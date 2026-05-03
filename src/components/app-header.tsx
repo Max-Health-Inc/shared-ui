@@ -18,8 +18,10 @@ export interface AppHeaderProps {
   children?: ReactNode
   /** Tailwind max-width class for the inner container (default: "max-w-5xl") */
   maxWidth?: string
-  /** Hide all action buttons (Sign Out, App Store) — useful for shared/public views */
+  /** Hide all action buttons (Sign Out, App Store) \u2014 useful for shared/public views */
   hideActions?: boolean
+  /** URL for the App Store button (default: "/apps") */
+  appStoreUrl?: string
 }
 
 export function AppHeader({
@@ -30,6 +32,7 @@ export function AppHeader({
   children,
   maxWidth = "max-w-5xl",
   hideActions,
+  appStoreUrl = "/apps",
 }: AppHeaderProps) {
   const brand = useBranding()
 
@@ -53,7 +56,7 @@ export function AppHeader({
             </Button>
           ) : (
             <Button variant="ghost" size="sm" asChild>
-              <a href="/apps">
+              <a href={appStoreUrl}>
                 <LayoutGrid className="size-4" />
                 <span className="hidden sm:inline">App Store</span>
               </a>
