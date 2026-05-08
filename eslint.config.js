@@ -57,8 +57,8 @@ export default tseslint.config(
     },
   },
 
-  // Ignore build output and generated files
+  // Ignore build output, generated files, and test files (Bun-only)
   {
-    ignores: ["dist/**", "node_modules/**", "vite.config.ts"],
+    ignores: ["dist/**", "node_modules/**", "vite.config.ts", "src/**/*.test.ts"],
   },
 )

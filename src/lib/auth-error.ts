@@ -19,8 +19,10 @@ export function reportAuthError(message: string) {
 
 // ─── Shared auth-fetch wrapper ───────────────────────────────────────────────
 
+type AuthenticatedFetchFn = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+
 interface SmartAuthWithFetch {
-  createAuthenticatedFetch(): typeof fetch
+  createAuthenticatedFetch(): AuthenticatedFetchFn
 }
 
 /**
@@ -33,7 +35,7 @@ interface SmartAuthWithFetch {
  * const client = new FhirClient(fhirBaseUrl, authFetch)
  * ```
  */
-export function createAuthFetch(smartAuth: SmartAuthWithFetch): typeof fetch {
+export function createAuthFetch(smartAuth: SmartAuthWithFetch): AuthenticatedFetchFn {
   const baseFetch = smartAuth.createAuthenticatedFetch()
   return async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
     try {
