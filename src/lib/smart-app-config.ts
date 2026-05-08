@@ -52,7 +52,8 @@ interface CreateSmartAuthOptions<T> {
  * Exported so apps that need the URL without a SmartAuth instance can use it.
  */
 export function buildFhirBaseUrl(cfg: SmartAppConfig): string {
-  return `${cfg.proxyBase}/${cfg.proxyPrefix}/${cfg.fhirServerId}/${cfg.fhirVersion}`
+  const base = cfg.proxyBase.replace(/\/+$/, "")
+  return `${base}/${cfg.proxyPrefix}/${cfg.fhirServerId}/${cfg.fhirVersion}`
 }
 
 /**

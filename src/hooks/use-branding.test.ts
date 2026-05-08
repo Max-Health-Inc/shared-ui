@@ -52,6 +52,11 @@ describe("parseBrandBundle", () => {
     expect(result.name).toBe("Proxy Smart")
   })
 
+  it("falls back to default name when org name is empty string", () => {
+    const result = parseBrandBundle(makeBundle({ name: "" }))
+    expect(result.name).toBe("Proxy Smart")
+  })
+
   it("extracts logo URL from brand extension", () => {
     const result = parseBrandBundle(
       makeBundle({

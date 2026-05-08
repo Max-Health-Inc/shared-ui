@@ -40,7 +40,14 @@ describe("buildFhirBaseUrl", () => {
   it("handles trailing slash in proxyBase", () => {
     const url = buildFhirBaseUrl(makeConfig({ proxyBase: "https://proxy.example.com/" }))
     expect(url).toBe(
-      "https://proxy.example.com//proxy-smart-backend/hapi-fhir-server/R4",
+      "https://proxy.example.com/proxy-smart-backend/hapi-fhir-server/R4",
+    )
+  })
+
+  it("handles multiple trailing slashes in proxyBase", () => {
+    const url = buildFhirBaseUrl(makeConfig({ proxyBase: "https://proxy.example.com///" }))
+    expect(url).toBe(
+      "https://proxy.example.com/proxy-smart-backend/hapi-fhir-server/R4",
     )
   })
 })

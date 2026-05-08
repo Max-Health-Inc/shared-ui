@@ -48,6 +48,10 @@ describe("formatHumanName", () => {
     expect(formatHumanName([{ use: "official" }])).toBe("Unknown")
   })
 
+  it("returns 'Unknown' when text is empty string", () => {
+    expect(formatHumanName([{ text: "" }])).toBe("Unknown")
+  })
+
   it("ignores suffix (not implemented in current logic)", () => {
     expect(
       formatHumanName([{ family: "Smith", given: ["John"], suffix: ["Jr."] }]),

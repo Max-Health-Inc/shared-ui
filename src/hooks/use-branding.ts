@@ -45,7 +45,7 @@ export function parseBrandBundle(bundle: unknown): BrandInfo {
   const org = entries.find(e => e.resource?.resourceType === 'Organization')?.resource
   if (!org) return fallback
 
-  const name = org.name ?? fallback.name
+  const name = org.name != null && org.name !== "" ? org.name : fallback.name
 
   let logoUrl: string | null = null
   let website: string | null = null
