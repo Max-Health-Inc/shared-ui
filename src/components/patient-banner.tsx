@@ -7,11 +7,11 @@ import { formatHumanName } from "../lib/fhir-helpers"
 // ── Generic FHIR Patient shape (works with R4, IPS, or any conformant type) ─
 
 export interface BannerPatient {
-  name?: Array<{ use?: string; text?: string; family?: string; given?: string[]; prefix?: string[]; suffix?: string[] }>
+  name?: { use?: string; text?: string; family?: string; given?: string[]; prefix?: string[]; suffix?: string[] }[]
   birthDate?: string
   gender?: string
-  identifier?: Array<{ value?: string; system?: string }>
-  extension?: Array<{ url: string; valueCodeableConcept?: { coding?: Array<{ display?: string }> }; valueCode?: string }>
+  identifier?: { value?: string; system?: string }[]
+  extension?: { url: string; valueCodeableConcept?: { coding?: { display?: string }[] }; valueCode?: string }[]
 }
 
 export interface PatientBannerProps {
@@ -44,7 +44,7 @@ export function PatientBanner({
   patient,
   bloodType,
   actions,
-  formatAge = (age) => `${age} yo`,
+  formatAge = (age) => `${String(age)} yo`,
   formatDate = defaultFormatDate,
   formatMrn = (v) => `MRN: ${v}`,
   formatBirthSex = (v) => `SAAB: ${v}`,

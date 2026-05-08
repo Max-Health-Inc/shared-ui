@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { onAuthError } from "../lib/auth-error"
 
 const DEEPLINK_KEY = "__smart_deeplink__"
@@ -70,7 +70,7 @@ export function useSmartAuth({
       callbackHandled.current = true
 
       setState("callback")
-      smartAuth
+      void smartAuth
         .handleCallback()
         .then(() => {
           const saved = sessionStorage.getItem(DEEPLINK_KEY)
@@ -79,7 +79,7 @@ export function useSmartAuth({
           onAuthenticated?.()
           setState("authenticated")
         })
-        .catch((err) => {
+        .catch((err: unknown) => {
           const msg =
             err instanceof Error ? err.message : "Auth callback failed"
           if (/state mismatch/i.test(msg)) {
@@ -104,9 +104,9 @@ export function useSmartAuth({
       params.has("iss") &&
       smartAuth.startEhrLaunch
     ) {
-      const launch = params.get("launch")!
-      const iss = params.get("iss")!
-      smartAuth.startEhrLaunch(launch, iss).catch((err) => {
+      const launch = params.get("launch") ?? ""
+      const iss = params.get("iss") ?? ""
+      void smartAuth.startEhrLaunch(launch, iss).catch((err: unknown) => {
         setError(err instanceof Error ? err.message : "EHR launch failed")
         setState("error")
       })
@@ -116,7 +116,7 @@ export function useSmartAuth({
     // Check existing token
     if (smartAuth.isAuthenticated()) {
       if (smartAuth.isTokenExpired()) {
-        smartAuth.refreshAccessToken().then((refreshed) => {
+        void smartAuth.refreshAccessToken().then((refreshed) => {
           if (refreshed) {
             onAuthenticated?.()
             setState("authenticated")
@@ -127,31 +127,29 @@ export function useSmartAuth({
           }
         })
       } else {
-        // Already authenticated — handled during state initialization, just fire callback
         onAuthenticated?.()
       }
     } else {
-      // Not authenticated — resolved synchronously via promise to satisfy linter
-      Promise.resolve().then(() => setState("unauthenticated"))
+      void Promise.resolve().then(() => { setState("unauthenticated") })
     }
-  }, [])
+  }, [ehrLaunch, onAuthenticated, skip, smartAuth])
 
-  const handleLogin = () => {
+  const handleLogin = useCallback(() => {
     if (window.location.search) {
       sessionStorage.setItem(DEEPLINK_KEY, window.location.search)
     }
     const auth = startAuth ?? (() => smartAuth.authorize())
-    auth().catch((err) => {
+    void auth().catch((err: unknown) => {
       setError(
         err instanceof Error ? err.message : "Failed to start SMART launch",
       )
       setState("error")
     })
-  }
+  }, [startAuth, smartAuth])
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     smartAuth.logout()
-  }
+  }, [smartAuth])
 
   return { state, error, handleLogin, handleLogout }
 }

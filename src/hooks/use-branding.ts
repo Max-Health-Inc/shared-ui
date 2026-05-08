@@ -1,12 +1,27 @@
 import { useState, useEffect } from 'react'
 
 // Minimal inline types for FHIR brand bundle parsing (avoids external dependency)
+interface BundleExtensionInner {
+  url: string
+  valueUrl?: string
+}
+
+interface BundleExtension {
+  url: string
+  extension?: BundleExtensionInner[]
+}
+
+interface BundleTelecom {
+  system?: string
+  value?: string
+}
+
 interface BundleEntry {
   resource?: {
     resourceType?: string
     name?: string
-    extension?: Array<{ url: string; extension?: Array<{ url: string; valueUrl?: string }> }>
-    telecom?: Array<{ system?: string; value?: string }>
+    extension?: BundleExtension[]
+    telecom?: BundleTelecom[]
   }
 }
 
@@ -30,7 +45,7 @@ function parseBrandBundle(bundle: unknown): BrandInfo {
   const org = entries.find(e => e.resource?.resourceType === 'Organization')?.resource
   if (!org) return fallback
 
-  const name = org.name || fallback.name
+  const name = org.name ?? fallback.name
 
   let logoUrl: string | null = null
   let website: string | null = null
@@ -62,7 +77,7 @@ function fetchBrand(): Promise<BrandInfo> {
 
   fetchPromise = fetch('/branding.json')
     .then(res => {
-      if (!res.ok) throw new Error(`${res.status}`)
+      if (!res.ok) throw new Error(String(res.status))
       return res.json()
     })
     .then(bundle => {
@@ -83,7 +98,7 @@ export function useBranding(): BrandInfo | null {
   const [brand, setBrand] = useState<BrandInfo | null>(cachedBrand)
 
   useEffect(() => {
-    fetchBrand().then(setBrand)
+    void fetchBrand().then(setBrand)
   }, [])
 
   return brand

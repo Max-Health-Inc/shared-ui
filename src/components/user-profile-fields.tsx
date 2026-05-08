@@ -46,7 +46,7 @@ export function UserProfileFormFields({
             id="profile-firstName"
             placeholder="e.g., John"
             value={values.firstName}
-            onChange={(e) => onChange("firstName", e.target.value)}
+            onChange={(e) => { onChange("firstName", e.target.value) }}
             disabled={readOnly.firstName}
             required
           />
@@ -62,7 +62,7 @@ export function UserProfileFormFields({
             id="profile-lastName"
             placeholder="e.g., Smith"
             value={values.lastName}
-            onChange={(e) => onChange("lastName", e.target.value)}
+            onChange={(e) => { onChange("lastName", e.target.value) }}
             disabled={readOnly.lastName}
             required
           />
@@ -81,7 +81,7 @@ export function UserProfileFormFields({
           type="email"
           placeholder="john.smith@example.com"
           value={values.email}
-          onChange={(e) => onChange("email", e.target.value)}
+            onChange={(e) => { onChange("email", e.target.value) }}
           disabled={readOnly.email}
           required
         />

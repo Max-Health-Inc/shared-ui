@@ -55,7 +55,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
               {this.state.error.message}
             </p>
             <button
-              onClick={() => window.location.reload()}
+              onClick={() => { window.location.reload() }}
               style={{
                 background: "#fff",
                 color: "#000",

@@ -82,7 +82,7 @@ export function SmartAppShell({
                 <AlertTriangle className="size-12 mx-auto text-amber-500" />
                 <h2 className="text-xl font-semibold">Session Expired</h2>
                 <p className="text-muted-foreground max-w-md">
-                  {error || "Your session has expired. Please sign in again to continue."}
+                  {error ?? "Your session has expired. Please sign in again to continue."}
                 </p>
               </div>
               <Button size="lg" onClick={handleLogin}>
