@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react"
 import { onAuthError } from "../lib/auth-error"
 
+const DEEPLINK_KEY = "__smart_deeplink__"
+
 export type SmartAppState =
   | "loading"
   | "unauthenticated"
@@ -71,7 +73,9 @@ export function useSmartAuth({
       smartAuth
         .handleCallback()
         .then(() => {
-          window.history.replaceState({}, "", window.location.pathname)
+          const saved = sessionStorage.getItem(DEEPLINK_KEY)
+          sessionStorage.removeItem(DEEPLINK_KEY)
+          window.history.replaceState({}, "", window.location.pathname + (saved ?? ""))
           onAuthenticated?.()
           setState("authenticated")
         })
@@ -133,6 +137,9 @@ export function useSmartAuth({
   }, [])
 
   const handleLogin = () => {
+    if (window.location.search) {
+      sessionStorage.setItem(DEEPLINK_KEY, window.location.search)
+    }
     const auth = startAuth ?? (() => smartAuth.authorize())
     auth().catch((err) => {
       setError(

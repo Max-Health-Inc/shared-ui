@@ -21,9 +21,10 @@ export interface BrandInfo {
 }
 
 /** Extract brand name and logo from the /branding.json FHIR Bundle */
-function parseBrandBundle(bundle: BrandBundle): BrandInfo {
+function parseBrandBundle(bundle: unknown): BrandInfo {
   const fallback: BrandInfo = { name: 'Proxy Smart', logoUrl: null, website: null }
-  const entries = bundle.entry
+  if (typeof bundle !== 'object' || bundle === null) return fallback
+  const entries = (bundle as BrandBundle).entry
   if (!Array.isArray(entries)) return fallback
 
   const org = entries.find(e => e.resource?.resourceType === 'Organization')?.resource
