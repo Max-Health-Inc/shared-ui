@@ -105,4 +105,49 @@ describe("createAuthFetch", () => {
     await expect(authFetch("https://example.com/fhir/Patient")).rejects.toThrow()
     expect(reportedError).toBeNull()
   })
+
+  it("detects auth error with mixed case in message", async () => {
+    let reportedError: string | null = null
+    onAuthError((msg) => { reportedError = msg })
+
+    const smartAuth = {
+      createAuthenticatedFetch: () =>
+        (async () => {
+          throw new Error("Error: NO VALID SMART TOKEN available")
+        }) as unknown as typeof fetch,
+    }
+    const authFetch = createAuthFetch(smartAuth)
+    await expect(authFetch("/fhir")).rejects.toThrow()
+    expect(reportedError).toBe("Your session has expired. Please sign in again.")
+  })
+
+  it("detects auth error when message contains the phrase among other text", async () => {
+    let reportedError: string | null = null
+    onAuthError((msg) => { reportedError = msg })
+
+    const smartAuth = {
+      createAuthenticatedFetch: () =>
+        (async () => {
+          throw new Error("Request failed: no valid smart token found for user")
+        }) as unknown as typeof fetch,
+    }
+    const authFetch = createAuthFetch(smartAuth)
+    await expect(authFetch("/fhir")).rejects.toThrow()
+    expect(reportedError).toBe("Your session has expired. Please sign in again.")
+  })
+
+  it("passes through RequestInit to underlying fetch", async () => {
+    let capturedInit: RequestInit | undefined
+    const smartAuth = {
+      createAuthenticatedFetch: () =>
+        (async (_input: RequestInfo | URL, init?: RequestInit) => {
+          capturedInit = init
+          return new Response("ok")
+        }) as unknown as typeof fetch,
+    }
+    const authFetch = createAuthFetch(smartAuth)
+    await authFetch("/fhir", { method: "POST", body: '{"data":1}' })
+    expect(capturedInit?.method).toBe("POST")
+    expect(capturedInit?.body).toBe('{"data":1}')
+  })
 })

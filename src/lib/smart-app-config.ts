@@ -58,7 +58,8 @@ interface CreateSmartAuthOptions<T> {
  */
 export function buildFhirBaseUrl(cfg: SmartAppConfig): string {
   const base = cfg.proxyBase.replace(/\/+$/, "")
-  return `${base}/${cfg.proxyPrefix}/${cfg.fhirServerId}/${cfg.fhirVersion}`
+  const segments = [cfg.proxyPrefix, cfg.fhirServerId, cfg.fhirVersion].filter(Boolean)
+  return `${base}/${segments.join("/")}`
 }
 
 /**

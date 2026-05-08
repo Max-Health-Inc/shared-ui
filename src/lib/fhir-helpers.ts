@@ -16,8 +16,9 @@ export function formatHumanName(name?: HumanName[]): string {
   if (n.prefix?.length) parts.push(n.prefix.join(" "))
   if (n.given?.length) parts.push(n.given.join(" "))
   if (n.family) parts.push(n.family)
-  const joined = parts.join(" ")
+  const joined = parts.join(" ").trim()
   if (joined !== "") return joined
-  if (n.text != null && n.text !== "") return n.text
+  const text = n.text?.trim()
+  if (text != null && text !== "") return text
   return "Unknown"
 }

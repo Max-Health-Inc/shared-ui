@@ -86,4 +86,32 @@ describe("formatHumanName", () => {
       formatHumanName([{ family: "Smith", given: [], prefix: [] }]),
     ).toBe("Smith")
   })
+
+  it("trims leading/trailing whitespace from result", () => {
+    // given=[" "] yields parts = [" "], joined.trim() = "" → falls through to Unknown
+    const result = formatHumanName([{ given: [" "] }])
+    expect(result).toBe("Unknown")
+  })
+
+  it("handles whitespace-only family name", () => {
+    const result = formatHumanName([{ family: "  " }])
+    expect(result).toBe("Unknown")
+  })
+
+  it("handles whitespace-only text fallback", () => {
+    const result = formatHumanName([{ text: "   " }])
+    expect(result).toBe("Unknown")
+  })
+
+  it("handles unicode characters in names", () => {
+    expect(
+      formatHumanName([{ family: "Müller-Lüdenscheidt", given: ["Öztürk"] }]),
+    ).toBe("Öztürk Müller-Lüdenscheidt")
+  })
+
+  it("handles very long names", () => {
+    const longName = "A".repeat(500)
+    const result = formatHumanName([{ family: longName }])
+    expect(result).toBe(longName)
+  })
 })

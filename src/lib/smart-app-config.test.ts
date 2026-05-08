@@ -50,6 +50,28 @@ describe("buildFhirBaseUrl", () => {
       "https://proxy.example.com/proxy-smart-backend/hapi-fhir-server/R4",
     )
   })
+
+  it("does not produce double slashes with empty proxyPrefix", () => {
+    const url = buildFhirBaseUrl(makeConfig({ proxyPrefix: "" }))
+    expect(url).not.toContain("//hapi")
+  })
+
+  it("does not produce double slashes with empty fhirServerId", () => {
+    const url = buildFhirBaseUrl(makeConfig({ fhirServerId: "" }))
+    expect(url).not.toContain("//R4")
+  })
+
+  it("does not produce double slashes with empty fhirVersion", () => {
+    const url = buildFhirBaseUrl(makeConfig({ fhirVersion: "" }))
+    expect(url).not.toMatch(/\/$/)
+  })
+
+  it("does not produce a bare-slash URL with empty proxyBase (non-browser)", () => {
+    const url = buildFhirBaseUrl(makeConfig({ proxyBase: "" }))
+    // Should not start with / when there's no origin — caller should handle
+    // At minimum: must not start with //
+    expect(url).not.toMatch(/^\/\//)
+  })
 })
 
 describe("createSmartAppConfig", () => {

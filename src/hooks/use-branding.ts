@@ -20,13 +20,13 @@ interface BundleEntry {
   resource?: {
     resourceType?: string
     name?: string
-    extension?: BundleExtension[]
-    telecom?: BundleTelecom[]
+    extension?: (BundleExtension | null | undefined)[]
+    telecom?: (BundleTelecom | null | undefined)[]
   }
 }
 
 interface BrandBundle {
-  entry?: BundleEntry[]
+  entry?: (BundleEntry | null | undefined)[]
 }
 
 export interface BrandInfo {
@@ -42,7 +42,7 @@ export function parseBrandBundle(bundle: unknown): BrandInfo {
   const entries = (bundle as BrandBundle).entry
   if (!Array.isArray(entries)) return fallback
 
-  const org = entries.find(e => e.resource?.resourceType === 'Organization')?.resource
+  const org = entries.find(e => e?.resource?.resourceType === 'Organization')?.resource
   if (!org) return fallback
 
   const name = org.name != null && org.name !== "" ? org.name : fallback.name
@@ -52,7 +52,7 @@ export function parseBrandBundle(bundle: unknown): BrandInfo {
 
   if (Array.isArray(org.extension)) {
     const brandExt = org.extension.find(
-      (e) => e.url === 'http://hl7.org/fhir/StructureDefinition/organization-brand'
+      (e) => e?.url === 'http://hl7.org/fhir/StructureDefinition/organization-brand'
     )
     if (brandExt) {
       const inner = brandExt.extension
@@ -62,7 +62,7 @@ export function parseBrandBundle(bundle: unknown): BrandInfo {
 
   const telecoms = org.telecom
   if (Array.isArray(telecoms)) {
-    website = telecoms.find(t => t.system === 'url')?.value ?? null
+    website = telecoms.find(t => t?.system === 'url')?.value ?? null
   }
 
   return { name, logoUrl, website }

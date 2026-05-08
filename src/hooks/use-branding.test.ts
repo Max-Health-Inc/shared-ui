@@ -150,4 +150,56 @@ describe("parseBrandBundle", () => {
       website: "https://acme.com",
     })
   })
+
+  it("handles null entry items without crashing", () => {
+    const result = parseBrandBundle({
+      entry: [null, undefined, { resource: { resourceType: "Organization", name: "OK" } }],
+    })
+    expect(result.name).toBe("OK")
+  })
+
+  it("handles entry with missing resource gracefully", () => {
+    const result = parseBrandBundle({
+      entry: [{}, { resource: { resourceType: "Organization", name: "Found" } }],
+    })
+    expect(result.name).toBe("Found")
+  })
+
+  it("handles extension array with null entries", () => {
+    const result = parseBrandBundle(
+      makeBundle({
+        name: "Acme",
+        extension: [null, undefined, { url: BRAND_EXT_URL, extension: [{ url: "brandLogo", valueUrl: "https://logo.png" }] }],
+      }),
+    )
+    expect(result.logoUrl).toBe("https://logo.png")
+  })
+
+  it("handles telecom array with null entries", () => {
+    const result = parseBrandBundle(
+      makeBundle({
+        name: "Acme",
+        telecom: [null, undefined, { system: "url", value: "https://acme.com" }],
+      }),
+    )
+    expect(result.website).toBe("https://acme.com")
+  })
+
+  it("handles brand extension with no inner extension array", () => {
+    const result = parseBrandBundle(
+      makeBundle({
+        name: "Acme",
+        extension: [{ url: BRAND_EXT_URL }],
+      }),
+    )
+    expect(result.logoUrl).toBeNull()
+  })
+
+  it("returns fallback for numeric input", () => {
+    expect(parseBrandBundle(42)).toEqual({ name: "Proxy Smart", logoUrl: null, website: null })
+  })
+
+  it("returns fallback for array input (not a FHIR object)", () => {
+    expect(parseBrandBundle([1, 2, 3])).toEqual({ name: "Proxy Smart", logoUrl: null, website: null })
+  })
 })
