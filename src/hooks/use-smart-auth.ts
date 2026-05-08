@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { onAuthError } from "../lib/auth-error"
 
 const DEEPLINK_KEY = "__smart_deeplink__"
+const isBrowser = typeof window !== "undefined"
 
 export type SmartAppState =
   | "loading"
@@ -44,6 +45,7 @@ export function useSmartAuth({
 }: UseSmartAuthOptions) {
   const [state, setState] = useState<SmartAppState>(() => {
     if (skip) return "unauthenticated"
+    if (!isBrowser) return "loading"
     const params = new URLSearchParams(window.location.search)
     // If there's a callback or EHR launch pending, start in loading state
     if (params.has("code") || (ehrLaunch && params.has("launch") && params.has("iss"))) return "loading"
@@ -56,6 +58,7 @@ export function useSmartAuth({
 
   useEffect(() => {
     if (skip) return
+    if (!isBrowser) return
 
     onAuthError((msg) => {
       setError(msg)
@@ -135,7 +138,7 @@ export function useSmartAuth({
   }, [ehrLaunch, onAuthenticated, skip, smartAuth])
 
   const handleLogin = useCallback(() => {
-    if (window.location.search) {
+    if (isBrowser && window.location.search) {
       sessionStorage.setItem(DEEPLINK_KEY, window.location.search)
     }
     const auth = startAuth ?? (() => smartAuth.authorize())

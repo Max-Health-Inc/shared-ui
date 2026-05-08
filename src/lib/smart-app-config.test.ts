@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test"
-import { buildFhirBaseUrl } from "./smart-app-config"
+import { buildFhirBaseUrl, createSmartAppConfig, createSmartAuth } from "./smart-app-config"
 import type { SmartAppConfig } from "./smart-app-config"
 
 function makeConfig(overrides: Partial<SmartAppConfig> = {}): SmartAppConfig {
@@ -49,5 +49,67 @@ describe("buildFhirBaseUrl", () => {
     expect(url).toBe(
       "https://proxy.example.com/proxy-smart-backend/hapi-fhir-server/R4",
     )
+  })
+})
+
+describe("createSmartAppConfig", () => {
+  it("does not crash in non-browser environments", () => {
+    expect(() =>
+      createSmartAppConfig({ clientId: "test", scopes: "openid" }),
+    ).not.toThrow()
+  })
+
+  it("uses defaults for clientId and scopes", () => {
+    const cfg = createSmartAppConfig({ clientId: "my-app", scopes: "openid fhirUser" })
+    expect(cfg.clientId).toBe("my-app")
+    expect(cfg.scopes).toBe("openid fhirUser")
+  })
+
+  it("falls back to default proxyPrefix", () => {
+    const cfg = createSmartAppConfig({ clientId: "x", scopes: "openid" })
+    expect(cfg.proxyPrefix).toBe("proxy-smart-backend")
+  })
+
+  it("falls back to default fhirServerId and fhirVersion", () => {
+    const cfg = createSmartAppConfig({ clientId: "x", scopes: "openid" })
+    expect(cfg.fhirServerId).toBe("hapi-fhir-server")
+    expect(cfg.fhirVersion).toBe("R4")
+  })
+})
+
+describe("createSmartAuth", () => {
+  it("instantiates the SmartAuth class with correct options", () => {
+    let capturedOpts: Record<string, string> | undefined
+    class MockSmartAuth {
+      constructor(opts: Record<string, string>) {
+        capturedOpts = opts
+      }
+    }
+    const config = makeConfig()
+    const result = createSmartAuth({
+      config,
+      SmartAuth: MockSmartAuth,
+      storagePrefix: "test_",
+    })
+    expect(result.smartAuth).toBeInstanceOf(MockSmartAuth)
+    expect(result.fhirBaseUrl).toBe(
+      "https://proxy.example.com/proxy-smart-backend/hapi-fhir-server/R4",
+    )
+    expect(capturedOpts?.clientId).toBe("test-client")
+    expect(capturedOpts?.storagePrefix).toBe("test_")
+    expect(capturedOpts?.scopes).toBe("openid fhirUser")
+  })
+
+  it("does not crash in non-browser environments", () => {
+    class MockSmartAuth {
+      constructor(_opts: Record<string, string>) { /* noop */ }
+    }
+    expect(() =>
+      createSmartAuth({
+        config: makeConfig(),
+        SmartAuth: MockSmartAuth,
+        storagePrefix: "test_",
+      }),
+    ).not.toThrow()
   })
 })
