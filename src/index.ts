@@ -16,6 +16,7 @@ export { Dialog, DialogPortal, DialogOverlay, DialogClose, DialogTrigger, Dialog
 export { Separator } from "./components/separator"
 export { DropdownMenu, DropdownMenuPortal, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuCheckboxItem, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from "./components/dropdown-menu"
 export { Table, TableHeader, TableBody, TableFooter, TableHead, TableRow, TableCell, TableCaption } from "./components/table"
+export { Alert, AlertTitle, AlertDescription, alertVariants } from "./components/alert"
 export { ScrollArea, ScrollBar } from "./components/scroll-area"
 export { Progress } from "./components/progress"
 export { Toaster, type ThemedToasterProps } from "./components/sonner"
