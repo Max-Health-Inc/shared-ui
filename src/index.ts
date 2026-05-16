@@ -46,3 +46,9 @@ export {
   type SmartAuthLike,
   type UseSmartAuthOptions,
 } from "./hooks/use-smart-auth"
+export {
+  useScene,
+  SCENES,
+  type Scene,
+  type UseSceneOptions,
+} from "./hooks/use-scene"
