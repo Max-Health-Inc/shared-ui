@@ -1,0 +1,223 @@
+/*
+ * Background scene CSS for apps using the useScene hook.
+ *
+ * Import this stylesheet in your app's global CSS:
+ *   @import "@max-health-inc/shared-ui/scenes.css";
+ *
+ * The active scene is driven by a `data-scene` attribute on <body>,
+ * managed by the useScene() hook.
+ *
+ * Available scenes:
+ *   "perspective-grid"  — 3D floor plane with grid lines
+ *   "room-edges"        — Subtle converging edge lines with horizon glow
+ *   "none"              — Plain solid background, no effects
+ */
+
+@layer base {
+  body[data-scene="room-edges"],
+  body[data-scene="perspective-grid"] {
+    perspective: 1400px;
+    perspective-origin: 50% 45%;
+  }
+
+  /* ── Scene: Room Edges ─────────────────────────────────── */
+
+  body[data-scene="room-edges"]::before {
+    content: '';
+    position: fixed;
+    bottom: 0;
+    left: -20%;
+    right: -20%;
+    height: 55%;
+    z-index: -1;
+    pointer-events: none;
+    transform: rotateX(58deg);
+    transform-origin: bottom center;
+    background:
+      /* Floor surface tint */
+      linear-gradient(
+        to bottom,
+        transparent 0%,
+        oklch(0.82 0.02 250 / 0.10) 40%,
+        oklch(0.75 0.03 250 / 0.18) 100%
+      );
+  }
+
+  body[data-scene="room-edges"]::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      /* Bottom-left floor edge → vanishing point */
+      linear-gradient(
+        to top right,
+        transparent calc(50% - 0.5px),
+        oklch(0.55 0.02 250 / 0.18) 50%,
+        transparent calc(50% + 0.5px)
+      ) no-repeat 0% 100% / 50% 55%,
+      /* Bottom-right floor edge → vanishing point */
+      linear-gradient(
+        to top left,
+        transparent calc(50% - 0.5px),
+        oklch(0.55 0.02 250 / 0.18) 50%,
+        transparent calc(50% + 0.5px)
+      ) no-repeat 100% 100% / 50% 55%,
+      /* Top-left ceiling edge → vanishing point */
+      linear-gradient(
+        to bottom right,
+        transparent calc(50% - 0.5px),
+        oklch(0.55 0.02 250 / 0.08) 50%,
+        transparent calc(50% + 0.5px)
+      ) no-repeat 0% 0% / 50% 45%,
+      /* Top-right ceiling edge → vanishing point */
+      linear-gradient(
+        to bottom left,
+        transparent calc(50% - 0.5px),
+        oklch(0.55 0.02 250 / 0.08) 50%,
+        transparent calc(50% + 0.5px)
+      ) no-repeat 100% 0% / 50% 45%,
+      /* Horizon glow at vanishing point */
+      radial-gradient(
+        ellipse 50% 8% at 50% 45%,
+        oklch(0.80 0.025 250 / 0.10) 0%,
+        transparent 100%
+      );
+  }
+
+  .dark body[data-scene="room-edges"]::before {
+    background:
+      linear-gradient(
+        to bottom,
+        transparent 0%,
+        oklch(0.16 0.02 250 / 0.30) 40%,
+        oklch(0.12 0.025 250 / 0.45) 100%
+      );
+  }
+
+  .dark body[data-scene="room-edges"]::after {
+    background:
+      /* Bottom-left floor edge */
+      linear-gradient(
+        to top right,
+        transparent calc(50% - 0.5px),
+        oklch(0.45 0.04 250 / 0.28) 50%,
+        transparent calc(50% + 0.5px)
+      ) no-repeat 0% 100% / 50% 55%,
+      /* Bottom-right floor edge */
+      linear-gradient(
+        to top left,
+        transparent calc(50% - 0.5px),
+        oklch(0.45 0.04 250 / 0.28) 50%,
+        transparent calc(50% + 0.5px)
+      ) no-repeat 100% 100% / 50% 55%,
+      /* Top-left ceiling edge */
+      linear-gradient(
+        to bottom right,
+        transparent calc(50% - 0.5px),
+        oklch(0.45 0.04 250 / 0.14) 50%,
+        transparent calc(50% + 0.5px)
+      ) no-repeat 0% 0% / 50% 45%,
+      /* Top-right ceiling edge */
+      linear-gradient(
+        to bottom left,
+        transparent calc(50% - 0.5px),
+        oklch(0.45 0.04 250 / 0.14) 50%,
+        transparent calc(50% + 0.5px)
+      ) no-repeat 100% 0% / 50% 45%,
+      /* Horizon glow */
+      radial-gradient(
+        ellipse 50% 8% at 50% 45%,
+        oklch(0.25 0.04 250 / 0.18) 0%,
+        transparent 100%
+      );
+  }
+
+  /* ── Scene: Perspective Grid ───────────────────────────── */
+
+  body[data-scene="perspective-grid"]::before {
+    content: '';
+    position: fixed;
+    bottom: 0;
+    left: -15%;
+    right: -15%;
+    height: 55%;
+    z-index: -1;
+    pointer-events: none;
+    transform: rotateX(58deg);
+    transform-origin: bottom center;
+    background:
+      /* Grid lines — horizontal */
+      repeating-linear-gradient(
+        0deg,
+        oklch(0.55 0.03 250 / 0.13) 0px,
+        oklch(0.55 0.03 250 / 0.13) 1px,
+        transparent 1px,
+        transparent 100px
+      ),
+      /* Grid lines — vertical */
+      repeating-linear-gradient(
+        90deg,
+        oklch(0.55 0.03 250 / 0.13) 0px,
+        oklch(0.55 0.03 250 / 0.13) 1px,
+        transparent 1px,
+        transparent 100px
+      ),
+      /* Floor surface tint */
+      linear-gradient(
+        to bottom,
+        transparent 0%,
+        oklch(0.82 0.02 250 / 0.12) 40%,
+        oklch(0.75 0.03 250 / 0.20) 100%
+      );
+  }
+
+  body[data-scene="perspective-grid"]::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      /* Wall glow */
+      radial-gradient(
+        ellipse 80% 30% at 50% 55%,
+        oklch(0.80 0.025 250 / 0.10) 0%,
+        transparent 70%
+      );
+  }
+
+  .dark body[data-scene="perspective-grid"]::before {
+    background:
+      repeating-linear-gradient(
+        0deg,
+        oklch(0.45 0.04 250 / 0.18) 0px,
+        oklch(0.45 0.04 250 / 0.18) 1px,
+        transparent 1px,
+        transparent 100px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        oklch(0.45 0.04 250 / 0.18) 0px,
+        oklch(0.45 0.04 250 / 0.18) 1px,
+        transparent 1px,
+        transparent 100px
+      ),
+      linear-gradient(
+        to bottom,
+        transparent 0%,
+        oklch(0.16 0.02 250 / 0.30) 40%,
+        oklch(0.12 0.025 250 / 0.45) 100%
+      );
+  }
+
+  .dark body[data-scene="perspective-grid"]::after {
+    background:
+      radial-gradient(
+        ellipse 80% 30% at 50% 55%,
+        oklch(0.25 0.04 250 / 0.18) 0%,
+        transparent 70%
+      );
+  }
+}
