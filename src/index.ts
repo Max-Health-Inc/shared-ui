@@ -26,6 +26,21 @@ export { PatientBanner, type PatientBannerProps, type BannerPatient } from "./co
 export { UserProfileFormFields, type UserProfileFormFieldsProps, type UserProfileData } from "./components/user-profile-fields"
 export { SmartAppShell, type SmartAppShellProps } from "./components/smart-app-shell"
 
+// New generic components
+export { Textarea } from "./components/textarea"
+export { Checkbox } from "./components/checkbox"
+export { Switch } from "./components/switch"
+export { Collapsible, CollapsibleTrigger, CollapsibleContent } from "./components/collapsible"
+export { EmptyState, type EmptyStateProps } from "./components/empty-state"
+export { MessageBanner, messageBannerVariants, type MessageBannerProps } from "./components/message-banner"
+export { CloseButton, type CloseButtonProps } from "./components/close-button"
+export { SectionHeader, type SectionHeaderProps } from "./components/section-header"
+export { FilterTabs, filterTabsVariants, type FilterTabsProps, type FilterOption } from "./components/filter-tabs"
+export { Combobox, type ComboboxProps, type ComboboxOption } from "./components/combobox"
+export { Popover, PopoverTrigger, PopoverContent, PopoverAnchor } from "./components/popover"
+export { ConfirmProvider, useConfirm } from "./components/confirm-dialog"
+export { Form, FormField, FormError, FormActions } from "./components/form"
+
 // Utilities
 export { cn } from "./lib/utils"
 export { createSmartAppConfig, createSmartAuth, buildFhirBaseUrl, type SmartAppConfig } from "./lib/smart-app-config"
