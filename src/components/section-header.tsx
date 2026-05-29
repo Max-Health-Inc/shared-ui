@@ -77,7 +77,7 @@ function SectionHeader({
           </div>
         </div>
         {actions && (
-          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center gap-2" onClick={(e) => { e.stopPropagation(); }}>
             {actions}
           </div>
         )}
