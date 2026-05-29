@@ -131,7 +131,7 @@ function Combobox({
                   setSearch("")
                 }}
                 className={cn(
-                  "relative flex w-full items-center rounded-sm px-2 py-1.5 text-sm cursor-pointer transition-colors",
+                  "relative flex w-full items-start rounded-sm px-2 py-1.5 text-sm text-left cursor-pointer transition-colors",
                   isDark
                     ? cn("text-white/80 hover:bg-white/10", option.value === value && "bg-white/10")
                     : cn("hover:bg-foreground/5", option.value === value && "bg-foreground/5"),
@@ -140,12 +140,12 @@ function Combobox({
               >
                 <Check
                   className={cn(
-                    "mr-2 size-4 shrink-0",
+                    "mr-2 size-4 shrink-0 mt-0.5",
                     option.value === value ? "opacity-100" : "opacity-0",
                     isDark && "text-white/70"
                   )}
                 />
-                <div className="flex flex-col min-w-0">
+                <div className="flex flex-col min-w-0 items-start">
                   <span className="truncate">{option.label}</span>
                   {option.description && (
                     <span className={cn(
