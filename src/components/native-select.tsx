@@ -30,19 +30,19 @@ const variants: Record<
   { base: string; normal: string; error: string; colorScheme: string }
 > = {
   default: {
-    base: "w-full appearance-none bg-background text-foreground border rounded-lg focus:outline-none transition-colors cursor-pointer [&>option]:bg-background [&>option]:text-foreground",
+    base: "w-full appearance-none bg-background text-foreground border focus:outline-none transition-colors cursor-pointer [&>option]:bg-background [&>option]:text-foreground",
     normal: "border-foreground/20 focus:border-foreground/50",
     error: "border-red-400/50 focus:border-red-400",
     colorScheme: "",
   },
   filled: {
-    base: "w-full appearance-none bg-foreground/5 border rounded-lg text-foreground focus:outline-none transition-colors cursor-pointer [&>option]:bg-background [&>option]:text-foreground",
+    base: "w-full appearance-none bg-foreground/5 border text-foreground focus:outline-none transition-colors cursor-pointer [&>option]:bg-background [&>option]:text-foreground",
     normal: "border-foreground/10 focus:border-foreground/30",
     error: "border-red-400/50 focus:border-red-400",
     colorScheme: "",
   },
   light: {
-    base: "w-full appearance-none bg-white text-gray-900 border rounded-lg focus:outline-none focus:ring-2 transition-colors cursor-pointer [&>option]:bg-white [&>option]:text-gray-900",
+    base: "w-full appearance-none bg-white text-gray-900 border focus:outline-none focus:ring-2 transition-colors cursor-pointer [&>option]:bg-white [&>option]:text-gray-900",
     normal: "border-gray-300 focus:border-gray-400 focus:ring-gray-200",
     error: "border-red-400 focus:border-red-500 focus:ring-red-200",
     colorScheme: "light",
