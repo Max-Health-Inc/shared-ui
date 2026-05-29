@@ -49,7 +49,7 @@ function FormField({
       {label && (
         <label
           htmlFor={name}
-          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          className="block text-xs text-foreground/50 mb-2 peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
         >
           {label}
           {required && <span className="ml-1 text-destructive">*</span>}
@@ -57,7 +57,7 @@ function FormField({
       )}
       {children}
       {description && !error && (
-        <p id={descriptionId} className="text-xs text-muted-foreground">
+        <p id={descriptionId} className="text-xs text-foreground/50">
           {description}
         </p>
       )}

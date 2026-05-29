@@ -23,10 +23,10 @@ const buttonVariants = cva(
           "border border-emerald-400/30 text-emerald-400 hover:bg-emerald-400/10 hover:border-emerald-400/50 focus-visible:ring-emerald-400/50",
       },
       size: {
-        default: "px-4 py-2 has-[>svg]:px-3",
-        sm: "px-3 py-1.5 text-[11px] has-[>svg]:px-2.5",
+        default: "px-4 py-2 text-xs has-[>svg]:px-3",
+        sm: "px-3 py-1 text-xs has-[>svg]:px-2.5",
         lg: "px-6 py-3 text-sm has-[>svg]:px-4",
-        icon: "p-2",
+        icon: "px-3 py-2 text-sm",
         "icon-sm": "p-1.5",
       },
     },

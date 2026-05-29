@@ -9,9 +9,9 @@ interface SectionHeaderProps extends Omit<React.ComponentProps<"div">, "title"> 
 }
 
 const sizeClasses = {
-  sm: "text-base font-medium",
-  md: "text-lg font-medium",
-  lg: "text-xl font-medium",
+  sm: "text-base font-light",
+  md: "text-lg font-light",
+  lg: "text-xl font-light",
 }
 
 function SectionHeader({
@@ -31,7 +31,7 @@ function SectionHeader({
       <div>
         <h2 className={sizeClasses[size]}>{title}</h2>
         {subtitle && (
-          <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
+          <p className="mt-1 text-sm text-foreground/50">{subtitle}</p>
         )}
       </div>
       {actions && (

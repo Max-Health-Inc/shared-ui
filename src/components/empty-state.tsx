@@ -20,17 +20,17 @@ function EmptyState({
     <div
       data-slot="empty-state"
       className={cn(
-        "flex flex-col items-center justify-center py-12 text-center",
+        "text-center py-12 text-foreground/50",
         className
       )}
       {...props}
     >
       {icon && (
-        <div className="mb-4 text-muted-foreground">{icon}</div>
+        <div className="flex justify-center mb-4">{icon}</div>
       )}
-      <p className="text-sm font-medium text-foreground">{message}</p>
+      <p className="text-foreground/70">{message}</p>
       {description && (
-        <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+        <p className="text-sm mt-1">{description}</p>
       )}
       {action && <div className="mt-4">{action}</div>}
     </div>
