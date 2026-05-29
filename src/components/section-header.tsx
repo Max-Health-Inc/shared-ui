@@ -6,6 +6,7 @@ interface SectionHeaderProps extends Omit<React.ComponentProps<"div">, "title"> 
   subtitle?: React.ReactNode
   actions?: React.ReactNode
   size?: "sm" | "md" | "lg"
+  children?: React.ReactNode
 }
 
 const sizeClasses = {
@@ -20,23 +21,23 @@ function SectionHeader({
   actions,
   size = "lg",
   className,
+  children,
   ...props
 }: SectionHeaderProps) {
   return (
-    <div
-      data-slot="section-header"
-      className={cn("flex items-center justify-between", className)}
-      {...props}
-    >
-      <div>
-        <h2 className={sizeClasses[size]}>{title}</h2>
-        {subtitle && (
-          <p className="mt-1 text-sm text-foreground/50">{subtitle}</p>
+    <div data-slot="section-header" {...props}>
+      <div className={cn("flex items-center justify-between", className)}>
+        <div>
+          <h2 className={sizeClasses[size]}>{title}</h2>
+          {subtitle && (
+            <p className="mt-1 text-sm text-foreground/50">{subtitle}</p>
+          )}
+        </div>
+        {actions && (
+          <div className="flex items-center gap-2">{actions}</div>
         )}
       </div>
-      {actions && (
-        <div className="flex items-center gap-2">{actions}</div>
-      )}
+      {children}
     </div>
   )
 }
