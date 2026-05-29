@@ -67,7 +67,7 @@ function Combobox({
           aria-expanded={open}
           disabled={disabled}
           className={cn(
-            "flex h-9 w-full items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm",
+            "flex h-9 w-full items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm text-left",
             "focus-visible:outline-none focus-visible:ring-[3px]",
             "disabled:cursor-not-allowed disabled:opacity-50",
             "cursor-pointer",
@@ -78,7 +78,7 @@ function Combobox({
           )}
         >
           <span className={cn(
-            "truncate",
+            "truncate flex-1",
             selectedOption
               ? isDark ? "text-white/90" : "text-foreground"
               : isDark ? "text-white/50" : "text-muted-foreground"
@@ -111,7 +111,12 @@ function Combobox({
             )}
           />
         </div>
-        <div className="max-h-56 overflow-y-auto p-1">
+        <div className={cn(
+          "max-h-56 overflow-y-auto p-1",
+          isDark
+            ? "[&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full"
+            : "[&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-foreground/15 [&::-webkit-scrollbar-thumb]:rounded-full"
+        )}>
           {filteredOptions.length > 0 ? (
             filteredOptions.map((option) => (
               <button
