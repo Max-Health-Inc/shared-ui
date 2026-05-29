@@ -10,6 +10,7 @@ interface CollapsibleProps extends React.ComponentProps<"div"> {
 
 const CollapsibleContext = React.createContext<{ open: boolean; toggle: () => void }>({
   open: false,
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   toggle: () => {},
 })
 

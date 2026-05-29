@@ -55,8 +55,8 @@ function FilterTabs<T extends string = string>({
             className={cn(
               "rounded-md transition-colors duration-200 cursor-pointer",
               isActive
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground hover:bg-foreground/5"
+                ? "bg-foreground text-background"
+                : "text-foreground/50 hover:text-foreground hover:bg-foreground/5"
             )}
           >
             {option.label}

@@ -27,7 +27,7 @@ function PageHeader({
   return (
     <div
       className={cn(
-        "bg-muted/50 p-4 sm:p-6 lg:p-8 rounded-3xl border border-border/50 shadow-lg",
+        "bg-foreground/5 p-4 sm:p-6 lg:p-8 rounded-3xl border border-foreground/10 shadow-lg",
         className,
       )}
     >
@@ -37,9 +37,9 @@ function PageHeader({
             {title}
           </h1>
           {description && (
-            <div className="text-muted-foreground text-base sm:text-lg flex items-center">
+            <div className="text-foreground/60 text-base sm:text-lg flex items-center">
               {icon && (
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary/10 rounded-xl flex items-center justify-center mr-2 sm:mr-3 shadow-sm shrink-0">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-foreground/10 rounded-xl flex items-center justify-center mr-2 sm:mr-3 shadow-sm shrink-0">
                   {icon}
                 </div>
               )}

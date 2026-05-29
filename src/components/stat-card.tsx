@@ -3,9 +3,9 @@ import { cn } from "../lib/utils"
 
 const colorMap = {
   primary: {
-    bg: "bg-primary/10",
-    text: "text-primary",
-    label: "text-primary",
+    bg: "bg-foreground/10",
+    text: "text-foreground",
+    label: "text-foreground/70",
   },
   blue: {
     bg: "bg-blue-500/10 dark:bg-blue-400/20",
@@ -81,7 +81,7 @@ function StatCard({
   return (
     <div
       className={cn(
-        "bg-card/70 border border-border/50 px-3 py-2 transition-colors duration-200",
+        "bg-foreground/5 border border-foreground/10 px-3 py-2 transition-colors duration-200",
         className,
       )}
     >
@@ -107,7 +107,7 @@ function StatCard({
         </div>
       </div>
       {subtitle && (
-        <p className="text-[10px] text-muted-foreground font-light mt-0.5 ml-8">
+        <p className="text-[10px] text-foreground/50 font-light mt-0.5 ml-8">
           {subtitle}
         </p>
       )}

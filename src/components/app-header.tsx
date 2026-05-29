@@ -37,7 +37,7 @@ export function AppHeader({
   const brand = useBranding()
 
   return (
-    <header className="border-b bg-card">
+    <header className="border-b border-foreground/10 bg-foreground/[0.02]">
       <div className={cn(maxWidth, "mx-auto px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between gap-2")}>
         <div className="flex items-center gap-2 min-w-0">
           {brand?.logoUrl ? (

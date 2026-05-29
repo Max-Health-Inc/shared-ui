@@ -19,6 +19,12 @@ const badgeVariants = cva(
           "border border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400",
         outline:
           "border border-foreground/10 text-foreground/60",
+        pill:
+          "rounded-full border border-foreground/10 bg-transparent text-foreground/60",
+        "pill-filled":
+          "rounded-full border border-foreground/20 bg-foreground/10 text-foreground/70",
+        rectangular:
+          "rounded-none border border-foreground/10 bg-foreground/5 text-foreground/70",
       },
     },
     defaultVariants: {
