@@ -1,4 +1,8 @@
-/// <reference types="vite/client" />
+/**
+ * Ambient ImportMeta type declarations for SMART app env vars.
+ * This file is referenced from smart-app-config.ts so consumers
+ * don't need vite/client types installed.
+ */
 
 interface ImportMetaEnv {
   readonly VITE_PROXY_BASE: string | undefined
