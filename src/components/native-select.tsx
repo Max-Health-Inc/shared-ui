@@ -14,9 +14,9 @@ interface NativeSelectProps
 }
 
 const sizes: Record<NativeSelectSize, string> = {
-  sm: "pl-3 pr-8 py-1.5 text-xs",
-  md: "pl-3 pr-8 py-2 text-sm",
-  lg: "pl-4 pr-10 py-3 text-sm",
+  sm: "pl-3 pr-10 py-1.5 text-xs",
+  md: "pl-3 pr-10 py-2 text-sm",
+  lg: "pl-4 pr-12 py-3 text-sm",
 }
 
 const variants: Record<
