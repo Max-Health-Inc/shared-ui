@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { cn } from "../lib/utils"
-import { ChevronsUpDown, Check } from "lucide-react"
+import { ChevronsUpDown } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "./popover"
 
 interface ComboboxOption {
@@ -133,18 +133,11 @@ function Combobox({
                 className={cn(
                   "relative flex w-full items-start rounded-sm px-2 py-1.5 text-sm text-left cursor-pointer transition-colors",
                   isDark
-                    ? cn("text-white/80 hover:bg-white/10", option.value === value && "bg-white/10")
-                    : cn("hover:bg-foreground/5", option.value === value && "bg-foreground/5"),
+                    ? cn("text-white/80 hover:bg-white/10", option.value === value && "bg-white/15 text-white")
+                    : cn("hover:bg-foreground/5", option.value === value && "bg-primary/10 text-primary"),
                   option.disabled && "pointer-events-none opacity-50"
                 )}
               >
-                <Check
-                  className={cn(
-                    "mr-2 size-4 shrink-0 mt-0.5",
-                    option.value === value ? "opacity-100" : "opacity-0",
-                    isDark && "text-white/70"
-                  )}
-                />
                 <div className="flex flex-col min-w-0 items-start">
                   <span className="truncate">{option.label}</span>
                   {option.description && (
