@@ -21,6 +21,8 @@ interface ComboboxProps {
   onChange?: (value: string) => void
   disabled?: boolean
   className?: string
+  /** Visual variant. "default" follows the app theme; "dark" is for dark overlay contexts (e.g. 3D toolbars). */
+  variant?: "default" | "dark"
 }
 
 function Combobox({
@@ -32,10 +34,13 @@ function Combobox({
   onChange,
   disabled = false,
   className,
+  variant = "default",
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
   const [search, setSearch] = React.useState("")
   const inputRef = React.useRef<HTMLInputElement>(null)
+
+  const isDark = variant === "dark"
 
   const filteredOptions = search.length > 0
     ? options.filter(
@@ -62,21 +67,35 @@ function Combobox({
           aria-expanded={open}
           disabled={disabled}
           className={cn(
-            "flex h-9 w-full items-center justify-between gap-2 rounded-md border border-foreground/10 bg-transparent px-3 py-2 text-sm",
-            "focus-visible:outline-none focus-visible:border-foreground/40 focus-visible:ring-[3px] focus-visible:ring-ring/50",
+            "flex h-9 w-full items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm",
+            "focus-visible:outline-none focus-visible:ring-[3px]",
             "disabled:cursor-not-allowed disabled:opacity-50",
             "cursor-pointer",
+            isDark
+              ? "border-white/20 bg-white/10 text-white/90 focus-visible:border-white/40 focus-visible:ring-white/20"
+              : "border-foreground/10 bg-transparent text-foreground focus-visible:border-foreground/40 focus-visible:ring-ring/50",
             className
           )}
         >
-          <span className={selectedOption ? "text-foreground" : "text-muted-foreground"}>
+          <span className={cn(
+            "truncate",
+            selectedOption
+              ? isDark ? "text-white/90" : "text-foreground"
+              : isDark ? "text-white/50" : "text-muted-foreground"
+          )}>
             {selectedOption?.label ?? placeholder}
           </span>
-          <ChevronsUpDown className="size-4 shrink-0 opacity-50" />
+          <ChevronsUpDown className={cn("size-4 shrink-0", isDark ? "opacity-60" : "opacity-50")} />
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
-        <div className="p-2 border-b border-foreground/10">
+      <PopoverContent
+        className={cn(
+          "w-[var(--radix-popover-trigger-width)] min-w-56 p-0",
+          isDark && "bg-gray-900 border-white/15"
+        )}
+        align="start"
+      >
+        <div className={cn("p-2 border-b", isDark ? "border-white/10" : "border-foreground/10")}>
           <input
             ref={inputRef}
             type="text"
@@ -84,13 +103,15 @@ function Combobox({
             onChange={(e) => { setSearch(e.target.value) }}
             placeholder={searchPlaceholder}
             className={cn(
-              "flex h-8 w-full bg-foreground/5 rounded-md px-3 py-1 text-sm",
-              "border border-foreground/10 placeholder:text-muted-foreground",
-              "focus-visible:outline-none focus-visible:border-foreground/30"
+              "flex h-8 w-full rounded-md px-3 py-1 text-sm",
+              "focus-visible:outline-none",
+              isDark
+                ? "bg-white/10 border border-white/15 text-white placeholder:text-white/40 focus-visible:border-white/30"
+                : "bg-foreground/5 border border-foreground/10 placeholder:text-muted-foreground focus-visible:border-foreground/30"
             )}
           />
         </div>
-        <div className="max-h-48 overflow-y-auto p-1">
+        <div className="max-h-56 overflow-y-auto p-1">
           {filteredOptions.length > 0 ? (
             filteredOptions.map((option) => (
               <button
@@ -105,28 +126,36 @@ function Combobox({
                   setSearch("")
                 }}
                 className={cn(
-                  "relative flex w-full items-center rounded-sm px-2 py-1.5 text-sm cursor-pointer",
-                  "transition-colors hover:bg-foreground/5",
-                  option.value === value && "bg-foreground/5",
+                  "relative flex w-full items-center rounded-sm px-2 py-1.5 text-sm cursor-pointer transition-colors",
+                  isDark
+                    ? cn("text-white/80 hover:bg-white/10", option.value === value && "bg-white/10")
+                    : cn("hover:bg-foreground/5", option.value === value && "bg-foreground/5"),
                   option.disabled && "pointer-events-none opacity-50"
                 )}
               >
                 <Check
                   className={cn(
-                    "mr-2 size-4",
-                    option.value === value ? "opacity-100" : "opacity-0"
+                    "mr-2 size-4 shrink-0",
+                    option.value === value ? "opacity-100" : "opacity-0",
+                    isDark && "text-white/70"
                   )}
                 />
-                <div className="flex flex-col">
-                  <span>{option.label}</span>
+                <div className="flex flex-col min-w-0">
+                  <span className="truncate">{option.label}</span>
                   {option.description && (
-                    <span className="text-xs text-muted-foreground">{option.description}</span>
+                    <span className={cn(
+                      "text-xs truncate",
+                      isDark ? "text-white/40" : "text-muted-foreground"
+                    )}>{option.description}</span>
                   )}
                 </div>
               </button>
             ))
           ) : (
-            <p className="py-4 text-center text-sm text-muted-foreground">
+            <p className={cn(
+              "py-4 text-center text-sm",
+              isDark ? "text-white/40" : "text-muted-foreground"
+            )}>
               {emptyMessage}
             </p>
           )}
