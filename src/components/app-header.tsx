@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import type { LucideIcon } from "lucide-react"
-import { LayoutGrid, LogOut } from "lucide-react"
+import { LayoutGrid, LogOut, UserRoundSearch } from "lucide-react"
 import { Button } from "./button"
 import { useBranding } from "../hooks/use-branding"
 import { cn } from "../lib/utils"
@@ -14,6 +14,8 @@ export interface AppHeaderProps {
   authenticated?: boolean
   /** Called when the user clicks Sign Out */
   onSignOut?: () => void
+  /** Called when the user wants to switch patient context (re-launch without re-login) */
+  onSwitchPatient?: () => void
   /** Optional extra content rendered after the title (e.g. a launch-mode badge) */
   children?: ReactNode
   /** Tailwind max-width class for the inner container (default: "max-w-5xl") */
@@ -29,6 +31,7 @@ export function AppHeader({
   icon: Icon,
   authenticated,
   onSignOut,
+  onSwitchPatient,
   children,
   maxWidth = "max-w-5xl",
   hideActions,
@@ -50,10 +53,18 @@ export function AppHeader({
         </div>
         <div className="flex items-center gap-1 shrink-0">
           {!hideActions && (authenticated ? (
-            <Button variant="ghost" size="sm" onClick={onSignOut}>
-              <LogOut className="size-4" />
-              <span className="hidden sm:inline">Sign Out</span>
-            </Button>
+            <>
+              {onSwitchPatient && (
+                <Button variant="ghost" size="sm" onClick={onSwitchPatient}>
+                  <UserRoundSearch className="size-4" />
+                  <span className="hidden sm:inline">Switch Patient</span>
+                </Button>
+              )}
+              <Button variant="ghost" size="sm" onClick={onSignOut}>
+                <LogOut className="size-4" />
+                <span className="hidden sm:inline">Sign Out</span>
+              </Button>
+            </>
           ) : (
             <Button variant="ghost" size="sm" asChild>
               <a href={appStoreUrl}>

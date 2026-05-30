@@ -13,7 +13,7 @@ export interface SmartAppShellProps {
   /** Override options for the useSmartAuth hook. */
   hookOptions?: Omit<UseSmartAuthOptions, "smartAuth">
   /** Props forwarded to AppHeader. */
-  header: Omit<AppHeaderProps, "authenticated" | "onSignOut">
+  header: Omit<AppHeaderProps, "authenticated" | "onSignOut" | "onSwitchPatient">
   /** App title shown on the unauthenticated landing screen. */
   title: string
   /** Description shown on the unauthenticated landing screen. */
@@ -34,6 +34,8 @@ export interface SmartAppShellProps {
   renderUnauthenticated?: (login: () => void) => ReactNode
   /** Override the session-expired state renderer. */
   renderSessionExpired?: (error: string | null, login: () => void) => ReactNode
+  /** Show a "Switch Patient" button in the header when authenticated. Triggers a new authorize flow (no re-login needed thanks to IdP session). Default: false */
+  switchPatient?: boolean
 }
 
 export function SmartAppShell({
@@ -50,6 +52,7 @@ export function SmartAppShell({
   renderError,
   renderUnauthenticated,
   renderSessionExpired,
+  switchPatient = false,
 }: SmartAppShellProps) {
   const { state, error, handleLogin, handleLogout } = useSmartAuth({
     smartAuth,
@@ -59,7 +62,7 @@ export function SmartAppShell({
 
   const content = (
     <div className="min-h-screen bg-background">
-      <AppHeader {...header} authenticated={state === "authenticated"} onSignOut={handleLogout} />
+      <AppHeader {...header} authenticated={state === "authenticated"} onSignOut={handleLogout} onSwitchPatient={switchPatient ? handleLogin : undefined} />
 
       <main className={`${maxWidth} mx-auto px-4 py-6`}>
         {state === "loading" || state === "callback" ? (
