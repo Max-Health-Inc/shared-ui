@@ -9,6 +9,7 @@ export { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectScro
 export { Tabs, TabsList, TabsTrigger, TabsContent, tabsListVariants } from "./components/tabs"
 export { ResponsiveTabsList, type ResponsiveTabsListProps } from "./components/responsive-tabs-list"
 export { PageHeader, type PageHeaderProps } from "./components/page-header"
+export { PageLayout, type PageLayoutProps } from "./components/page-layout"
 export { FilterToolbar, FilterToolbarItem, type FilterToolbarProps, type FilterToolbarItemProps } from "./components/filter-toolbar"
 export { StatCard, colorMap, type StatCardProps, type StatCardColor } from "./components/stat-card"
 export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./components/tooltip"
