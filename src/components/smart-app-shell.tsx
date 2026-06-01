@@ -1,4 +1,4 @@
-import type { ReactNode } from "react"
+import { createContext, useContext, type ReactNode } from "react"
 import type { LucideIcon } from "lucide-react"
 import { LogIn, AlertTriangle } from "lucide-react"
 import { AppHeader, type AppHeaderProps } from "./app-header"
@@ -6,6 +6,17 @@ import { Button } from "./button"
 import { Spinner } from "./spinner"
 import { useBranding } from "../hooks/use-branding"
 import { useSmartAuth, type SmartAuthLike, type UseSmartAuthOptions } from "../hooks/use-smart-auth"
+
+/** Context providing the current patient ID (reactive — updates on Switch Patient). */
+const PatientContext = createContext<string | undefined>(undefined)
+
+/**
+ * Hook to access the current patient ID from within a SmartAppShell.
+ * Returns undefined when no patient context is available.
+ */
+export function usePatientId(): string | undefined {
+  return useContext(PatientContext)
+}
 
 export interface SmartAppShellProps {
   /** The SmartAuth instance (from createSmartAuth). */
@@ -54,13 +65,14 @@ export function SmartAppShell({
   renderSessionExpired,
   switchPatient = false,
 }: SmartAppShellProps) {
-  const { state, error, handleLogin, handleLogout } = useSmartAuth({
+  const { state, error, handleLogin, handleLogout, patientId } = useSmartAuth({
     smartAuth,
     ...hookOptions,
   })
   const brand = useBranding()
 
   const content = (
+    <PatientContext.Provider value={patientId}>
     <div className="min-h-screen bg-background">
       <AppHeader {...header} authenticated={state === "authenticated"} onSignOut={handleLogout} onSwitchPatient={switchPatient ? handleLogin : undefined} />
 
@@ -129,6 +141,7 @@ export function SmartAppShell({
         )}
       </main>
     </div>
+    </PatientContext.Provider>
   )
 
   return wrapper ? wrapper(content) : content

@@ -22,6 +22,8 @@ export interface SmartAuthLike {
   authorize(): Promise<void>
   logout(): void
   startEhrLaunch?(launch: string, iss: string): Promise<void>
+  /** Optional: return the current token (used to derive patientId reactively). */
+  getToken?(): { patient?: string; [key: string]: unknown } | null
 }
 
 export interface UseSmartAuthOptions {
@@ -154,5 +156,10 @@ export function useSmartAuth({
     smartAuth.logout()
   }, [smartAuth])
 
-  return { state, error, handleLogin, handleLogout }
+  // Derive patientId reactively — updates when state changes to "authenticated"
+  const patientId = state === "authenticated" && smartAuth.getToken
+    ? smartAuth.getToken()?.patient ?? undefined
+    : undefined
+
+  return { state, error, handleLogin, handleLogout, patientId }
 }

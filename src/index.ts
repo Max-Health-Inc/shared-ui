@@ -24,7 +24,7 @@ export { ErrorBoundary } from "./components/error-boundary"
 export { AppHeader, type AppHeaderProps } from "./components/app-header"
 export { PatientBanner, type PatientBannerProps, type BannerPatient } from "./components/patient-banner"
 export { UserProfileFormFields, type UserProfileFormFieldsProps, type UserProfileData } from "./components/user-profile-fields"
-export { SmartAppShell, type SmartAppShellProps } from "./components/smart-app-shell"
+export { SmartAppShell, usePatientId, type SmartAppShellProps } from "./components/smart-app-shell"
 
 // New generic components
 export { Textarea } from "./components/textarea"
