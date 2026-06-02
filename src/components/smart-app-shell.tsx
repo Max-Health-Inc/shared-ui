@@ -1,6 +1,6 @@
 import { createContext, useContext, type ReactNode } from "react"
 import type { LucideIcon } from "lucide-react"
-import { LogIn, AlertTriangle } from "lucide-react"
+import { LogIn, AlertTriangle, WifiOff, ShieldAlert, RefreshCw } from "lucide-react"
 import { AppHeader, type AppHeaderProps } from "./app-header"
 import { Button } from "./button"
 import { Spinner } from "./spinner"
@@ -110,11 +110,7 @@ export function SmartAppShell({
           renderError ? (
             renderError(error, handleLogin)
           ) : (
-            <div className="flex flex-col items-center justify-center py-24 gap-4">
-              <p className="text-destructive font-medium">Authentication Error</p>
-              <p className="text-sm text-muted-foreground max-w-md text-center">{error}</p>
-              <Button onClick={handleLogin}>Try Again</Button>
-            </div>
+            <AuthErrorBoundary error={error} onRetry={handleLogin} />
           )
         ) : state === "unauthenticated" ? (
           renderUnauthenticated ? (
@@ -145,4 +141,93 @@ export function SmartAppShell({
   )
 
   return wrapper ? wrapper(content) : content
+}
+
+// ── Auth Error Boundary ─────────────────────────────────────────────────────
+
+interface AuthErrorInfo {
+  icon: LucideIcon
+  title: string
+  message: string
+  isNetwork: boolean
+}
+
+function classifyAuthError(error: string | null): AuthErrorInfo {
+  const msg = (error ?? "").toLowerCase()
+
+  if (msg.includes("failed to fetch") || msg.includes("networkerror") || msg.includes("network")) {
+    return {
+      icon: WifiOff,
+      title: "Connection Problem",
+      message: "Unable to reach the authentication server. Please check your internet connection and try again.",
+      isNetwork: true,
+    }
+  }
+
+  if (msg.includes("timeout") || msg.includes("timed out")) {
+    return {
+      icon: WifiOff,
+      title: "Request Timed Out",
+      message: "The authentication server took too long to respond. This is usually temporary — please try again.",
+      isNetwork: true,
+    }
+  }
+
+  if (msg.includes("invalid_client") || msg.includes("unauthorized_client")) {
+    return {
+      icon: ShieldAlert,
+      title: "Configuration Error",
+      message: "This application is not properly registered with the identity provider. Please contact your administrator.",
+      isNetwork: false,
+    }
+  }
+
+  if (msg.includes("access_denied") || msg.includes("consent")) {
+    return {
+      icon: ShieldAlert,
+      title: "Access Denied",
+      message: "You do not have permission to access this application, or the required consent was not granted.",
+      isNetwork: false,
+    }
+  }
+
+  return {
+    icon: AlertTriangle,
+    title: "Something Went Wrong",
+    message: "We couldn\u2019t complete the sign-in process. This may be a temporary issue.",
+    isNetwork: false,
+  }
+}
+
+function AuthErrorBoundary({ error, onRetry }: { error: string | null; onRetry: () => void }) {
+  const info = classifyAuthError(error)
+  const ErrorIcon = info.icon
+
+  return (
+    <div className="flex flex-col items-center justify-center py-24 gap-6">
+      <div className="rounded-full bg-muted p-4">
+        <ErrorIcon className="size-10 text-muted-foreground" />
+      </div>
+      <div className="text-center space-y-2 max-w-md">
+        <h2 className="text-xl font-semibold">{info.title}</h2>
+        <p className="text-muted-foreground text-sm leading-relaxed">{info.message}</p>
+      </div>
+      <div className="flex gap-3">
+        <Button variant="outline" onClick={() => { window.location.reload() }}>
+          <RefreshCw className="size-4" />
+          Reload Page
+        </Button>
+        <Button onClick={onRetry}>
+          <LogIn className="size-4" />
+          Try Again
+        </Button>
+      </div>
+      {error && (
+        <details className="text-xs text-muted-foreground/60 max-w-sm">
+          <summary className="cursor-pointer hover:text-muted-foreground">Technical details</summary>
+          <code className="block mt-1 p-2 bg-muted rounded text-[11px] break-all">{error}</code>
+        </details>
+      )}
+    </div>
+  )
 }
