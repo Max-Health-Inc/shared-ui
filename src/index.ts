@@ -21,7 +21,8 @@ export { Alert, AlertTitle, AlertDescription, alertVariants } from "./components
 export { ScrollArea, ScrollBar } from "./components/scroll-area"
 export { Progress } from "./components/progress"
 export { Toaster, type ThemedToasterProps } from "./components/sonner"
-export { ErrorBoundary } from "./components/error-boundary"
+export { ErrorBoundary, type ErrorBoundaryProps } from "./components/error-boundary"
+export { ServiceUnavailable, type ServiceUnavailableProps, type ServiceErrorVariant } from "./components/service-unavailable"
 export { AppHeader, type AppHeaderProps } from "./components/app-header"
 export { PatientBanner, type PatientBannerProps, type BannerPatient } from "./components/patient-banner"
 export { UserProfileFormFields, type UserProfileFormFieldsProps, type UserProfileData } from "./components/user-profile-fields"
@@ -54,6 +55,7 @@ export { formatHumanName } from "./lib/fhir-helpers"
 
 // Auth utilities
 export { onAuthError, reportAuthError, createAuthFetch } from "./lib/auth-error"
+export { safeFetch, safeFetchResult, type SafeFetchOptions, type ApiError } from "./lib/safe-fetch"
 
 // Hooks
 export { useBranding, type BrandInfo } from "./hooks/use-branding"
