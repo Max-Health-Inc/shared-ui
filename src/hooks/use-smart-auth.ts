@@ -23,7 +23,7 @@ export interface SmartAuthLike {
   logout(): void
   startEhrLaunch?(launch: string, iss: string): Promise<void>
   /** Optional: return the current token (used to derive patientId reactively). */
-  getToken?(): { patient?: string; [key: string]: unknown } | null
+  getToken?(): { patient?: string } | null
 }
 
 export interface UseSmartAuthOptions {
