@@ -27,6 +27,7 @@ export { AppHeader, type AppHeaderProps } from "./components/app-header"
 export { PatientBanner, type PatientBannerProps, type BannerPatient } from "./components/patient-banner"
 export { UserProfileFormFields, type UserProfileFormFieldsProps, type UserProfileData } from "./components/user-profile-fields"
 export { SmartAppShell, usePatientId, type SmartAppShellProps } from "./components/smart-app-shell"
+export { PwaInstallButton, type PwaInstallButtonProps } from "./components/pwa-install-button"
 
 // New generic components
 export { Textarea } from "./components/textarea"
@@ -72,3 +73,7 @@ export {
   type Scene,
   type UseSceneOptions,
 } from "./hooks/use-scene"
+export {
+  usePwaInstall,
+  type UsePwaInstallReturn,
+} from "./hooks/use-pwa-install"
