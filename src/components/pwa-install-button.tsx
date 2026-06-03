@@ -32,7 +32,7 @@ export function PwaInstallButton({ label = "Install App", className, pwa }: PwaI
       variant="ghost"
       size="sm"
       className={cn("gap-1.5", className)}
-      onClick={promptInstall}
+      onClick={() => { void promptInstall() }}
     >
       <Download className="size-4" />
       <span className="hidden sm:inline">{label}</span>

@@ -11,6 +11,18 @@ export interface ApiError {
   body?: unknown
 }
 
+class ApiErrorImpl extends Error implements ApiError {
+  status: number
+  body?: unknown
+
+  constructor(status: number, message: string, body?: unknown) {
+    super(message)
+    this.name = "ApiError"
+    this.status = status
+    this.body = body
+  }
+}
+
 /**
  * Centralized fetch wrapper for BFF (backend-for-frontend) apps.
  * Validates responses, extracts error messages, and reports auth errors
@@ -39,13 +51,13 @@ export async function safeFetch<T>(url: string, init?: SafeFetchOptions): Promis
     if (!suppressAuthError) {
       reportAuthError("Unable to reach the server. Check your connection and try again.")
     }
-    throw { status: 0, message: "Network error", body: null } satisfies ApiError
+    throw new ApiErrorImpl(0, "Network error", null)
   }
 
   if (!res.ok) {
     let body: Record<string, unknown> | null = null
     try {
-      body = await res.json()
+      body = await res.json() as Record<string, unknown>
     } catch {
       // Response may not be JSON
     }
@@ -57,7 +69,7 @@ export async function safeFetch<T>(url: string, init?: SafeFetchOptions): Promis
       reportAuthError(message)
     }
 
-    throw { status: res.status, message, body } satisfies ApiError
+    throw new ApiErrorImpl(res.status, message, body)
   }
 
   // Handle 204 No Content
@@ -72,33 +84,37 @@ export async function safeFetch<T>(url: string, init?: SafeFetchOptions): Promis
  * Non-throwing variant: returns `{ data, error }` instead of throwing.
  * Useful in components that want to handle errors without try/catch.
  */
-export async function safeFetchResult<T>(
+export async function safeFetchResult(
   url: string,
   init?: SafeFetchOptions,
-): Promise<{ data: T; error: null } | { data: null; error: ApiError }> {
+): Promise<{ data: unknown; error: null } | { data: null; error: ApiError }> {
   try {
-    const data = await safeFetch<T>(url, init)
+    const data: unknown = await safeFetch<unknown>(url, init)
     return { data, error: null }
   } catch (err) {
-    return { data: null, error: err as ApiError }
+    if (err instanceof ApiErrorImpl) {
+      return { data: null, error: { status: err.status, message: err.message, body: err.body } }
+    }
+    return { data: null, error: { status: 0, message: "Unknown error" } }
   }
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function extractErrorMessage(body: Record<string, unknown> | null, res: Response): string {
-  if (!body) return `Unexpected error (HTTP ${res.status})`
+  if (!body) return `Unexpected error (HTTP ${String(res.status)})`
   // Standard error shapes from our backends
   if (typeof body.error_description === "string") return body.error_description
   if (typeof body.error === "string") return body.error
   if (typeof body.message === "string") return body.message
-  return `Unexpected error (HTTP ${res.status})`
+  return `Unexpected error (HTTP ${String(res.status)})`
 }
 
 function isAuthError(status: number, body: Record<string, unknown> | null): boolean {
   if (status === 401) return true
   if (!body) return false
-  const err = (body.error as string)?.toLowerCase() ?? ""
-  const desc = (body.error_description as string)?.toLowerCase() ?? ""
+  const err = typeof body.error === "string" ? body.error.toLowerCase() : ""
+  const desc = typeof body.error_description === "string" ? body.error_description.toLowerCase() : ""
   return err.includes("session_expired") || desc.includes("expired") || err.includes("unauthenticated")
 }
+

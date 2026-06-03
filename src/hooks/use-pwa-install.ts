@@ -61,7 +61,7 @@ export function usePwaInstall(): UsePwaInstallReturn {
 
   const promptInstall = useCallback(async () => {
     if (!deferredPrompt.current) return false
-    deferredPrompt.current.prompt()
+    void deferredPrompt.current.prompt()
     const { outcome } = await deferredPrompt.current.userChoice
     deferredPrompt.current = null
     setIsInstallable(false)
