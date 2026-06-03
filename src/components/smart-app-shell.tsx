@@ -1,4 +1,4 @@
-import { createContext, useContext, type ReactNode } from "react"
+import { createContext, useContext, type ComponentType, type ReactNode } from "react"
 import type { LucideIcon } from "lucide-react"
 import { LogIn, AlertTriangle, WifiOff, ShieldAlert, RefreshCw } from "lucide-react"
 import { AppHeader, type AppHeaderProps } from "./app-header"
@@ -30,7 +30,7 @@ export interface SmartAppShellProps {
   /** Description shown on the unauthenticated landing screen. */
   description: string
   /** Icon shown on the unauthenticated landing when no branding logo is set. */
-  icon: LucideIcon
+  icon: LucideIcon | ComponentType<{ className?: string }>
   /** Tailwind max-width class for the main content area. Default: "max-w-5xl" */
   maxWidth?: string
   /** Content rendered when authenticated. */

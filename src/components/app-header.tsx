@@ -1,4 +1,4 @@
-import type { ReactNode } from "react"
+import type { ComponentType, ReactNode } from "react"
 import type { LucideIcon } from "lucide-react"
 import { LayoutGrid, LogOut, UserRoundSearch } from "lucide-react"
 import { Button } from "./button"
@@ -9,8 +9,8 @@ import { cn } from "../lib/utils"
 export interface AppHeaderProps {
   /** App title displayed next to the icon */
   title: string
-  /** Lucide icon component used as fallback when no branding logo is configured */
-  icon: LucideIcon
+  /** Icon component used as fallback when no branding logo is configured. Accepts LucideIcon or any SVG component with className prop. */
+  icon: LucideIcon | ComponentType<{ className?: string }>
   /** Whether the user is currently authenticated (controls Sign Out visibility) */
   authenticated?: boolean
   /** Called when the user clicks Sign Out */
