@@ -2,6 +2,7 @@ import type { ReactNode } from "react"
 import type { LucideIcon } from "lucide-react"
 import { LayoutGrid, LogOut, UserRoundSearch } from "lucide-react"
 import { Button } from "./button"
+import { PwaInstallButton } from "./pwa-install-button"
 import { useBranding } from "../hooks/use-branding"
 import { cn } from "../lib/utils"
 
@@ -20,10 +21,12 @@ export interface AppHeaderProps {
   children?: ReactNode
   /** Tailwind max-width class for the inner container (default: "max-w-5xl") */
   maxWidth?: string
-  /** Hide all action buttons (Sign Out, App Store) \u2014 useful for shared/public views */
+  /** Hide all action buttons (Sign Out, App Store) — useful for shared/public views */
   hideActions?: boolean
   /** URL for the App Store button (default: "/apps") */
   appStoreUrl?: string
+  /** Label for the PWA install button (default: "Install"). Set to false to hide. */
+  installLabel?: string | false
 }
 
 export function AppHeader({
@@ -36,6 +39,7 @@ export function AppHeader({
   maxWidth = "max-w-5xl",
   hideActions,
   appStoreUrl = "/apps",
+  installLabel = "Install",
 }: AppHeaderProps) {
   const brand = useBranding()
 
@@ -52,6 +56,7 @@ export function AppHeader({
           {children}
         </div>
         <div className="flex items-center gap-1 shrink-0">
+          {installLabel !== false && <PwaInstallButton label={installLabel} />}
           {!hideActions && (authenticated ? (
             <>
               {onSwitchPatient && (
