@@ -73,10 +73,10 @@ export function SmartAppShell({
 
   const content = (
     <PatientContext.Provider value={patientId}>
-    <div className="min-h-screen bg-background">
+    <div className="flex flex-col h-full min-h-screen bg-background">
       <AppHeader {...header} authenticated={state === "authenticated"} onSignOut={handleLogout} onSwitchPatient={switchPatient ? handleLogin : undefined} />
 
-      <main className={`${maxWidth} mx-auto px-4 py-6`}>
+      <main className={`${maxWidth} mx-auto px-4 py-6 flex-1 overflow-y-auto w-full`}>
         {state === "loading" || state === "callback" ? (
           renderLoading ? (
             renderLoading(state)
