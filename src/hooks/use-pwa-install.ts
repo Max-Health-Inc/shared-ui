@@ -9,6 +9,13 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>
 }
 
+declare global {
+  interface Window {
+    /** Early-captured install prompt for apps that register a head script. */
+    __deferredInstallPrompt?: BeforeInstallPromptEvent | null
+  }
+}
+
 export interface UsePwaInstallReturn {
   /** Whether the browser considers this app installable right now */
   isInstallable: boolean
@@ -19,8 +26,20 @@ export interface UsePwaInstallReturn {
 }
 
 /**
+ * Inline script to add to `<head>` so the `beforeinstallprompt` event is captured
+ * before React hydrates. Without this, the event may fire before the hook mounts.
+ *
+ * Usage: `<script dangerouslySetInnerHTML={{ __html: PWA_INSTALL_CAPTURE_SCRIPT }} />`
+ */
+export const PWA_INSTALL_CAPTURE_SCRIPT = `window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__deferredInstallPrompt=e;});`
+
+/**
  * React hook that captures the browser's `beforeinstallprompt` event and
  * exposes a controlled API for triggering the native PWA install dialog.
+ *
+ * If the event fired before React mounted (common with SW-cached pages),
+ * it reads from `window.__deferredInstallPrompt` which can be set via
+ * {@link PWA_INSTALL_CAPTURE_SCRIPT} in `<head>`.
  *
  * Usage:
  * ```tsx
@@ -40,6 +59,13 @@ export function usePwaInstall(): UsePwaInstallReturn {
       (navigator as unknown as { standalone?: boolean }).standalone === true)
 
   useEffect(() => {
+    // Pick up an early-captured event (from inline head script)
+    if (window.__deferredInstallPrompt) {
+      deferredPrompt.current = window.__deferredInstallPrompt
+      window.__deferredInstallPrompt = null
+      setIsInstallable(true)
+    }
+
     const handler = (e: Event) => {
       e.preventDefault()
       deferredPrompt.current = e as BeforeInstallPromptEvent

@@ -77,4 +77,5 @@ export {
 export {
   usePwaInstall,
   type UsePwaInstallReturn,
+  PWA_INSTALL_CAPTURE_SCRIPT,
 } from "./hooks/use-pwa-install"
