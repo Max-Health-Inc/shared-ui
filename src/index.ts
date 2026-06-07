@@ -53,7 +53,7 @@ export { createSmartAppConfig, createSmartAuth, buildFhirBaseUrl, type SmartAppC
 export { CHART_COLORS } from "./lib/chart-colors"
 
 // FHIR helpers
-export { formatHumanName } from "./lib/fhir-helpers"
+export { formatHumanName, formatFhirDate } from "./lib/fhir-helpers"
 
 // Auth utilities
 export { onAuthError, reportAuthError, createAuthFetch } from "./lib/auth-error"

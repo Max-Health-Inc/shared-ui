@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test"
-import { formatHumanName } from "./fhir-helpers"
+import { formatHumanName, formatFhirDate } from "./fhir-helpers"
 
 describe("formatHumanName", () => {
   it("returns 'Unknown' for undefined input", () => {
@@ -113,5 +113,65 @@ describe("formatHumanName", () => {
     const longName = "A".repeat(500)
     const result = formatHumanName([{ family: longName }])
     expect(result).toBe(longName)
+  })
+})
+
+describe("formatFhirDate", () => {
+  it("returns '' for undefined input", () => {
+    expect(formatFhirDate(undefined)).toBe("")
+  })
+
+  it("returns '' for null input", () => {
+    expect(formatFhirDate(null as unknown as undefined)).toBe("")
+  })
+
+  it("returns '' for empty string", () => {
+    expect(formatFhirDate("")).toBe("")
+  })
+
+  it("returns '' for whitespace-only string", () => {
+    expect(formatFhirDate("   ")).toBe("")
+  })
+
+  it("returns '' for unparseable input", () => {
+    expect(formatFhirDate("not-a-date")).toBe("")
+  })
+
+  it("formats a full YYYY-MM-DD date", () => {
+    expect(formatFhirDate("2026-06-07")).toBe("Jun 7, 2026")
+  })
+
+  it("does not shift the day for a date-only string regardless of timezone", () => {
+    // new Date("2026-06-07") would be UTC midnight and could render Jun 6 in
+    // negative-offset timezones; the local-parts construction must avoid that.
+    expect(formatFhirDate("2026-06-07")).toBe("Jun 7, 2026")
+  })
+
+  it("ignores a trailing time component on a dateTime", () => {
+    expect(formatFhirDate("2026-06-07T13:45:00Z")).toBe("Jun 7, 2026")
+  })
+
+  it("formats a year+month string", () => {
+    expect(formatFhirDate("2026-06")).toBe("Jun 2026")
+  })
+
+  it("formats a year-only string", () => {
+    expect(formatFhirDate("2026")).toBe("2026")
+  })
+
+  it("formats a Date instance", () => {
+    expect(formatFhirDate(new Date(2026, 5, 7))).toBe("Jun 7, 2026")
+  })
+
+  it("returns '' for an invalid Date instance", () => {
+    expect(formatFhirDate(new Date(Number.NaN))).toBe("")
+  })
+
+  it("trims surrounding whitespace before parsing", () => {
+    expect(formatFhirDate("  2026-06-07  ")).toBe("Jun 7, 2026")
+  })
+
+  it("returns '' when the leading characters are not a year", () => {
+    expect(formatFhirDate("June 7 2026")).toBe("")
   })
 })

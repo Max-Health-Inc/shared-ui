@@ -2,7 +2,7 @@ import type { ReactNode } from "react"
 import { Card, CardContent } from "./card"
 import { Badge } from "./badge"
 import { User, Droplets } from "lucide-react"
-import { formatHumanName } from "../lib/fhir-helpers"
+import { formatHumanName, formatFhirDate } from "../lib/fhir-helpers"
 
 // ── Generic FHIR Patient shape (works with R4, IPS, or any conformant type) ─
 
@@ -29,10 +29,6 @@ export interface PatientBannerProps {
   formatBirthSex?: (value: string) => string
 }
 
-function defaultFormatDate(date: Date): string {
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-}
-
 function differenceInYears(a: Date, b: Date): number {
   let years = a.getFullYear() - b.getFullYear()
   const m = a.getMonth() - b.getMonth()
@@ -45,7 +41,7 @@ export function PatientBanner({
   bloodType,
   actions,
   formatAge = (age) => `${String(age)} yo`,
-  formatDate = defaultFormatDate,
+  formatDate = (date) => formatFhirDate(date),
   formatMrn = (v) => `MRN: ${v}`,
   formatBirthSex = (v) => `SAAB: ${v}`,
 }: PatientBannerProps) {
