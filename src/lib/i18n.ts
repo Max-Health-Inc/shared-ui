@@ -1,0 +1,118 @@
+import i18next from "i18next"
+import { initReactI18next } from "react-i18next"
+import LanguageDetector from "i18next-browser-languagedetector"
+import type { i18n as I18nInstance } from "i18next"
+
+/**
+ * Optional DRY i18n mechanism for Max Health apps.
+ *
+ * This module is the MECHANISM only — it ships ZERO app translation strings.
+ * Each app keeps its own `translations.json` and passes it to {@link createAppI18n}.
+ *
+ * ## translations.json format
+ * ```json
+ * {
+ *   "_languages": ["de", "es"],
+ *   "Save changes": ["Änderungen speichern", "Guardar cambios"],
+ *   "Cancel": ["Abbrechen", "Cancelar"]
+ * }
+ * ```
+ * - The English source string IS the i18next key.
+ * - The value is a positional array of translations, indexed by `_languages`.
+ * - English is never stored: when a key has no translation for the active
+ *   language, i18next returns the key itself, so `fallbackLng: 'en'` yields
+ *   the original English source string.
+ *
+ * Because the keys are full English sentences (which may contain `.` and `:`),
+ * `keySeparator` and `nsSeparator` are disabled so keys resolve literally.
+ */
+
+export interface CreateAppI18nOptions {
+  /** Language returned when a key has no translation for the active language. Defaults to `'en'`. */
+  fallbackLng?: string
+  /** Enable browser language detection (localStorage → navigator → htmlTag). Defaults to `true`; pass `false` to disable. */
+  detect?: boolean
+  /** Enable verbose i18next logging. Defaults to `false`. */
+  debug?: boolean
+}
+
+/**
+ * Language endonyms used by the language switcher. These are language-independent
+ * constants (a language's name in its own tongue), NOT app translation data.
+ */
+export const LOCALE_NAMES: Record<string, string> = {
+  en: "English",
+  de: "Deutsch",
+  es: "Español",
+  fr: "Français",
+  it: "Italiano",
+}
+
+/**
+ * Derive the full supported-language list from a `translations.json`.
+ * Always includes `'en'` (the implicit fallback) followed by `_languages`.
+ */
+export function getSupportedLanguages(translations: Record<string, unknown>): string[] {
+  const languages = (translations._languages as string[] | undefined) ?? []
+  return ["en", ...languages]
+}
+
+/**
+ * Build a fresh i18next instance from a `translations.json`.
+ *
+ * A new instance is created via `i18next.createInstance()` so the shared default
+ * singleton is never mutated — multiple apps (or tests) can each hold their own.
+ *
+ * @param translations Parsed `translations.json` (see module docs for the format).
+ * @param opts Optional behavior overrides.
+ * @returns The initialized i18next instance.
+ */
+export function createAppI18n(
+  translations: Record<string, unknown>,
+  opts?: CreateAppI18nOptions,
+): I18nInstance {
+  const { _languages, ...entries } = translations
+  const languages = (_languages as string[] | undefined) ?? []
+
+  const resources: Record<string, { translation: Record<string, string> }> = {}
+  for (const lng of languages) {
+    resources[lng] = { translation: {} }
+  }
+
+  const langIndex = Object.fromEntries(languages.map((lng, i) => [lng, i]))
+  for (const [key, values] of Object.entries(entries)) {
+    if (!Array.isArray(values)) continue
+    for (const lng of languages) {
+      const val: unknown = values[langIndex[lng]]
+      if (typeof val === "string" && val) {
+        resources[lng].translation[key] = val
+      }
+    }
+  }
+
+  const instance = i18next.createInstance()
+  instance.use(initReactI18next)
+  if (opts?.detect !== false) {
+    instance.use(LanguageDetector)
+  }
+
+  // The init() promise is intentionally not awaited here: react-i18next renders
+  // the keys (English fallback) until resources are ready, then re-renders.
+  void instance.init({
+    resources,
+    supportedLngs: ["en", ...languages],
+    fallbackLng: opts?.fallbackLng ?? "en",
+    keySeparator: false,
+    nsSeparator: false,
+    interpolation: {
+      escapeValue: false,
+    },
+    detection: {
+      order: ["localStorage", "navigator", "htmlTag"],
+      caches: ["localStorage"],
+    },
+    debug: opts?.debug ?? false,
+  })
+
+  return instance
+}
