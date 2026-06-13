@@ -29,6 +29,7 @@ export { PatientBanner, type PatientBannerProps, type BannerPatient } from "./co
 export { UserProfileFormFields, type UserProfileFormFieldsProps, type UserProfileData } from "./components/user-profile-fields"
 export { SmartAppShell, usePatientId, type SmartAppShellProps } from "./components/smart-app-shell"
 export { PwaInstallButton, type PwaInstallButtonProps } from "./components/pwa-install-button"
+export { ServiceWorkerUpdatePrompt, type ServiceWorkerUpdatePromptProps } from "./components/service-worker-update-banner"
 
 // New generic components
 export { Textarea } from "./components/textarea"
@@ -79,3 +80,8 @@ export {
   type UsePwaInstallReturn,
   PWA_INSTALL_CAPTURE_SCRIPT,
 } from "./hooks/use-pwa-install"
+export {
+  useServiceWorkerUpdate,
+  type UseServiceWorkerUpdateOptions,
+  type UseServiceWorkerUpdateReturn,
+} from "./hooks/use-service-worker-update"
