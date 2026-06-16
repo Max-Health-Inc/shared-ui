@@ -45,7 +45,7 @@ export interface SmartAppShellProps {
   renderUnauthenticated?: (login: () => void) => ReactNode
   /** Override the session-expired state renderer. */
   renderSessionExpired?: (error: string | null, login: () => void) => ReactNode
-  /** Offer a "Switch Patient" button in the header when authenticated. Triggers a new authorize flow (no re-login needed thanks to IdP session). Only shown to practitioners (`fhirUser` is a Practitioner) — patient logins never see it. Default: false */
+  /** Offer a "Switch Patient" button in the header when authenticated. Triggers a new authorize flow (no re-login needed thanks to IdP session). Only shown when the session can actually pick a patient — a practitioner (`fhirUser` is a Practitioner) holding the `launch/patient` scope (standalone launch). Patient logins and EHR launches never see it. Default: false */
   switchPatient?: boolean
 }
 
@@ -65,7 +65,7 @@ export function SmartAppShell({
   renderSessionExpired,
   switchPatient = false,
 }: SmartAppShellProps) {
-  const { state, error, handleLogin, handleLogout, patientId, isPractitioner } = useSmartAuth({
+  const { state, error, handleLogin, handleLogout, patientId, canSwitchPatient } = useSmartAuth({
     smartAuth,
     ...hookOptions,
   })
@@ -74,7 +74,7 @@ export function SmartAppShell({
   const content = (
     <PatientContext.Provider value={patientId}>
     <div className="flex flex-col h-full min-h-screen bg-background">
-      <AppHeader {...header} authenticated={state === "authenticated"} onSignOut={handleLogout} onSwitchPatient={switchPatient && isPractitioner ? handleLogin : undefined} />
+      <AppHeader {...header} authenticated={state === "authenticated"} onSignOut={handleLogout} onSwitchPatient={switchPatient && canSwitchPatient ? handleLogin : undefined} />
 
       <main className={`${maxWidth} mx-auto px-4 py-6 flex-1 overflow-y-auto w-full`}>
         {state === "loading" || state === "callback" ? (

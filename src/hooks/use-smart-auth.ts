@@ -22,8 +22,8 @@ export interface SmartAuthLike {
   authorize(): Promise<void>
   logout(): void
   startEhrLaunch?(launch: string, iss: string): Promise<void>
-  /** Optional: return the current token (used to derive patientId + fhirUser reactively). */
-  getToken?(): { patient?: string; fhirUser?: string } | null
+  /** Optional: return the current token (used to derive patientId, fhirUser + granted scope reactively). */
+  getToken?(): { patient?: string; fhirUser?: string; scope?: string } | null
 }
 
 export interface UseSmartAuthOptions {
@@ -165,6 +165,15 @@ export function useSmartAuth({
   const patientId = token?.patient ?? undefined
   const fhirUser = token?.fhirUser ?? undefined
   const isPractitioner = !!fhirUser && /\/Practitioner\//i.test(fhirUser)
+  // "Switch Patient" only works when the session can actually re-run a patient
+  // picker: a practitioner who also holds the `launch/patient` scope (standalone
+  // launch). EHR launches grant `launch` (patient fixed by the launch context,
+  // single-use) so a standalone re-authorize() can't present a picker; and a
+  // patient's own standalone login holds launch/patient but must not switch —
+  // hence BOTH conditions. The granted scope lives on the token, so this is
+  // stable across the OAuth redirect (unlike the one-shot launch/iss URL params).
+  const canSwitchPatient =
+    isPractitioner && (token?.scope ?? "").split(/\s+/).includes("launch/patient")
 
-  return { state, error, handleLogin, handleLogout, patientId, fhirUser, isPractitioner }
+  return { state, error, handleLogin, handleLogout, patientId, fhirUser, isPractitioner, canSwitchPatient }
 }
