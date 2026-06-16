@@ -22,8 +22,8 @@ export interface SmartAuthLike {
   authorize(): Promise<void>
   logout(): void
   startEhrLaunch?(launch: string, iss: string): Promise<void>
-  /** Optional: return the current token (used to derive patientId reactively). */
-  getToken?(): { patient?: string } | null
+  /** Optional: return the current token (used to derive patientId + fhirUser reactively). */
+  getToken?(): { patient?: string; fhirUser?: string } | null
 }
 
 export interface UseSmartAuthOptions {
@@ -156,10 +156,15 @@ export function useSmartAuth({
     smartAuth.logout()
   }, [smartAuth])
 
-  // Derive patientId reactively — updates when state changes to "authenticated"
-  const patientId = state === "authenticated" && smartAuth.getToken
-    ? smartAuth.getToken()?.patient ?? undefined
-    : undefined
+  // Derive patientId + the user's FHIR role reactively — updates when state
+  // becomes "authenticated". `fhirUser` (the SMART claim) points at the signed-in
+  // user's own resource, so a `.../Practitioner/<id>` URL marks a clinician (vs a
+  // `.../Patient/<id>` for patient-facing logins). `isPractitioner` lets the shell
+  // gate clinician-only affordances such as Switch Patient.
+  const token = state === "authenticated" && smartAuth.getToken ? smartAuth.getToken() : null
+  const patientId = token?.patient ?? undefined
+  const fhirUser = token?.fhirUser ?? undefined
+  const isPractitioner = !!fhirUser && /\/Practitioner\//i.test(fhirUser)
 
-  return { state, error, handleLogin, handleLogout, patientId }
+  return { state, error, handleLogin, handleLogout, patientId, fhirUser, isPractitioner }
 }
