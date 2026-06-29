@@ -50,7 +50,12 @@ export const PWA_INSTALL_CAPTURE_SCRIPT = `window.addEventListener('beforeinstal
  * ```
  */
 export function usePwaInstall(): UsePwaInstallReturn {
-  const [isInstallable, setIsInstallable] = useState(false)
+  // Seed directly from an early-captured event (see PWA_INSTALL_CAPTURE_SCRIPT) so the
+  // initial render already reflects installability — no setState in the mount effect,
+  // which would cascade a render (react-hooks/set-state-in-effect).
+  const [isInstallable, setIsInstallable] = useState(
+    () => typeof window !== "undefined" && window.__deferredInstallPrompt != null,
+  )
   const deferredPrompt = useRef<BeforeInstallPromptEvent | null>(null)
 
   const isInstalled =
@@ -59,11 +64,12 @@ export function usePwaInstall(): UsePwaInstallReturn {
       (navigator as unknown as { standalone?: boolean }).standalone === true)
 
   useEffect(() => {
-    // Pick up an early-captured event (from inline head script)
+    // Adopt an early-captured event (from the inline head script). State was already
+    // seeded from it by the lazy initializer above, so here we only move it into the
+    // ref — assigning a ref in an effect does not trigger a render.
     if (window.__deferredInstallPrompt) {
       deferredPrompt.current = window.__deferredInstallPrompt
       window.__deferredInstallPrompt = null
-      setIsInstallable(true)
     }
 
     const handler = (e: Event) => {
