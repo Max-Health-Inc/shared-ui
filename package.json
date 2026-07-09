@@ -85,7 +85,7 @@
     "i18next": "^26.0.0",
     "i18next-browser-languagedetector": "^8.0.0",
     "react-i18next": "^17.0.0",
-    "typescript": "^5.8.0",
+    "typescript": "^6.0.3",
     "typescript-eslint": "^8.59.2",
     "vite": "^8.0.10",
     "vite-plugin-dts": "^4.5.0"
