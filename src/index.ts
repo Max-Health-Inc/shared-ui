@@ -56,6 +56,53 @@ export { CHART_COLORS } from "./lib/chart-colors"
 // FHIR helpers
 export { formatHumanName, formatFhirDate } from "./lib/fhir-helpers"
 
+// FHIR data-verification model (shared "who asserted this / is it verified")
+export {
+  VERIFICATION_STATUS_SYSTEM,
+  ORIGINAL_SNAPSHOT_EXT,
+  DATA_VERIFICATION_TAG_SYSTEM,
+  parseFhirUser,
+  isPatientRole,
+  getVerificationCode,
+  isVerifiedCode,
+  isResourceVerified,
+  describeVerification,
+  hasSnapshot,
+  getSnapshot,
+  setVerificationLevel,
+  markAsProvisional,
+  markAsConfirmed,
+  stampAuthorship,
+  buildProvenance,
+  type VerificationLevel,
+  type FhirUserRole,
+  type ClassifiedFhirUser,
+  type AuthorshipOptions,
+  type ProvenanceOptions,
+  type Coding,
+  type CodeableConcept,
+  type Extension,
+  type Reference,
+  type VerifiableResource,
+} from "./lib/fhir-verification"
+
+// FHIR record components (add / edit / verify + AI-extraction review)
+export {
+  EDITABLE_FIELDS,
+  EDITABLE_TYPES,
+  getByPath,
+  setByPath,
+  type EditableField,
+  type ImportedResource,
+  type FailedResource,
+} from "./components/fhir-record/editable-fields"
+export { type FhirRecordClient } from "./components/fhir-record/client"
+export { type TFn } from "./components/fhir-record/i18n"
+export { ResourceReviewCard, type ResourceReviewCardProps } from "./components/fhir-record/resource-review-card"
+export { RecordEditModal, type RecordEditModalProps } from "./components/fhir-record/record-edit-modal"
+export { RecordDetailModal, type RecordDetailModalProps } from "./components/fhir-record/record-detail-modal"
+export { ResourceReviewFlow, type ResourceReviewFlowProps } from "./components/fhir-record/resource-review-flow"
+
 // Auth utilities
 export { onAuthError, reportAuthError, createAuthFetch } from "./lib/auth-error"
 export { safeFetch, safeFetchResult, type SafeFetchOptions, type ApiError } from "./lib/safe-fetch"
