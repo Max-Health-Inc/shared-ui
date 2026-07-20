@@ -38,7 +38,9 @@ function LanguageSwitcher({ className }: LanguageSwitcherProps) {
   const languages = (Array.isArray(supportedLngs) ? supportedLngs : []).filter(
     (lng): lng is string => Boolean(lng) && lng !== "cimode",
   )
-  const active = i18n.resolvedLanguage
+  // Prefer the supported-resolved language; fall back to the raw current language
+  // so the code still shows if `resolvedLanguage` is momentarily unset.
+  const active = i18n.resolvedLanguage ?? i18n.language
 
   return (
     <DropdownMenu>

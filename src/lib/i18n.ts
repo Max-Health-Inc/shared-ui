@@ -101,6 +101,11 @@ export function createAppI18n(
   void instance.init({
     resources,
     supportedLngs: ["en", ...languages],
+    // Map a detected regional locale to its base (e.g. `en-US` → `en`, `de-DE` →
+    // `de`) so it counts as supported: this both loads the right resources and
+    // lets i18next set `resolvedLanguage` (otherwise it stays undefined for any
+    // region-tagged navigator language, blanking the language switcher).
+    nonExplicitSupportedLngs: true,
     fallbackLng: opts?.fallbackLng ?? "en",
     keySeparator: false,
     nsSeparator: false,
