@@ -2,13 +2,14 @@
  * MaxHealth design system for all SMART / MCP-host apps.
  *
  * The token VALUES (colours, radius, shadow, font-sans) are no longer defined here —
- * they live once upstream in @max-network/css (the design-language contract shared by
- * shared-ui, hono-ui and prefab) and are imported below. This file only adds the
- * shared base layer + utilities that sit on top of the tokens.
+ * they live once upstream in `brandc` (the design-language contract shared by
+ * shared-ui, hono-ui and prefab) and are imported below. `brandc/base.css` adds the
+ * shared cursor-pointer restoration; this file layers the surface base + utilities.
  *
- * Rebrand or change a colour = edit @max-network/css, not this file.
+ * Rebrand or change a colour = edit `brandc`, not this file.
  */
-@import "@max-network/css/theme.css";
+@import "brandc/theme.css";
+@import "brandc/base.css";
 
 @layer base {
   * {
