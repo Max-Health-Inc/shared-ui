@@ -50,3 +50,6 @@ jobs:
         run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
+          # The committed .npmrc resolves _authToken from ${GITHUB_TOKEN}; the publish
+          # needs a write-capable token there too (else it expands empty → E401).
+          GITHUB_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
