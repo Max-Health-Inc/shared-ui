@@ -20,9 +20,11 @@ export default tseslint.config(
     },
   },
 
-  // Disable type-checked rules for the config file itself — it runs outside tsconfig
+  // Disable type-checked rules for plain-JS files that run outside the tsconfig:
+  // the eslint config itself and the build-tool plugin (shipped as JS so Node can
+  // import it from node_modules without .ts type-stripping).
   {
-    files: ["eslint.config.js"],
+    files: ["eslint.config.js", "src/vite/*.js"],
     ...tseslint.configs.disableTypeChecked,
   },
 

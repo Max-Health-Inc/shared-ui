@@ -4,8 +4,12 @@
  * own byte-drifting copy of `public/sw.js` plus a local stamping plugin; this module
  * replaces all of them.
  *
- * Pairs with the page-side {@link "../hooks/use-service-worker-update".useServiceWorkerUpdate}
- * hook + `ServiceWorkerUpdatePrompt` (the "wait + prompt-to-reload" pattern).
+ * Pairs with the page-side `useServiceWorkerUpdate` hook + `ServiceWorkerUpdatePrompt`
+ * (the "wait + prompt-to-reload" pattern).
+ *
+ * Shipped as plain JS (with a `.d.ts` sidecar) because shared-ui is consumed as source
+ * and a Vite config externalizes its imports to Node, which cannot type-strip a `.ts`
+ * under `node_modules`.
  *
  * Usage in an app's `vite.config.ts`:
  * ```ts
@@ -16,7 +20,6 @@
  * ```
  * The app must NOT keep a `public/sw.js` — the plugin emits `dist/sw.js`.
  */
-import type { Plugin } from "vite"
 import { createHash } from "node:crypto"
 import { writeFile } from "node:fs/promises"
 import { join } from "node:path"
@@ -29,9 +32,9 @@ export const BUILD_ID_PLACEHOLDER = "__BUILD_ID__"
 const PRECACHE_PLACEHOLDER = "__PRECACHE__"
 
 /**
- * The service-worker source, with placeholders the plugin fills in. It is stored
- * as a string (not a real module) because it runs in the SW global scope and is
- * written verbatim to `dist/sw.js`.
+ * The service-worker source, with placeholders the plugin fills in. Stored as a
+ * string (not a real module) because it runs in the SW global scope and is written
+ * verbatim to `dist/sw.js`.
  *
  * Network strategy: cache-first for hashed static assets, network-first for
  * navigations and everything else, `/api/` bypassed. The cache-first branch never
@@ -130,26 +133,16 @@ async function networkFirst(request) {
  * Replace every {@link BUILD_ID_PLACEHOLDER} occurrence with `buildId`, inserted
  * literally (never interpreted as a `String.replace` pattern, so ids with `$` are
  * safe). Returns `source` unchanged when the token is absent.
+ * @param {string} source
+ * @param {string} buildId
+ * @returns {string}
  */
-export function stampServiceWorker(source: string, buildId: string): string {
+export function stampServiceWorker(source, buildId) {
   if (!source.includes(BUILD_ID_PLACEHOLDER)) return source
   return source.split(BUILD_ID_PLACEHOLDER).join(buildId)
 }
 
-export interface ServiceWorkerPluginOptions {
-  /**
-   * Cache-name prefix, typically the app's name (e.g. `"dicom-viewer"`). The final
-   * cache key is `` `${cacheName}-${buildId}` ``.
-   */
-  cacheName: string
-  /**
-   * Paths to precache on install. Default: manifest + favicon + PWA icons.
-   */
-  precache?: string[]
-  /** Output filename (default `"sw.js"`). */
-  fileName?: string
-}
-
+/** @type {string[]} */
 const DEFAULT_PRECACHE = [
   "/manifest.json",
   "/favicon.ico",
@@ -163,8 +156,11 @@ const DEFAULT_PRECACHE = [
  * The build id is a short content hash of the emitted (hashed) asset filenames, so
  * it changes whenever the app's output changes — which is what makes the browser
  * detect a new worker after a deploy. Client build only (skips SSR passes).
+ *
+ * @param {import("./service-worker").ServiceWorkerPluginOptions} options
+ * @returns {import("vite").Plugin}
  */
-export function serviceWorkerPlugin(options: ServiceWorkerPluginOptions): Plugin {
+export function serviceWorkerPlugin(options) {
   const { cacheName, precache = DEFAULT_PRECACHE, fileName = "sw.js" } = options
   let isSsr = false
   let outDir = "dist"
@@ -185,9 +181,10 @@ export function serviceWorkerPlugin(options: ServiceWorkerPluginOptions): Plugin
       const buildId = hash.digest("hex").slice(0, 12)
 
       const source = stampServiceWorker(
-        SERVICE_WORKER_SOURCE.split(APP_NAME_PLACEHOLDER).join(cacheName).split(
-          PRECACHE_PLACEHOLDER,
-        ).join(JSON.stringify(precache)),
+        SERVICE_WORKER_SOURCE.split(APP_NAME_PLACEHOLDER)
+          .join(cacheName)
+          .split(PRECACHE_PLACEHOLDER)
+          .join(JSON.stringify(precache)),
         buildId,
       )
 
