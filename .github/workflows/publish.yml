@@ -27,6 +27,11 @@ jobs:
           scope: '@max-health-inc'
 
       - name: Install dependencies
+        # shared-ui now depends on @max-network/css (a different org's GH Packages
+        # registry package); the committed .npmrc reads ${GITHUB_TOKEN}, so the
+        # install step needs the org's cross-org read token to resolve it.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
         run: bun install
 
       - name: Lint
