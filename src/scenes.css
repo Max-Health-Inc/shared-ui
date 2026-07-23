@@ -18,6 +18,15 @@
   body[data-scene="perspective-grid"] {
     perspective: 1400px;
     perspective-origin: 50% 45%;
+    /* The fixed floor plane is intentionally wider than the viewport (negative
+       left/right) to cover the 3D perspective spread. Clip the horizontal
+       overflow it adds so narrow viewports don't get a phantom scroll / gap.
+       Must be on both <html> and <body> — a fixed element escapes html-only
+       clipping. */
+    overflow-x: hidden;
+  }
+  html:has(> body[data-scene]:not([data-scene="none"])) {
+    overflow-x: hidden;
   }
 
   /* ── Scene: Room Edges ─────────────────────────────────── */
