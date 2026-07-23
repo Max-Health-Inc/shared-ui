@@ -29,6 +29,19 @@
     overflow-x: hidden;
   }
 
+  /* While a modal is open, drop the scene perspective. `perspective` on <body>
+     makes it the containing block for position:fixed descendants (CSS Transforms
+     spec), so a portaled `fixed inset-*` dialog would size to the full scrollable
+     document — and get projected/offset — instead of the viewport. Radix /
+     react-remove-scroll sets `data-scroll-locked` on <body> while any dialog is
+     open; the scene sits behind the dialog's overlay, so removing perspective
+     here has no visible effect but restores correct viewport-relative modals.
+     Verified live: a `fixed inset:16px` probe measured 6613px tall (perspective)
+     vs 711px = viewport-32 (perspective:none). */
+  body[data-scene]:not([data-scene="none"])[data-scroll-locked] {
+    perspective: none;
+  }
+
   /* ── Scene: Room Edges ─────────────────────────────────── */
 
   body[data-scene="room-edges"]::before {
