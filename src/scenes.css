@@ -189,9 +189,10 @@
     z-index: -1;
     pointer-events: none;
     background:
-      /* Wall glow */
+      /* Horizon glow — sized in vw/vh so it's always a wide, shallow band and
+         never collapses into a vertical beam (portrait) or lens (landscape). */
       radial-gradient(
-        ellipse 80% 30% at 50% 55%,
+        ellipse 120vw 18vh at 50% 58%,
         oklch(0.80 0.025 250 / 0.10) 0%,
         transparent 70%
       );
@@ -224,7 +225,7 @@
   .dark body[data-scene="perspective-grid"]::after {
     background:
       radial-gradient(
-        ellipse 80% 30% at 50% 55%,
+        ellipse 120vw 18vh at 50% 58%,
         oklch(0.25 0.04 250 / 0.18) 0%,
         transparent 70%
       );
