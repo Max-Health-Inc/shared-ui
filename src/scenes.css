@@ -42,6 +42,17 @@
     perspective: none;
   }
 
+  /* Frosted-glass header over the scene. The app header's near-transparent bg
+     (AppHeader uses `bg-foreground/[0.02]`) lets the scene's grid + glow bleed
+     behind the title and hurts readability. Give it a translucent card backing
+     + blur so the header stays readable while the scene shows softly through.
+     Applies to any scene app's <header> (AppHeader carries `border-b`);
+     !important beats the header's utility bg regardless of cascade layer. */
+  body[data-scene]:not([data-scene="none"]) header.border-b {
+    background: color-mix(in oklch, var(--card) 80%, transparent) !important;
+    backdrop-filter: blur(8px);
+  }
+
   /* ── Scene: Room Edges ─────────────────────────────────── */
 
   body[data-scene="room-edges"]::before {
