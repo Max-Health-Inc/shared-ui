@@ -68,11 +68,5 @@ A merge whose version is already on the registry publishes nothing and says so i
 run summary — so docs-only and CI-only merges are a safe no-op, and forgetting to bump
 means "not released" rather than a failed build.
 
-## Publishing
-
-Push a tag to trigger the GitHub Actions workflow:
-
-```bash
-git tag v0.1.0
-git push origin v0.1.0
-```
+Pushing a `v*` tag re-runs the same workflow, which is only useful for retrying a
+release — the already-published check makes it a no-op otherwise.
