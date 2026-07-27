@@ -122,6 +122,7 @@ export {
   type Scene,
   type UseSceneOptions,
 } from "./hooks/use-scene"
+export { ScenePicker, type ScenePickerProps } from "./components/scene-picker"
 export {
   usePwaInstall,
   type UsePwaInstallReturn,
