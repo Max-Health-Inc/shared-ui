@@ -11,6 +11,17 @@
  *   "perspective-grid"  — 3D floor plane with grid lines
  *   "room-edges"        — Subtle converging edge lines with horizon glow
  *   "none"              — Plain solid background, no effects
+ *
+ * There is no WebGL here. The depth read comes from `perspective` on <body> plus a
+ * bottom-anchored plane laid back with `rotateX()`; an ordinary square grid painted on
+ * that plane converges toward the horizon under the perspective projection.
+ *
+ * COLOURS COME FROM THE BRAND CONTRACT. Every scene colour is a `color-mix()` of a
+ * `brandc` token — `--foreground` for the structural lines and floor, `--maxhealth` for
+ * the horizon glow. Those tokens are already `light-dark()` pairs, so the scene follows
+ * the active colour scheme without a duplicated dark stylesheet: in dark mode
+ * `--foreground` is near-white, so the same mix yields light lines on a dark floor.
+ * Rebrand or change a colour = edit `brandc`, not this file.
  */
 
 @layer base {
@@ -24,7 +35,32 @@
        Must be on both <html> and <body> — a fixed element escapes html-only
        clipping. */
     overflow-x: hidden;
+
+    /* ── Scene palette ──────────────────────────────────────
+       Derived from the contract, so there is exactly ONE definition of each colour
+       and the gradients below are written exactly once. */
+    --scene-line: color-mix(in oklab, var(--foreground) 15%, transparent);
+    --scene-edge: color-mix(in oklab, var(--foreground) 20%, transparent);
+    /* Ceiling edges read as further away than the floor edges, hence fainter. */
+    --scene-edge-far: color-mix(in oklab, var(--foreground) 9%, transparent);
+    --scene-floor-mid: color-mix(in oklab, var(--foreground) 7%, transparent);
+    --scene-floor-near: color-mix(in oklab, var(--foreground) 13%, transparent);
+    --scene-glow: color-mix(in oklab, var(--maxhealth) 16%, transparent);
   }
+
+  /* Dark surfaces need a little more separation than the same mix gives on white, so
+     the DARK SCHEME ADJUSTS THE ALPHAS ONLY — six declarations, not a second copy of
+     every gradient. The hues still come from the contract. */
+  .dark body[data-scene="room-edges"],
+  .dark body[data-scene="perspective-grid"] {
+    --scene-line: color-mix(in oklab, var(--foreground) 20%, transparent);
+    --scene-edge: color-mix(in oklab, var(--foreground) 30%, transparent);
+    --scene-edge-far: color-mix(in oklab, var(--foreground) 15%, transparent);
+    --scene-floor-mid: color-mix(in oklab, var(--foreground) 10%, transparent);
+    --scene-floor-near: color-mix(in oklab, var(--foreground) 16%, transparent);
+    --scene-glow: color-mix(in oklab, var(--maxhealth) 22%, transparent);
+  }
+
   html:has(> body[data-scene]:not([data-scene="none"])) {
     overflow-x: hidden;
   }
@@ -66,14 +102,13 @@
     pointer-events: none;
     transform: rotateX(58deg);
     transform-origin: bottom center;
-    background:
-      /* Floor surface tint */
-      linear-gradient(
-        to bottom,
-        transparent 0%,
-        oklch(0.82 0.02 250 / 0.10) 40%,
-        oklch(0.75 0.03 250 / 0.18) 100%
-      );
+    /* Floor surface tint */
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      var(--scene-floor-mid) 40%,
+      var(--scene-floor-near) 100%
+    );
   }
 
   body[data-scene="room-edges"]::after {
@@ -87,82 +122,34 @@
       linear-gradient(
         to top right,
         transparent calc(50% - 0.5px),
-        oklch(0.55 0.02 250 / 0.18) 50%,
+        var(--scene-edge) 50%,
         transparent calc(50% + 0.5px)
       ) no-repeat 0% 100% / 50% 55%,
       /* Bottom-right floor edge → vanishing point */
       linear-gradient(
         to top left,
         transparent calc(50% - 0.5px),
-        oklch(0.55 0.02 250 / 0.18) 50%,
+        var(--scene-edge) 50%,
         transparent calc(50% + 0.5px)
       ) no-repeat 100% 100% / 50% 55%,
       /* Top-left ceiling edge → vanishing point */
       linear-gradient(
         to bottom right,
         transparent calc(50% - 0.5px),
-        oklch(0.55 0.02 250 / 0.08) 50%,
+        var(--scene-edge-far) 50%,
         transparent calc(50% + 0.5px)
       ) no-repeat 0% 0% / 50% 45%,
       /* Top-right ceiling edge → vanishing point */
       linear-gradient(
         to bottom left,
         transparent calc(50% - 0.5px),
-        oklch(0.55 0.02 250 / 0.08) 50%,
+        var(--scene-edge-far) 50%,
         transparent calc(50% + 0.5px)
       ) no-repeat 100% 0% / 50% 45%,
       /* Horizon glow at vanishing point */
       radial-gradient(
         ellipse 50% 8% at 50% 45%,
-        oklch(0.80 0.025 250 / 0.10) 0%,
-        transparent 100%
-      );
-  }
-
-  .dark body[data-scene="room-edges"]::before {
-    background:
-      linear-gradient(
-        to bottom,
-        transparent 0%,
-        oklch(0.16 0.02 250 / 0.30) 40%,
-        oklch(0.12 0.025 250 / 0.45) 100%
-      );
-  }
-
-  .dark body[data-scene="room-edges"]::after {
-    background:
-      /* Bottom-left floor edge */
-      linear-gradient(
-        to top right,
-        transparent calc(50% - 0.5px),
-        oklch(0.45 0.04 250 / 0.28) 50%,
-        transparent calc(50% + 0.5px)
-      ) no-repeat 0% 100% / 50% 55%,
-      /* Bottom-right floor edge */
-      linear-gradient(
-        to top left,
-        transparent calc(50% - 0.5px),
-        oklch(0.45 0.04 250 / 0.28) 50%,
-        transparent calc(50% + 0.5px)
-      ) no-repeat 100% 100% / 50% 55%,
-      /* Top-left ceiling edge */
-      linear-gradient(
-        to bottom right,
-        transparent calc(50% - 0.5px),
-        oklch(0.45 0.04 250 / 0.14) 50%,
-        transparent calc(50% + 0.5px)
-      ) no-repeat 0% 0% / 50% 45%,
-      /* Top-right ceiling edge */
-      linear-gradient(
-        to bottom left,
-        transparent calc(50% - 0.5px),
-        oklch(0.45 0.04 250 / 0.14) 50%,
-        transparent calc(50% + 0.5px)
-      ) no-repeat 100% 0% / 50% 45%,
-      /* Horizon glow */
-      radial-gradient(
-        ellipse 50% 8% at 50% 45%,
-        oklch(0.25 0.04 250 / 0.18) 0%,
+        var(--scene-glow) 0%,
         transparent 100%
       );
   }
@@ -184,16 +171,16 @@
       /* Grid lines — horizontal */
       repeating-linear-gradient(
         0deg,
-        oklch(0.55 0.03 250 / 0.13) 0px,
-        oklch(0.55 0.03 250 / 0.13) 1px,
+        var(--scene-line) 0px,
+        var(--scene-line) 1px,
         transparent 1px,
         transparent 100px
       ),
       /* Grid lines — vertical */
       repeating-linear-gradient(
         90deg,
-        oklch(0.55 0.03 250 / 0.13) 0px,
-        oklch(0.55 0.03 250 / 0.13) 1px,
+        var(--scene-line) 0px,
+        var(--scene-line) 1px,
         transparent 1px,
         transparent 100px
       ),
@@ -201,8 +188,8 @@
       linear-gradient(
         to bottom,
         transparent 0%,
-        oklch(0.82 0.02 250 / 0.12) 40%,
-        oklch(0.75 0.03 250 / 0.20) 100%
+        var(--scene-floor-mid) 40%,
+        var(--scene-floor-near) 100%
       );
   }
 
@@ -212,46 +199,12 @@
     inset: 0;
     z-index: -1;
     pointer-events: none;
-    background:
-      /* Horizon glow — sized in vw/vh so it's always a wide, shallow band and
-         never collapses into a vertical beam (portrait) or lens (landscape). */
-      radial-gradient(
-        ellipse 120vw 18vh at 50% 58%,
-        oklch(0.80 0.025 250 / 0.10) 0%,
-        transparent 70%
-      );
-  }
-
-  .dark body[data-scene="perspective-grid"]::before {
-    background:
-      repeating-linear-gradient(
-        0deg,
-        oklch(0.45 0.04 250 / 0.18) 0px,
-        oklch(0.45 0.04 250 / 0.18) 1px,
-        transparent 1px,
-        transparent 100px
-      ),
-      repeating-linear-gradient(
-        90deg,
-        oklch(0.45 0.04 250 / 0.18) 0px,
-        oklch(0.45 0.04 250 / 0.18) 1px,
-        transparent 1px,
-        transparent 100px
-      ),
-      linear-gradient(
-        to bottom,
-        transparent 0%,
-        oklch(0.16 0.02 250 / 0.30) 40%,
-        oklch(0.12 0.025 250 / 0.45) 100%
-      );
-  }
-
-  .dark body[data-scene="perspective-grid"]::after {
-    background:
-      radial-gradient(
-        ellipse 120vw 18vh at 50% 58%,
-        oklch(0.25 0.04 250 / 0.18) 0%,
-        transparent 70%
-      );
+    /* Horizon glow — sized in vw/vh so it's always a wide, shallow band and
+       never collapses into a vertical beam (portrait) or lens (landscape). */
+    background: radial-gradient(
+      ellipse 120vw 18vh at 50% 58%,
+      var(--scene-glow) 0%,
+      transparent 70%
+    );
   }
 }
