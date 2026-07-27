@@ -4,13 +4,23 @@ Shared React UI components, hooks, and utilities for SMART on FHIR healthcare ap
 
 ## Installation
 
+Published to **GitHub Packages** on every merge to `main`, so depend on it by semver
+range like any other `@max-health-inc` package — not by git URL or commit SHA.
+
 ```bash
-# Configure GitHub Packages registry for @max-health-inc scope
+# Point the @max-health-inc scope at GitHub Packages (once, per consuming repo)
 echo "@max-health-inc:registry=https://npm.pkg.github.com" >> .npmrc
 
-# Install
 bun add @max-health-inc/shared-ui
 ```
+
+```jsonc
+// package.json
+"@max-health-inc/shared-ui": "^0.5.0"   // ✅
+"@max-health-inc/shared-ui": "github:Max-Health-Inc/shared-ui#0f05673"  // ❌ pinned, no upgrade path
+```
+
+Installing needs a token with `read:packages`; CI reads it from `${GITHUB_TOKEN}`.
 
 ## Usage
 
@@ -49,11 +59,14 @@ bun run dev        # Watch mode
 bun run typecheck  # Type-check without emitting
 ```
 
-## Publishing
+### Releasing
 
-Push a tag to trigger the GitHub Actions workflow:
+**Bump `version` in `package.json` as part of your PR.** Merging to `main` runs lint,
+typecheck, tests and the build, then publishes that version and tags the commit.
 
-```bash
-git tag v0.1.0
-git push origin v0.1.0
-```
+A merge whose version is already on the registry publishes nothing and says so in the
+run summary — so docs-only and CI-only merges are a safe no-op, and forgetting to bump
+means "not released" rather than a failed build.
+
+Pushing a `v*` tag re-runs the same workflow, which is only useful for retrying a
+release — the already-published check makes it a no-op otherwise.

@@ -1,14 +1,29 @@
 name: Publish to GitHub Packages
 
+# Publishes on merge to main, matching the rest of the org (see mcp-host, billing,
+# worker-utils). Consumers depend on a normal semver range
+# (`"@max-health-inc/shared-ui": "^0.5.0"`) rather than pinning a git SHA.
+#
+# RELEASING = BUMPING THE VERSION IN YOUR PR. A merge whose package.json version is
+# already on the registry publishes nothing and says so in the run summary, so a
+# merge that only touches docs or CI is a safe no-op rather than a red build.
+#
+# The `v*` tag trigger is kept so a release can be re-run by pushing a tag; the
+# already-published check makes running twice harmless.
 on:
   push:
+    branches: [main]
     tags:
       - 'v*'
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write # to push the release tag
   packages: write
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   publish:
@@ -27,9 +42,9 @@ jobs:
           scope: '@max-health-inc'
 
       - name: Install dependencies
-        # shared-ui now depends on @max-network/css (a different org's GH Packages
-        # registry package); the committed .npmrc reads ${GITHUB_TOKEN}, so the
-        # install step needs the org's cross-org read token to resolve it.
+        # The committed .npmrc points the @max-network scope at GH Packages and reads
+        # its token from ${GITHUB_TOKEN}, so the install needs the org's cross-org
+        # read token for any dependency on that scope.
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
         run: bun install
@@ -46,10 +61,50 @@ jobs:
       - name: Build
         run: bun run build
 
+      - name: Is this version already published?
+        id: check
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          # `npm view` exits non-zero for an unpublished version — that is the
+          # success path here, so swallow it and test the captured output instead.
+          FOUND=$(npm view "$NAME@$VERSION" version --registry=https://npm.pkg.github.com 2>/dev/null || true)
+          if [ -n "$FOUND" ]; then
+            echo "published=true" >> "$GITHUB_OUTPUT"
+            echo "⏭️ \`$NAME@$VERSION\` is already published — nothing to do. Bump the version in package.json to cut a release." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "published=false" >> "$GITHUB_OUTPUT"
+            echo "📦 Publishing \`$NAME@$VERSION\`" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
       - name: Publish to GitHub Packages
+        if: steps.check.outputs.published == 'false'
         run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
           # The committed .npmrc resolves _authToken from ${GITHUB_TOKEN}; the publish
           # needs a write-capable token there too (else it expands empty → E401).
           GITHUB_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
+
+      # Tag the released commit so a registry version is traceable to a commit.
+      # Skipped when the tag already exists, which is the case when this run was
+      # itself triggered by pushing that tag.
+      - name: Tag the release
+        if: steps.check.outputs.published == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="v${{ steps.check.outputs.version }}"
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists — skipping." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag "$TAG"
+          git push origin "$TAG"
+          gh release create "$TAG" --title "$TAG" --generate-notes
