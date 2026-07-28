@@ -16,12 +16,17 @@
  * bottom-anchored plane laid back with `rotateX()`; an ordinary square grid painted on
  * that plane converges toward the horizon under the perspective projection.
  *
- * COLOURS COME FROM THE BRAND CONTRACT. Every scene colour is a `color-mix()` of a
- * `brandc` token — `--foreground` for the structural lines and floor, `--maxhealth` for
- * the horizon glow. Those tokens are already `light-dark()` pairs, so the scene follows
- * the active colour scheme without a duplicated dark stylesheet: in dark mode
- * `--foreground` is near-white, so the same mix yields light lines on a dark floor.
- * Rebrand or change a colour = edit `brandc`, not this file.
+ * COLOURS COME FROM THE BRAND CONTRACT, AND THEY ARE ALL NEUTRAL. Every scene colour is
+ * a `color-mix()` of `--foreground` — the structural lines, the floor AND the horizon
+ * glow. That token is already a `light-dark()` pair, so the scene follows the active
+ * colour scheme without a duplicated dark stylesheet: in dark mode `--foreground` is
+ * near-white, so the same mix yields light lines on a dark floor and a white horizon
+ * haze. Rebrand or change a colour = edit `brandc`, not this file.
+ *
+ * The glow deliberately does NOT use the brand accent (`--maxhealth`). The scene covers
+ * the entire viewport, so an accent-tinted glow washes the whole product in brand colour
+ * instead of reading as depth — `--maxhealth` sits at chroma 0.17, roughly seven times
+ * the tint the glow was originally drawn with. `scenes.test.ts` enforces this.
  */
 
 @layer base {
@@ -45,11 +50,14 @@
     --scene-edge-far: color-mix(in oklab, var(--foreground) 9%, transparent);
     --scene-floor-mid: color-mix(in oklab, var(--foreground) 7%, transparent);
     --scene-floor-near: color-mix(in oklab, var(--foreground) 13%, transparent);
-    --scene-glow: color-mix(in oklab, var(--maxhealth) 16%, transparent);
+    /* A haze, not a wash. This mix shifts lightness by ~0.025 against the background,
+       which is the strength the glow was originally hand-tuned to in BOTH schemes —
+       so unlike the structural lines below it needs no dark-scheme override. */
+    --scene-glow: color-mix(in oklab, var(--foreground) 3%, transparent);
   }
 
   /* Dark surfaces need a little more separation than the same mix gives on white, so
-     the DARK SCHEME ADJUSTS THE ALPHAS ONLY — six declarations, not a second copy of
+     the DARK SCHEME ADJUSTS THE ALPHAS ONLY — five declarations, not a second copy of
      every gradient. The hues still come from the contract. */
   .dark body[data-scene="room-edges"],
   .dark body[data-scene="perspective-grid"] {
@@ -58,7 +66,6 @@
     --scene-edge-far: color-mix(in oklab, var(--foreground) 15%, transparent);
     --scene-floor-mid: color-mix(in oklab, var(--foreground) 10%, transparent);
     --scene-floor-near: color-mix(in oklab, var(--foreground) 16%, transparent);
-    --scene-glow: color-mix(in oklab, var(--maxhealth) 22%, transparent);
   }
 
   html:has(> body[data-scene]:not([data-scene="none"])) {
