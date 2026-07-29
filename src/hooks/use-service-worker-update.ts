@@ -26,6 +26,14 @@ export interface UseServiceWorkerUpdateReturn {
    * No-op when there is nothing waiting. The reload fires at most once.
    */
   reload: () => void
+  /**
+   * True from the moment {@link reload} starts until the page actually navigates
+   * away. That gap is not instant: `reload()` only asks the waiting worker to skip
+   * waiting, then waits for `controllerchange`. Use it to show progress and to stop
+   * a second click. Stays `false` when `reload()` was a no-op, so it can never latch
+   * a spinner that nothing will ever resolve.
+   */
+  reloading: boolean
   /** Hide the update prompt without reloading (sets `updateAvailable` false). */
   dismiss: () => void
 }
@@ -37,6 +45,7 @@ const NOOP: UseServiceWorkerUpdateReturn = {
   updateAvailable: false,
   reload: noop,
   dismiss: noop,
+  reloading: false,
 }
 
 /**
@@ -70,6 +79,8 @@ export function useServiceWorkerUpdate(
   const { swUrl = "/sw.js", enabled = true } = opts
 
   const [updateAvailable, setUpdateAvailable] = useState(false)
+  /** True once the user has asked to reload, until the page navigates away. */
+  const [reloading, setReloading] = useState(false)
   /** The worker that has installed and is waiting to take over. */
   const waitingWorkerRef = useRef<ServiceWorker | null>(null)
 
@@ -135,8 +146,12 @@ export function useServiceWorkerUpdate(
   const reload = useCallback(() => {
     const waiting = waitingWorkerRef.current
     if (!waiting || typeof navigator === "undefined" || !("serviceWorker" in navigator)) {
+      // Nothing to activate, so no controllerchange is coming. Leave `reloading`
+      // false rather than latching a spinner forever.
       return
     }
+
+    setReloading(true)
 
     // Reload once the new worker takes control. Guarded so it can never loop.
     const onControllerChange = () => {
@@ -157,5 +172,5 @@ export function useServiceWorkerUpdate(
 
   if (!supported) return NOOP
 
-  return { updateAvailable, reload, dismiss }
+  return { updateAvailable, reload, dismiss, reloading }
 }

@@ -1,5 +1,6 @@
 import { Button } from "./button"
 import { MessageBanner } from "./message-banner"
+import { Spinner } from "./spinner"
 import { useServiceWorkerUpdate } from "../hooks/use-service-worker-update"
 import { cn } from "../lib/utils"
 
@@ -13,6 +14,11 @@ export interface ServiceWorkerUpdatePromptProps {
   swUrl?: string
   /** Banner copy (default: "A new version is available."). */
   message?: string
+  /**
+   * Banner copy while the reload is in flight (default: "Updating…"). Also the
+   * accessible label of the button once it turns into a progress indicator.
+   */
+  reloadingMessage?: string
   /** Additional Tailwind classes for the banner. */
   className?: string
 }
@@ -24,6 +30,11 @@ export interface ServiceWorkerUpdatePromptProps {
  * newer build is installed and waiting, renders a slim, non-blocking
  * {@link MessageBanner} pinned to the top-center with a primary "Reload" action
  * and a dismiss control. The user is never reloaded automatically.
+ *
+ * Clicking Reload does not navigate immediately: it asks the waiting worker to skip
+ * waiting and then reloads once that worker takes control. For that window the button
+ * becomes a spinner and goes disabled, so the click visibly registers instead of
+ * looking like it missed.
  *
  * In development (`enabled={false}`) or where service workers are unsupported,
  * the underlying hook is inert and this renders nothing.
@@ -37,9 +48,13 @@ export function ServiceWorkerUpdatePrompt({
   enabled = true,
   swUrl,
   message = "A new version is available.",
+  reloadingMessage = "Updating…",
   className,
 }: ServiceWorkerUpdatePromptProps) {
-  const { updateAvailable, reload, dismiss } = useServiceWorkerUpdate({ enabled, swUrl })
+  const { updateAvailable, reload, dismiss, reloading } = useServiceWorkerUpdate({
+    enabled,
+    swUrl,
+  })
 
   if (!updateAvailable) return null
 
@@ -54,9 +69,21 @@ export function ServiceWorkerUpdatePrompt({
         )}
       >
         <div className="flex items-center gap-3">
-          <span className="flex-1">{message}</span>
-          <Button size="sm" onClick={reload} className="shrink-0">
-            Reload
+          <span className="flex-1">{reloading ? reloadingMessage : message}</span>
+          {/* Activating the new worker is not instant, so the button becomes a progress
+              indicator rather than sitting there still reading "Reload" as if the click
+              had missed. Disabled while it runs: a second SKIP_WAITING does nothing but
+              the button must not look re-clickable. `min-w` holds the width steady so
+              the banner does not jump on swap. */}
+          <Button size="sm" onClick={reload} disabled={reloading} aria-live="polite" className="min-w-20 shrink-0">
+            {reloading ? (
+              <>
+                <Spinner size="sm" className="border-current/30 border-t-current" aria-hidden />
+                <span className="sr-only">{reloadingMessage}</span>
+              </>
+            ) : (
+              "Reload"
+            )}
           </Button>
         </div>
       </MessageBanner>

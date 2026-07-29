@@ -172,6 +172,46 @@ describe("useServiceWorkerUpdate", () => {
     expect(reloadCalls).toBe(1)
   })
 
+  it("reports `reloading` between the click and the page actually reloading", async () => {
+    // The gap is real: reload() only posts SKIP_WAITING, then waits for the new worker
+    // to take control before calling location.reload(). The UI needs to show progress
+    // for that window instead of leaving a "Reload" button that looks unclicked.
+    container.controller = {}
+    const captured = renderHook()
+    await act(async () => {
+      await Promise.resolve()
+    })
+
+    const worker = new FakeWorker()
+    container.registration.installing = worker
+    act(() => container.registration.emit("updatefound"))
+    act(() => {
+      worker.state = "installed"
+      worker.emit("statechange")
+    })
+
+    expect(captured.current?.reloading, "not reloading before the click").toBe(false)
+
+    act(() => captured.current?.reload())
+    expect(
+      captured.current?.reloading,
+      "reloading must be true while waiting for the worker to take control",
+    ).toBe(true)
+  })
+
+  it("does not get stuck in `reloading` when there is no waiting worker", async () => {
+    // reload() is a documented no-op with nothing waiting. It must not latch a
+    // spinner that never resolves, because no controllerchange will ever arrive.
+    container.controller = {}
+    const captured = renderHook()
+    await act(async () => {
+      await Promise.resolve()
+    })
+
+    act(() => captured.current?.reload())
+    expect(captured.current?.reloading).toBe(false)
+  })
+
   it("does not flag an update on first install (no controller)", async () => {
     container.controller = null // first install: nothing to update over
     const captured = renderHook()
