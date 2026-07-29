@@ -83,9 +83,12 @@ export function createAppI18n(
   for (const [key, values] of Object.entries(entries)) {
     if (!Array.isArray(values)) continue
     for (const lng of languages) {
-      const val: unknown = values[langIndex[lng]]
+      const index = langIndex[lng]
+      const bundle = resources[lng]
+      if (index === undefined || bundle === undefined) continue
+      const val: unknown = values[index]
       if (typeof val === "string" && val) {
-        resources[lng].translation[key] = val
+        bundle.translation[key] = val
       }
     }
   }

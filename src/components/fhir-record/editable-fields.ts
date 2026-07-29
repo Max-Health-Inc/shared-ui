@@ -74,8 +74,10 @@ export const EDITABLE_TYPES: ReadonlySet<string> = new Set(Object.keys(EDITABLE_
 
 /** Editable fields for a resource type, or [] when none are defined. */
 export function getEditableFields(resourceType: string | undefined): EditableField[] {
-  if (!resourceType || !Object.hasOwn(EDITABLE_FIELDS, resourceType)) return []
-  return EDITABLE_FIELDS[resourceType]
+  if (!resourceType) return []
+  // `Object.hasOwn` guards the lookup but does not narrow the index signature, so the
+  // fallback is what actually satisfies the return type.
+  return EDITABLE_FIELDS[resourceType] ?? []
 }
 
 /** Coerce an unknown FHIR value into a display/input string ("" for objects/nullish). */
@@ -103,20 +105,24 @@ export function getByPath(obj: unknown, path: string): unknown {
 export function setByPath<T extends Record<string, unknown>>(obj: T, path: string, value: unknown): T {
   const clone = structuredClone(obj)
   const keys = path.split(".")
+  // `split` always yields at least one element, but the index signature cannot say so.
+  const leafKey = keys.at(-1)
+  if (leafKey === undefined) return clone
   let current: unknown = clone
   for (let i = 0; i < keys.length - 1; i++) {
     const k = keys[i]
+    const nextKey = keys[i + 1]
+    if (k === undefined || nextKey === undefined) return clone
     if (current == null || typeof current !== "object") return clone
     const container = current as Record<string, unknown>
     const next = container[k]
     if (next == null || typeof next !== "object") {
-      const nextKey = keys[i + 1]
       container[k] = /^\d+$/.test(nextKey) ? [] : {}
     }
     current = container[k]
   }
   if (current != null && typeof current === "object") {
-    (current as Record<string, unknown>)[keys[keys.length - 1]] = value
+    (current as Record<string, unknown>)[leafKey] = value
   }
   return clone
 }

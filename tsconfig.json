@@ -1,17 +1,21 @@
 {
+  "extends": "@max-health/config/tsconfig/app.json",
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "jsx": "react-jsx",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
+    /*
+     * Emit settings: `build` runs `tsc --emitDeclarationOnly --outDir dist`, so the preset's
+     * `noEmit` is overridden here rather than on the CLI. `allowImportingTsExtensions` stays
+     * compatible because declaration-only emit satisfies it.
+     */
+    "noEmit": false,
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
     "outDir": "./dist",
     "rootDir": "./src",
+
+    /* Consumers typecheck this package's SOURCE (main/types point at src/index.ts), so its
+     * strictness has to match theirs or it fails inside their build. */
+    "esModuleInterop": true,
     "paths": {
       "@/*": ["./src/*"]
     }
