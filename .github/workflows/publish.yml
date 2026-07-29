@@ -8,6 +8,9 @@ name: Publish to GitHub Packages
 # already on the registry publishes nothing and says so in the run summary, so a
 # merge that only touches docs or CI is a safe no-op rather than a red build.
 #
+# The lint/typecheck/test gate is NOT defined here. It lives in checks.yml, which this
+# workflow calls, so that pull requests and releases run the identical suite.
+#
 # The `v*` tag trigger is kept so a release can be re-run by pushing a tag; the
 # already-published check makes running twice harmless.
 on:
@@ -26,7 +29,14 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # The quality gate lives in checks.yml so that PRs and releases run the SAME suite.
+  # A red lint/typecheck/test here stops the publish job below from running at all.
+  checks:
+    uses: ./.github/workflows/checks.yml
+    secrets: inherit
+
   publish:
+    needs: checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -49,15 +59,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
         run: bun install
 
-      - name: Lint
-        run: bun run lint
-
-      - name: Typecheck
-        run: bun run typecheck
-
-      - name: Test
-        run: bun test
-
+      # Only the build is repeated here, because `npm publish` needs dist/ in THIS
+      # job's workspace. Lint, typecheck and test already ran in the `checks` job.
       - name: Build
         run: bun run build
 
