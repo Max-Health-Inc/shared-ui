@@ -97,9 +97,11 @@ export function parseFhirUser(ref?: string): ClassifiedFhirUser {
   if (!ref) return { role: "unknown" }
   const trimmed = ref.trim().replace(/\/+$/, "")
   const parts = trimmed.split("/")
-  if (parts.length < 2) return { role: "unknown" }
-  const id = parts[parts.length - 1]
-  const type = parts[parts.length - 2]
+  // Read the trailing "<Type>/<id>" pair through `at`, which types as possibly-undefined and
+  // so covers the short-reference case in one guard rather than a separate length check.
+  const id = parts.at(-1)
+  const type = parts.at(-2)
+  if (id === undefined || type === undefined) return { role: "unknown" }
   const reference = `${type}/${id}`
   switch (type) {
     case "Patient":

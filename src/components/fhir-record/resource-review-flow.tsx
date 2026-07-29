@@ -241,7 +241,7 @@ export function ResourceReviewFlow({
               {failed.map((f, i) => (
                 <li key={i} className="text-sm">
                   <span className="font-medium">{f.resourceType}</span>
-                  <span className="text-muted-foreground ml-2">— {f.errors[0] || t("validation failed")}</span>
+                  <span className="text-muted-foreground ml-2">— {f.errors[0] ?? t("validation failed")}</span>
                 </li>
               ))}
             </ul>
