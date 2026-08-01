@@ -12,9 +12,12 @@
  *   "room-edges"        — Subtle converging edge lines with horizon glow
  *   "none"              — Plain solid background, no effects
  *
- * There is no WebGL here. The depth read comes from `perspective` on <body> plus a
- * bottom-anchored plane laid back with `rotateX()`; an ordinary square grid painted on
- * that plane converges toward the horizon under the perspective projection.
+ * There is no WebGL here. The depth read comes from `perspective()` inside each floor's
+ * own `transform` (a bottom-anchored plane laid back with `rotateX()`); an ordinary
+ * square grid painted on that plane converges toward the horizon under the perspective
+ * projection. The perspective is deliberately NOT a `perspective` property on <body>:
+ * that makes body the containing block for the scene's position:fixed floor, so on a
+ * scrollable page the floor sizes to the whole document and stretches on scroll.
  *
  * COLOURS COME FROM THE BRAND CONTRACT, AND THEY ARE ALL NEUTRAL. Every scene colour is
  * a `color-mix()` of `--foreground` — the structural lines, the floor AND the horizon
@@ -32,8 +35,14 @@
 @layer base {
   body[data-scene="room-edges"],
   body[data-scene="perspective-grid"] {
-    perspective: 1400px;
-    perspective-origin: 50% 45%;
+    /* NOTE: the 3D perspective lives in each floor's own `transform:
+       perspective(…) rotateX(…)`, NOT as a `perspective` property here. A
+       `perspective` on <body> would make body the containing block for the
+       scene's own position:fixed floor (and any portaled dialog), so on a page
+       taller than the viewport the floor would size to the whole document
+       (height:55% of the document) and stretch off-screen on scroll. Keeping it
+       in the transform leaves the fixed floor viewport-relative. */
+
     /* The fixed floor plane is intentionally wider than the viewport (negative
        left/right) to cover the 3D perspective spread. Clip the horizontal
        overflow it adds so narrow viewports don't get a phantom scroll / gap.
@@ -72,18 +81,10 @@
     overflow-x: hidden;
   }
 
-  /* While a modal is open, drop the scene perspective. `perspective` on <body>
-     makes it the containing block for position:fixed descendants (CSS Transforms
-     spec), so a portaled `fixed inset-*` dialog would size to the full scrollable
-     document — and get projected/offset — instead of the viewport. Radix /
-     react-remove-scroll sets `data-scroll-locked` on <body> while any dialog is
-     open; the scene sits behind the dialog's overlay, so removing perspective
-     here has no visible effect but restores correct viewport-relative modals.
-     Verified live: a `fixed inset:16px` probe measured 6613px tall (perspective)
-     vs 711px = viewport-32 (perspective:none). */
-  body[data-scene]:not([data-scene="none"])[data-scroll-locked] {
-    perspective: none;
-  }
+  /* (No `[data-scroll-locked]{perspective:none}` workaround needed: since the
+     perspective now lives in each floor's transform rather than on <body>, body
+     is never a containing block for fixed descendants, so portaled dialogs stay
+     viewport-relative on their own.) */
 
   /* Frosted-glass header over the scene. The app header's near-transparent bg
      (AppHeader uses `bg-foreground/[0.02]`) lets the scene's grid + glow bleed
@@ -107,7 +108,7 @@
     height: 55%;
     z-index: -1;
     pointer-events: none;
-    transform: rotateX(58deg);
+    transform: perspective(1400px) rotateX(58deg);
     transform-origin: bottom center;
     /* Floor surface tint */
     background: linear-gradient(
@@ -172,7 +173,7 @@
     height: 55%;
     z-index: -1;
     pointer-events: none;
-    transform: rotateX(58deg);
+    transform: perspective(1400px) rotateX(58deg);
     transform-origin: bottom center;
     background:
       /* Grid lines — horizontal */
