@@ -37,6 +37,45 @@ export interface CreateAppI18nOptions {
 }
 
 /**
+ * Pick the singular or plural form by `count`.
+ *
+ * ## Why this exists
+ * i18next's own plural support (`key_one` / `key_other`) CANNOT work in this format.
+ * The English source string IS the key and English is never stored, so there is no `en`
+ * bundle holding a `_one` variant to resolve against — i18next falls through to the bare
+ * key and interpolates it. The result is that
+ *
+ * ```ts
+ * t("{{count}} tags", { count: 1 })   // → "1 tags"   ✗
+ * ```
+ *
+ * renders the plural form at one, silently, in every language. That has bitten three
+ * separate Max Health apps, so reach for this instead:
+ *
+ * ```ts
+ * plural(n, t("1 tag"), t("{{count}} tags", { count: n }))   // → "1 tag" / "3 tags" ✓
+ * ```
+ *
+ * ## Why it takes rendered strings, not keys
+ * Both arms stay literal `t("…")` calls at the call site, which is exactly what
+ * `extract-and-sync.py` scans for (its regex requires a string literal as the FIRST
+ * argument of the translator call). A signature like `plural(t, n, "1 tag", "{{count}} tags")`
+ * would hide both keys from extraction and they would be pruned from `translations.json` on
+ * the next sync. Evaluating both arms is a pair of map lookups, so the cost is nothing.
+ *
+ * Each form is translated independently, which is also what languages with different
+ * plural rules need — a translator sees two complete sentences rather than a fragment.
+ *
+ * @param count The quantity deciding the form. Only exactly `1` is singular, so `0` and
+ *   `-1` take the plural, matching English ("0 tags").
+ * @param one Rendered singular form.
+ * @param other Rendered plural form.
+ */
+export function plural<T>(count: number, one: T, other: T): T {
+  return count === 1 ? one : other
+}
+
+/**
  * Language endonyms used by the language switcher. These are language-independent
  * constants (a language's name in its own tongue), NOT app translation data.
  */

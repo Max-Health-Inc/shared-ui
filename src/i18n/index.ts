@@ -8,6 +8,7 @@
 export {
   createAppI18n,
   getSupportedLanguages,
+  plural,
   LOCALE_NAMES,
   type CreateAppI18nOptions,
 } from "../lib/i18n"
