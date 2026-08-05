@@ -53,8 +53,16 @@ jobs:
 
       - name: Install dependencies
         # The committed .npmrc reads its token from ${GITHUB_TOKEN}; the install needs the
-        # org's cross-org read token, same as checks.yml. The publish steps below use the
-        # write PAT instead.
+        # org's cross-org read token, same as checks.yml.
+        #
+        # GH_PACKAGES_TOKEN is used by EVERY step in this file — reads and writes — because
+        # it carries write:packages and because one secret name cannot half-exist. This repo
+        # previously split them (PACKAGES_TOKEN to publish, GH_PACKAGES_TOKEN to install)
+        # while only PACKAGES_TOKEN was actually defined, so the install expanded to an EMPTY
+        # token and 401'd for months, invisibly, because nothing here consumed a GH Packages
+        # package until @max-health-inc/config did. Renaming the secret then broke publishing
+        # the same way, from the other side. Matches config and i18n, which publish with
+        # GH_PACKAGES_TOKEN.
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
         run: bun install
@@ -67,8 +75,8 @@ jobs:
       - name: Is this version already published?
         id: check
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
         run: |
           NAME=$(node -p "require('./package.json').name")
           VERSION=$(node -p "require('./package.json').version")
@@ -88,10 +96,10 @@ jobs:
         if: steps.check.outputs.published == 'false'
         run: npm publish
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
           # The committed .npmrc resolves _authToken from ${GITHUB_TOKEN}; the publish
           # needs a write-capable token there too (else it expands empty → E401).
-          GITHUB_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
 
       # Tag the released commit so a registry version is traceable to a commit.
       # Skipped when the tag already exists, which is the case when this run was
