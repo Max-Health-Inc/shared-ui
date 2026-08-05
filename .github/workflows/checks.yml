@@ -30,11 +30,22 @@ jobs:
           bun-version: latest
 
       - name: Install dependencies
-        # The committed .npmrc points the @max-network scope at GH Packages and reads
-        # its token from ${GITHUB_TOKEN}, so the install needs the org's cross-org
-        # read token for any dependency on that scope.
+        # The committed .npmrc points @max-health-inc and @max-network at GH Packages and
+        # reads the token from ${GITHUB_TOKEN}. The run's OWN token is enough here: the only
+        # GH Packages dependency is @max-health-inc/config, which is a PUBLIC package in this
+        # same org, and a public package is readable by any authenticated token.
+        #
+        # Deliberately NOT secrets.GH_PACKAGES_TOKEN. Nothing in this repo consumed a GH
+        # Packages package until config moved off its git URL, so that secret had never been
+        # exercised — and when it finally was, it came back 401, i.e. rejected outright rather
+        # than merely unauthorized. The automatic token cannot expire, so it cannot rot the
+        # same way. Matches dicom-viewer's publish-ig.yml, which authenticates to the same
+        # registry with secrets.GITHUB_TOKEN.
+        #
+        # If this repo ever takes a PRIVATE dependency, or one from another org (@max-network
+        # is a different org), this must go back to a PAT with read:packages for it.
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: bun install
 
       - name: Lint
