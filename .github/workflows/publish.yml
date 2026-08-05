@@ -52,12 +52,11 @@ jobs:
           scope: '@max-health-inc'
 
       - name: Install dependencies
-        # The run's own token suffices: the only GH Packages dependency is
-        # @max-health-inc/config, a PUBLIC package in this org. See checks.yml for why this
-        # is not secrets.GH_PACKAGES_TOKEN (it had never been exercised and returned 401).
-        # The PUBLISH steps below still need the write PAT — only reading changed.
+        # The committed .npmrc reads its token from ${GITHUB_TOKEN}; the install needs the
+        # org's cross-org read token, same as checks.yml. The publish steps below use the
+        # write PAT instead.
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
         run: bun install
 
       # Only the build is repeated here, because `npm publish` needs dist/ in THIS

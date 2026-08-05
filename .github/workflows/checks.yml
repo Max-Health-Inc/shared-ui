@@ -31,26 +31,18 @@ jobs:
 
       - name: Install dependencies
         # The committed .npmrc points @max-health-inc and @max-network at GH Packages and
-        # reads its token from ${GITHUB_TOKEN}. The run's OWN token is used, NOT
-        # secrets.GH_PACKAGES_TOKEN, because the PAT does not work here and we could not
-        # establish why.
+        # reads its token from ${GITHUB_TOKEN}, so the install needs the org's cross-org read
+        # token. The run's own GITHUB_TOKEN would cover @max-health-inc/config (public, same
+        # org) but NOT @max-network, which is a different org.
         #
-        # What is established: with GH_PACKAGES_TOKEN this step fails
-        #   401 GET https://npm.pkg.github.com/download/@max-health-inc/config/<v>/<sha>
-        # and with the run's own token it succeeds. Ruled out by test, not by reasoning:
-        # token expiry (it has none), a missing read:packages scope (present — and a local
-        # token WITHOUT that scope downloads the package fine), package visibility (made
-        # public; identical 401 after), SAML SSO authorization (the org has no SAML IdP),
-        # and a stale secret value (re-set; identical 401 after). Other repos install the
-        # same package with their own GH_PACKAGES_TOKEN, so the failure is specific to this
-        # repo's credential, not to the package.
-        #
-        # This works only while every GH Packages dependency is PUBLIC and in THIS org, which
-        # today means @max-health-inc/config alone. @max-network is a different org and a
-        # run-scoped token cannot read it, so adding any @max-network dependency requires
-        # solving the PAT problem first — do not just swap the token and expect it to work.
+        # This step failed 401 on every run until 2026-08-05 for a dull reason worth writing
+        # down: the secret was named PACKAGES_TOKEN here, so GH_PACKAGES_TOKEN did not exist
+        # and the expression expanded to an EMPTY string, leaving `_authToken=` in .npmrc.
+        # The registry answers 401 to that exactly as it would to a bad token. Note the env
+        # block still logs `GITHUB_TOKEN: ***` when the secret is missing, so a masked value
+        # in the log is NOT evidence that a secret is set.
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
         run: bun install
 
       - name: Lint
