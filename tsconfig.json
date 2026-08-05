@@ -1,5 +1,5 @@
 {
-  "extends": "@max-health/config/tsconfig/app.json",
+  "extends": "@max-health-inc/config/tsconfig/app.json",
   "compilerOptions": {
     /*
      * Emit settings: `build` runs `tsc --emitDeclarationOnly --outDir dist`, so the preset's

@@ -16,7 +16,7 @@
       },
       "devDependencies": {
         "@eslint/js": "^10.0.1",
-        "@max-health/config": "github:max-health-inc/config",
+        "@max-health-inc/config": "^3.1.0",
         "@tailwindcss/vite": "^4.2.4",
         "@types/bun": "^1.3.13",
         "@types/react": "^19.2.14",
@@ -133,7 +133,7 @@
 
     "@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.31", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw=="],
 
-    "@max-health/config": ["@max-health/config@github:max-health-inc/config#259ca38", { "peerDependencies": { "@eslint/js": ">=9", "@tailwindcss/vite": ">=4", "@vitejs/plugin-react-swc": ">=4", "eslint": ">=9", "eslint-plugin-react-hooks": ">=5", "eslint-plugin-react-refresh": ">=0.4", "globals": ">=15", "typescript-eslint": ">=8", "vite": ">=6" }, "optionalPeers": ["@tailwindcss/vite", "@vitejs/plugin-react-swc", "eslint-plugin-react-hooks", "eslint-plugin-react-refresh", "vite"] }, "Max-Health-Inc-config-259ca38", "sha512-KZwIARaoYNS3r46cnM7h6f9LfvPpsi5tlH1L1rrNnNI0TNP2sTmLIepxfdifUhzO6mDNzRGn/MC2+SO6HMFQJQ=="],
+    "@max-health-inc/config": ["@max-health-inc/config@3.1.0", "https://npm.pkg.github.com/download/@max-health-inc/config/3.1.0/b7453f61169d1e601fa43dfb56046c4418eaab2b", { "peerDependencies": { "@eslint/js": ">=9", "eslint": ">=9", "globals": ">=15", "typescript-eslint": ">=8" } }, "sha512-DscdTTcibD1QTFcvbj91S16TTmWdnA9gvXdkRIZjg7+tTSA4WJ0yhairAgeBX16BDhAiosuq6iX2EhV7mdRidg=="],
 
     "@microsoft/api-extractor": ["@microsoft/api-extractor@7.58.7", "", { "dependencies": { "@microsoft/api-extractor-model": "7.33.8", "@microsoft/tsdoc": "~0.16.0", "@microsoft/tsdoc-config": "~0.18.1", "@rushstack/node-core-library": "5.23.1", "@rushstack/rig-package": "0.7.3", "@rushstack/terminal": "0.24.0", "@rushstack/ts-command-line": "5.3.9", "diff": "~8.0.2", "minimatch": "10.2.3", "resolve": "~1.22.1", "semver": "~7.7.4", "source-map": "~0.6.1", "typescript": "5.9.3" }, "bin": { "api-extractor": "bin/api-extractor" } }, "sha512-yK6OycD46gIzLRpj6ueVUWPk1ACSpkN1LBo05gY1qPTylbWyUCanXfH7+VgkI5LJrJoRSQR5F04XuCffCXLOBw=="],
 
