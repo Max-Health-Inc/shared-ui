@@ -19,6 +19,11 @@ export interface AppHeaderProps {
   onSwitchPatient?: () => void
   /** Optional extra content rendered after the title (e.g. a launch-mode badge) */
   children?: ReactNode
+  /**
+   * Extra controls rendered on the RIGHT, before the built-in actions (e.g. ModeToggle,
+   * SettingsDialog). Shown regardless of `hideActions`, which governs only the built-ins.
+   */
+  actions?: ReactNode
   /** Tailwind max-width class for the inner container (default: "max-w-5xl") */
   maxWidth?: string
   /** Hide all action buttons (Sign Out, App Store) — useful for shared/public views */
@@ -36,6 +41,7 @@ export function AppHeader({
   onSignOut,
   onSwitchPatient,
   children,
+  actions,
   maxWidth = "max-w-5xl",
   hideActions,
   appStoreUrl = "/apps",
@@ -56,6 +62,7 @@ export function AppHeader({
           {children}
         </div>
         <div className="flex items-center gap-1 shrink-0">
+          {actions}
           {installLabel !== false && <PwaInstallButton label={installLabel} />}
           {!hideActions && (authenticated ? (
             <>

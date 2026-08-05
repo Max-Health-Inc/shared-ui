@@ -124,6 +124,20 @@ export {
 } from "./hooks/use-scene"
 export { ScenePicker, type ScenePickerProps } from "./components/scene-picker"
 export {
+  ThemeProvider,
+  useTheme,
+  ThemeContext,
+  resolveTheme,
+  isTheme,
+  THEMES,
+  type Theme,
+  type ResolvedTheme,
+  type ThemeProviderProps,
+  type ThemeProviderState,
+} from "./hooks/use-theme"
+export { ModeToggle, type ModeToggleProps } from "./components/mode-toggle"
+export { SettingsDialog, type SettingsDialogProps } from "./components/settings-dialog"
+export {
   usePwaInstall,
   type UsePwaInstallReturn,
   PWA_INSTALL_CAPTURE_SCRIPT,
