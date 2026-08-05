@@ -31,21 +31,18 @@ jobs:
 
       - name: Install dependencies
         # The committed .npmrc points @max-health-inc and @max-network at GH Packages and
-        # reads the token from ${GITHUB_TOKEN}. The run's OWN token is enough here: the only
-        # GH Packages dependency is @max-health-inc/config, which is a PUBLIC package in this
-        # same org, and a public package is readable by any authenticated token.
+        # reads its token from ${GITHUB_TOKEN}, so the install needs the org's cross-org read
+        # token. The run's own GITHUB_TOKEN would cover @max-health-inc/config (public, same
+        # org) but NOT @max-network, which is a different org.
         #
-        # Deliberately NOT secrets.GH_PACKAGES_TOKEN. Nothing in this repo consumed a GH
-        # Packages package until config moved off its git URL, so that secret had never been
-        # exercised — and when it finally was, it came back 401, i.e. rejected outright rather
-        # than merely unauthorized. The automatic token cannot expire, so it cannot rot the
-        # same way. Matches dicom-viewer's publish-ig.yml, which authenticates to the same
-        # registry with secrets.GITHUB_TOKEN.
-        #
-        # If this repo ever takes a PRIVATE dependency, or one from another org (@max-network
-        # is a different org), this must go back to a PAT with read:packages for it.
+        # This step failed 401 on every run until 2026-08-05 for a dull reason worth writing
+        # down: the secret was named PACKAGES_TOKEN here, so GH_PACKAGES_TOKEN did not exist
+        # and the expression expanded to an EMPTY string, leaving `_authToken=` in .npmrc.
+        # The registry answers 401 to that exactly as it would to a bad token. Note the env
+        # block still logs `GITHUB_TOKEN: ***` when the secret is missing, so a masked value
+        # in the log is NOT evidence that a secret is set.
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
         run: bun install
 
       - name: Lint
