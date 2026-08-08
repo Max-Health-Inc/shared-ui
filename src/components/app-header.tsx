@@ -1,6 +1,5 @@
 import type { ComponentType, ReactNode } from "react"
-import type { LucideIcon } from "lucide-react"
-import { LayoutGrid, LogOut, UserRoundSearch } from "lucide-react"
+import { LayoutGrid, LogOut, UserRoundSearch, type LucideIcon } from "lucide-react"
 import { Button } from "./button"
 import { PwaInstallButton } from "./pwa-install-button"
 import { useBranding } from "../hooks/use-branding"

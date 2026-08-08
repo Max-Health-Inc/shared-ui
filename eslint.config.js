@@ -2,6 +2,7 @@ import js from "@eslint/js"
 import tseslint from "typescript-eslint"
 import reactHooks from "eslint-plugin-react-hooks"
 import reactRefresh from "eslint-plugin-react-refresh"
+import { sharedRules, typeCheckedRules } from "@max-health-inc/config/eslint/rules"
 
 export default tseslint.config(
   // Base JS recommended
@@ -40,18 +41,18 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
 
-      // TypeScript strictness
-      "@typescript-eslint/no-explicit-any": "error",
+      // Org baseline. These were copied out by hand and had already drifted:
+      // no-unused-vars was missing caughtErrors/restSiblings, and
+      // consistent-type-imports was missing the inline fix style.
+      ...sharedRules,
+      ...typeCheckedRules,
+
+      // Stricter than the baseline, deliberately: this is a published library,
+      // so a non-null assertion or an unawaited async in here becomes a bug in
+      // every consuming app.
       "@typescript-eslint/no-non-null-assertion": "error",
       "@typescript-eslint/no-unnecessary-condition": "error",
-      "@typescript-eslint/consistent-type-imports": ["error", { prefer: "type-imports" }],
-      "@typescript-eslint/no-floating-promises": "error",
-      "@typescript-eslint/no-misused-promises": "error",
       "@typescript-eslint/require-await": "error",
-      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
-
-      // General code quality
-      "no-console": ["warn", { allow: ["warn", "error"] }],
       "no-restricted-syntax": [
         "error",
         { selector: "TSEnumDeclaration", message: "Use const objects instead of enums." },
