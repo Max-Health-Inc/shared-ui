@@ -1,6 +1,5 @@
 import { createContext, useContext, type ComponentType, type ReactNode } from "react"
-import type { LucideIcon } from "lucide-react"
-import { LogIn, AlertTriangle, WifiOff, ShieldAlert, RefreshCw } from "lucide-react"
+import { LogIn, AlertTriangle, WifiOff, ShieldAlert, RefreshCw, type LucideIcon } from "lucide-react"
 import { AppHeader, type AppHeaderProps } from "./app-header"
 import { Button } from "./button"
 import { Spinner } from "./spinner"

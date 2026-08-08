@@ -1,7 +1,6 @@
-import i18next from "i18next"
+import i18next, { type i18n as I18nInstance } from "i18next"
 import { initReactI18next } from "react-i18next"
 import LanguageDetector from "i18next-browser-languagedetector"
-import type { i18n as I18nInstance } from "i18next"
 
 /**
  * Optional DRY i18n mechanism for Max Health apps.
