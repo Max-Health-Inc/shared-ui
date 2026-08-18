@@ -4,7 +4,7 @@
  * enforce the app's SMART scopes, consent, and audit). This keeps the record
  * components reusable across patient-portal, AIHR, and any future consumer.
  */
-import type { VerifiableResource } from "@/lib/fhir-verification"
+import type { VerifiableResource } from "../../lib/fhir-verification"
 
 /** Parameterise with the app's own resource union. An index-signature type is not usable here — it excludes every generated FHIR type. */
 export interface FhirRecordClient<TResource extends object = VerifiableResource> {
