@@ -15,10 +15,11 @@
 
     /* Consumers typecheck this package's SOURCE (main/types point at src/index.ts), so its
      * strictness has to match theirs or it fails inside their build. */
-    "esModuleInterop": true,
-    "paths": {
-      "@/*": ["./src/*"]
-    }
+    "esModuleInterop": true
+
+    /* No "paths" alias on purpose. tsconfig.json is not shipped, so a consumer compiles
+     * this src/ with THEIR config and any `@/...` import resolves nowhere — which is how
+     * 0.10.0 went out broken. Without the alias, such an import fails here too. */
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist", "src/**/*.test.ts"]
