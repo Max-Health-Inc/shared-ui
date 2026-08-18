@@ -62,19 +62,19 @@ export interface Reference {
 }
 
 /**
- * A resource this module can attribute/verify. The index signature keeps it
- * compatible with fully-typed FHIR resources without forcing a cast at call sites.
+ * A resource this module can attribute/verify. No index signature on purpose: one
+ * here rejects every generated FHIR type, which gets no implicit index signature.
  */
 export interface VerifiableResource {
   resourceType?: string
   id?: string
+  subject?: Reference
   verificationStatus?: CodeableConcept
   extension?: Extension[]
   meta?: { tag?: Coding[] }
   recorder?: Reference
   asserter?: Reference
   performer?: unknown
-  [key: string]: unknown
 }
 
 // ── Role parsing (single source of truth for fhirUser → role) ─────────────────

@@ -101,3 +101,58 @@ describe("buildProvenance", () => {
     expect(agents).toHaveLength(2)
   })
 })
+
+/**
+ * Generated FHIR types (fhir-ips, @types/fhir) are interfaces, and TypeScript gives an
+ * interface no implicit index signature. VerifiableResource used to declare one, so every
+ * such type was rejected and callers widened through `any` to get past it — which is how
+ * patient-portal ended up with `PortalFhirResource & Record<string, any>`.
+ *
+ * These interfaces stand in for a generated one: declared fields, no index signature. If
+ * an index signature comes back, this file stops compiling.
+ */
+interface GeneratedCondition {
+  resourceType: "Condition"
+  id?: string
+  subject?: { reference?: string }
+  code?: { coding?: { system?: string; code?: string; display?: string }[]; text?: string }
+  verificationStatus?: { coding?: { system?: string; code?: string; display?: string }[]; text?: string }
+  extension?: { url: string; valueString?: string }[]
+  meta?: { tag?: { system?: string; code?: string; display?: string }[]; lastUpdated?: string }
+  onsetDateTime?: string
+}
+
+describe("VerifiableResource accepts generated FHIR types", () => {
+  const condition: GeneratedCondition = {
+    resourceType: "Condition",
+    id: "c1",
+    code: { text: "Asthma" },
+  }
+
+  it("reads a resource that declares no index signature", () => {
+    expect(isResourceVerified(condition)).toBe(false)
+    expect(describeVerification(condition).verified).toBe(false)
+    expect(hasSnapshot(condition)).toBe(false)
+  })
+
+  /** The generic returns the caller's type, so no downstream cast is needed either. */
+  it("returns the caller's own type from the write helpers", () => {
+    const confirmed: GeneratedCondition = markAsConfirmed(condition)
+    expect(confirmed.resourceType).toBe("Condition")
+    expect(isResourceVerified(confirmed)).toBe(true)
+
+    const provisional: GeneratedCondition = markAsProvisional(confirmed, condition)
+    expect(isResourceVerified(provisional)).toBe(false)
+    expect(hasSnapshot(provisional)).toBe(true)
+    expect(getSnapshot(provisional)?.id).toBe("c1")
+  })
+
+  it("stamps authorship without losing the type", () => {
+    const stamped: GeneratedCondition = stampAuthorship(condition, {
+      role: "practitioner",
+      authorReference: "Practitioner/45",
+    })
+    expect(stamped.resourceType).toBe("Condition")
+    expect(isResourceVerified(stamped)).toBe(true)
+  })
+})

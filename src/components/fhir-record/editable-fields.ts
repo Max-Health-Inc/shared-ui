@@ -102,7 +102,7 @@ export function getByPath(obj: unknown, path: string): unknown {
  * Immutably set a dot-notation path, auto-creating intermediate objects/arrays
  * (a numeric next-key creates an array). Returns a deep clone with the change.
  */
-export function setByPath<T extends Record<string, unknown>>(obj: T, path: string, value: unknown): T {
+export function setByPath<T extends object>(obj: T, path: string, value: unknown): T {
   const clone = structuredClone(obj)
   const keys = path.split(".")
   // `split` always yields at least one element, but the index signature cannot say so.
