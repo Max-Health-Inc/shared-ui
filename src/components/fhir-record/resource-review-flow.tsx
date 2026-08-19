@@ -7,7 +7,7 @@ import { CheckCircle2, AlertTriangle, XCircle, Check, X } from "lucide-react"
 import { ResourceReviewCard } from "./resource-review-card"
 import type { FailedResource, ImportedResource } from "./editable-fields"
 import type { FhirRecordClient } from "./client"
-import { identityT, type TFn } from "./i18n"
+import { useUiText, type TFn } from "../../lib/ui-text"
 import {
   buildProvenance, isPatientRole, stampAuthorship, type FhirUserRole,
 } from "../../lib/fhir-verification"
@@ -52,8 +52,9 @@ export interface ResourceReviewFlowProps {
  */
 export function ResourceReviewFlow({
   resources, failed = [], documentReference, client, role, authorReference, assemblerDevice,
-  fileName, processingTimeMs, onClose, onSaved, t = identityT,
+  fileName, processingTimeMs, onClose, onSaved, t: appT,
 }: ResourceReviewFlowProps) {
+  const t = useUiText(appT)
   const [step, setStep] = useState<Step>("review")
   const [selections, setSelections] = useState<Selection[]>(() => resources.map((r) => ({ resource: r, selected: true })))
   const [saveProgress, setSaveProgress] = useState({ saved: 0, total: 0 })

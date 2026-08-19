@@ -3,6 +3,7 @@ import { Card, CardContent } from "./card"
 import { Badge } from "./badge"
 import { User, Droplets } from "lucide-react"
 import { formatHumanName, formatFhirDate } from "../lib/fhir-helpers"
+import { useUiText, type TFn } from "../lib/ui-text"
 
 // ── Generic FHIR Patient shape (works with R4, IPS, or any conformant type) ─
 
@@ -27,6 +28,8 @@ export interface PatientBannerProps {
   formatMrn?: (value: string) => string
   /** Label prefix for sex assigned at birth — defaults to "SAAB: ${value}" */
   formatBirthSex?: (value: string) => string
+  /** The app's translate function; omit it and this package's own catalogue is used. */
+  t?: TFn
 }
 
 function differenceInYears(a: Date, b: Date): number {
@@ -40,11 +43,18 @@ export function PatientBanner({
   patient,
   bloodType,
   actions,
-  formatAge = (age) => `${String(age)} yo`,
+  formatAge,
   formatDate = (date) => formatFhirDate(date),
-  formatMrn = (v) => `MRN: ${v}`,
-  formatBirthSex = (v) => `SAAB: ${v}`,
+  formatMrn,
+  formatBirthSex,
+  t: appT,
 }: PatientBannerProps) {
+  const t = useUiText(appT)
+  // Defaults come from the catalogue rather than the parameter list, which cannot
+  // reach a hook; an app-supplied formatter still wins.
+  const ageLabel = formatAge ?? ((value: number) => t("{{age}} yo", { age: value }))
+  const mrnLabel = formatMrn ?? ((value: string) => t("MRN: {{value}}", { value }))
+  const birthSexLabel = formatBirthSex ?? ((value: string) => t("SAAB: {{value}}", { value }))
   const name = formatHumanName(patient.name)
   const birthDate = patient.birthDate ? new Date(patient.birthDate) : null
   const age = birthDate ? differenceInYears(new Date(), birthDate) : null
@@ -73,7 +83,7 @@ export function PatientBanner({
             <h2 className="text-base sm:text-xl font-semibold truncate">{name}</h2>
             {birthDate && (
               <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
-                {formatDate(birthDate)}{age !== null && ` (${formatAge(age)})`}
+                {formatDate(birthDate)}{age !== null && ` (${ageLabel(age)})`}
               </span>
             )}
           </div>
@@ -83,13 +93,13 @@ export function PatientBanner({
             {genderIdentity && genderIdentity.toLowerCase() !== patient.gender?.toLowerCase() && (
               <Badge variant="outline" className="text-xs">{genderIdentity}</Badge>
             )}
-            {birthSex && <Badge variant="secondary" className="text-xs" title="Sex assigned at birth">{formatBirthSex(birthSex)}</Badge>}
+            {birthSex && <Badge variant="secondary" className="text-xs" title={t("Sex assigned at birth")}>{birthSexLabel(birthSex)}</Badge>}
             {pronouns && <Badge variant="secondary" className="text-xs">{pronouns}</Badge>}
             {bloodType && (
               <Badge variant="outline" className="text-xs gap-1"><Droplets className="size-3" />{bloodType}</Badge>
             )}
             {patient.identifier?.[0]?.value && (
-              <span className="text-xs text-muted-foreground font-mono">{formatMrn(patient.identifier[0].value)}</span>
+              <span className="text-xs text-muted-foreground font-mono">{mrnLabel(patient.identifier[0].value)}</span>
             )}
           </div>
         </div>

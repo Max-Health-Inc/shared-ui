@@ -3,6 +3,7 @@ import { MessageBanner } from "./message-banner"
 import { Spinner } from "./spinner"
 import { useServiceWorkerUpdate } from "../hooks/use-service-worker-update"
 import { cn } from "../lib/utils"
+import { useUiText, type TFn } from "../lib/ui-text"
 
 export interface ServiceWorkerUpdatePromptProps {
   /**
@@ -12,7 +13,7 @@ export interface ServiceWorkerUpdatePromptProps {
   enabled?: boolean
   /** URL of the service worker to register (default: `/sw.js`). */
   swUrl?: string
-  /** Banner copy (default: "A new version is available."). */
+  /** Banner copy (default: a translated "A new version is available."). */
   message?: string
   /**
    * Banner copy while the reload is in flight (default: "Updating…"). Also the
@@ -21,6 +22,8 @@ export interface ServiceWorkerUpdatePromptProps {
   reloadingMessage?: string
   /** Additional Tailwind classes for the banner. */
   className?: string
+  /** The app's translate function; omit it and this package's own catalogue is used. */
+  t?: TFn
 }
 
 /**
@@ -47,10 +50,14 @@ export interface ServiceWorkerUpdatePromptProps {
 export function ServiceWorkerUpdatePrompt({
   enabled = true,
   swUrl,
-  message = "A new version is available.",
-  reloadingMessage = "Updating…",
+  message,
+  reloadingMessage,
   className,
+  t: appT,
 }: ServiceWorkerUpdatePromptProps) {
+  const t = useUiText(appT)
+  const banner = message ?? t("A new version is available.")
+  const reloadingBanner = reloadingMessage ?? t("Updating…")
   const { updateAvailable, reload, dismiss, reloading } = useServiceWorkerUpdate({
     enabled,
     swUrl,
@@ -69,7 +76,7 @@ export function ServiceWorkerUpdatePrompt({
         )}
       >
         <div className="flex items-center gap-3">
-          <span className="flex-1">{reloading ? reloadingMessage : message}</span>
+          <span className="flex-1">{reloading ? reloadingBanner : banner}</span>
           {/* Activating the new worker is not instant, so the button becomes a progress
               indicator rather than sitting there still reading "Reload" as if the click
               had missed. Disabled while it runs: a second SKIP_WAITING does nothing but
@@ -79,10 +86,10 @@ export function ServiceWorkerUpdatePrompt({
             {reloading ? (
               <>
                 <Spinner size="sm" className="border-current/30 border-t-current" aria-hidden />
-                <span className="sr-only">{reloadingMessage}</span>
+                <span className="sr-only">{reloadingBanner}</span>
               </>
             ) : (
-              "Reload"
+              t("Reload")
             )}
           </Button>
         </div>

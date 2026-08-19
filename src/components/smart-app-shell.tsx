@@ -5,6 +5,7 @@ import { Button } from "./button"
 import { Spinner } from "./spinner"
 import { useBranding } from "../hooks/use-branding"
 import { useSmartAuth, type SmartAuthLike, type UseSmartAuthOptions } from "../hooks/use-smart-auth"
+import { useUiText, type TFn } from "../lib/ui-text"
 
 /** Context providing the current patient ID (reactive — updates on Switch Patient). */
 const PatientContext = createContext<string | undefined>(undefined)
@@ -46,6 +47,12 @@ export interface SmartAppShellProps {
   renderSessionExpired?: (error: string | null, login: () => void) => ReactNode
   /** Offer a "Switch Patient" button in the header when authenticated. Triggers a new authorize flow (no re-login needed thanks to IdP session). Only shown when the session can actually pick a patient — a practitioner (`fhirUser` is a Practitioner) holding the `launch/patient` scope (standalone launch). Patient logins and EHR launches never see it. Default: false */
   switchPatient?: boolean
+  /**
+   * The app's translate function, used where it has a translation for one of this
+   * package's keys and forwarded to the header. Omit it and the strings come from
+   * this package's own catalogue in the active language, or English.
+   */
+  t?: TFn
 }
 
 export function SmartAppShell({
@@ -63,7 +70,9 @@ export function SmartAppShell({
   renderUnauthenticated,
   renderSessionExpired,
   switchPatient = false,
+  t: appT,
 }: SmartAppShellProps) {
+  const t = useUiText(appT)
   const { state, error, handleLogin, handleLogout, patientId, canSwitchPatient } = useSmartAuth({
     smartAuth,
     ...hookOptions,
@@ -73,7 +82,7 @@ export function SmartAppShell({
   const content = (
     <PatientContext.Provider value={patientId}>
     <div className="flex flex-col h-full min-h-screen bg-background">
-      <AppHeader {...header} authenticated={state === "authenticated"} onSignOut={handleLogout} onSwitchPatient={switchPatient && canSwitchPatient ? handleLogin : undefined} />
+      <AppHeader {...header} t={header.t ?? appT} authenticated={state === "authenticated"} onSignOut={handleLogout} onSwitchPatient={switchPatient && canSwitchPatient ? handleLogin : undefined} />
 
       <main className={`${maxWidth} mx-auto px-4 py-6 flex-1 overflow-y-auto w-full`}>
         {state === "loading" || state === "callback" ? (
@@ -83,7 +92,7 @@ export function SmartAppShell({
             <div className="flex flex-col items-center justify-center py-24 gap-4">
               <Spinner size="lg" />
               <p className="text-muted-foreground">
-                {state === "callback" ? "Completing sign in..." : "Loading..."}
+                {state === "callback" ? t("Completing sign in...") : t("Loading...")}
               </p>
             </div>
           )
@@ -94,14 +103,14 @@ export function SmartAppShell({
             <div className="flex flex-col items-center justify-center py-24 gap-6">
               <div className="text-center space-y-3">
                 <AlertTriangle className="size-12 mx-auto text-amber-500" />
-                <h2 className="text-xl font-semibold">Session Expired</h2>
+                <h2 className="text-xl font-semibold">{t("Session Expired")}</h2>
                 <p className="text-muted-foreground max-w-md">
-                  {error ?? "Your session has expired. Please sign in again to continue."}
+                  {error ?? t("Your session has expired. Please sign in again to continue.")}
                 </p>
               </div>
               <Button size="lg" onClick={handleLogin}>
                 <LogIn className="size-4" />
-                Sign In Again
+                {t("Sign In Again")}
               </Button>
             </div>
           )
@@ -109,7 +118,7 @@ export function SmartAppShell({
           renderError ? (
             renderError(error, handleLogin)
           ) : (
-            <AuthErrorBoundary error={error} onRetry={handleLogin} />
+            <AuthErrorBoundary error={error} onRetry={handleLogin} t={t} />
           )
         ) : state === "unauthenticated" ? (
           renderUnauthenticated ? (
@@ -127,7 +136,7 @@ export function SmartAppShell({
               </div>
               <Button size="lg" onClick={handleLogin}>
                 <LogIn className="size-4" />
-                Sign In with SMART
+                {t("Sign In with SMART")}
               </Button>
             </div>
           )
@@ -146,6 +155,7 @@ export function SmartAppShell({
 
 interface AuthErrorInfo {
   icon: LucideIcon
+  /** Source strings, resolved by the view — this helper runs outside React. */
   title: string
   message: string
   isNetwork: boolean
@@ -198,7 +208,7 @@ function classifyAuthError(error: string | null): AuthErrorInfo {
   }
 }
 
-function AuthErrorBoundary({ error, onRetry }: { error: string | null; onRetry: () => void }) {
+function AuthErrorBoundary({ error, onRetry, t }: { error: string | null; onRetry: () => void; t: TFn }) {
   const info = classifyAuthError(error)
   const ErrorIcon = info.icon
 
@@ -208,22 +218,22 @@ function AuthErrorBoundary({ error, onRetry }: { error: string | null; onRetry: 
         <ErrorIcon className="size-10 text-muted-foreground" />
       </div>
       <div className="text-center space-y-2 max-w-md">
-        <h2 className="text-xl font-semibold">{info.title}</h2>
-        <p className="text-muted-foreground text-sm leading-relaxed">{info.message}</p>
+        <h2 className="text-xl font-semibold">{t(info.title)}</h2>
+        <p className="text-muted-foreground text-sm leading-relaxed">{t(info.message)}</p>
       </div>
       <div className="flex gap-3">
         <Button variant="outline" onClick={() => { window.location.reload() }}>
           <RefreshCw className="size-4" />
-          Reload Page
+          {t("Reload Page")}
         </Button>
         <Button onClick={onRetry}>
           <LogIn className="size-4" />
-          Try Again
+          {t("Try Again")}
         </Button>
       </div>
       {error && (
         <details className="text-xs text-muted-foreground/60 max-w-sm">
-          <summary className="cursor-pointer hover:text-muted-foreground">Technical details</summary>
+          <summary className="cursor-pointer hover:text-muted-foreground">{t("Technical details")}</summary>
           <code className="block mt-1 p-2 bg-muted rounded text-[11px] break-all">{error}</code>
         </details>
       )}

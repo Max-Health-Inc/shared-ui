@@ -3,7 +3,7 @@
 import * as React from "react"
 import { Settings } from "lucide-react"
 import { ScenePicker } from "./scene-picker"
-import { identityT, type TFn } from "./fhir-record/i18n"
+import { useUiText, type TFn } from "../lib/ui-text"
 import { Button } from "./button"
 import {
   Dialog,
@@ -24,7 +24,10 @@ export interface SettingsDialogProps {
   showScenePicker?: boolean
   /** App-specific settings, rendered below the shared ones. */
   children?: React.ReactNode
-  /** The app's translate function. Omit it and the English source strings are used verbatim. */
+  /**
+   * The app's translate function, used where it has a translation for one of this
+   * package's keys. Omit it and this package's own catalogue is used.
+   */
   t?: TFn
   className?: string
 }
@@ -41,9 +44,11 @@ function SettingsDialog({
   defaultScene,
   showScenePicker = true,
   children,
-  t = identityT,
+  t: appT,
   className,
 }: SettingsDialogProps) {
+  const t = useUiText(appT)
+
   return (
     <Dialog>
       <DialogTrigger asChild>

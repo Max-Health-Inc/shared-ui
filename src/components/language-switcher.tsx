@@ -11,6 +11,7 @@ import {
   DropdownMenuItem,
 } from "./dropdown-menu"
 import { LOCALE_NAMES } from "../lib/i18n"
+import { useUiText } from "../lib/ui-text"
 
 export interface LanguageSwitcherProps {
   className?: string
@@ -32,6 +33,7 @@ function isoCode(lng: string | undefined): string {
  */
 function LanguageSwitcher({ className }: LanguageSwitcherProps) {
   const { i18n } = useTranslation()
+  const t = useUiText()
 
   // `supportedLngs` is `false | readonly string[] | undefined` in i18next.
   const supportedLngs = i18n.options.supportedLngs
@@ -49,8 +51,8 @@ function LanguageSwitcher({ className }: LanguageSwitcherProps) {
           variant="ghost"
           size="sm"
           className={cn("h-7 gap-1 font-medium", className)}
-          aria-label="Select language"
-          title="Select language"
+          aria-label={t("Select language")}
+          title={t("Select language")}
         >
           {isoCode(active)}
           <ChevronDown className="size-3 opacity-60" />

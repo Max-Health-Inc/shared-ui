@@ -6,7 +6,7 @@ import { ShieldCheck, ShieldAlert, Pencil, Trash2, Undo2, CheckCircle2 } from "l
 import { asDisplayString, EDITABLE_TYPES, getByPath, getEditableFields } from "./editable-fields"
 import { RecordEditModal } from "./record-edit-modal"
 import type { FhirRecordClient } from "./client"
-import { identityT, type TFn } from "./i18n"
+import { useUiText, type TFn } from "../../lib/ui-text"
 import { formatFhirDate } from "../../lib/fhir-helpers"
 import {
   describeVerification, getSnapshot, hasSnapshot, isResourceVerified, markAsConfirmed,
@@ -51,8 +51,9 @@ function buildRows(resource: VerifiableResource): DetailRow[] {
  * and practitioner Approve (provisional → confirmed) / Delete.
  */
 export function RecordDetailModal({
-  open, onOpenChange, title, resource, client, onResourceUpdated, onResourceDeleted, isPractitioner = false, t = identityT,
+  open, onOpenChange, title, resource, client, onResourceUpdated, onResourceDeleted, isPractitioner = false, t: appT,
 }: RecordDetailModalProps) {
+  const t = useUiText(appT)
   const [editOpen, setEditOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)

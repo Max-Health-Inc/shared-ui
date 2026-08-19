@@ -12,7 +12,7 @@ import {
 } from "lucide-react"
 import { formatFhirDate } from "../../lib/fhir-helpers"
 import { asDisplayString, getByPath, getEditableFields, setByPath, type ImportedResource } from "./editable-fields"
-import { identityT, type TFn } from "./i18n"
+import { useUiText, type TFn } from "../../lib/ui-text"
 
 /** Validation warnings not useful to a patient (missing narrative, etc.). */
 const SUPPRESSED_WARNING_PATTERNS = [/narrative/i, /text\.div/i, /text\.status/i, /dom-6/i]
@@ -134,7 +134,8 @@ export interface ResourceReviewCardProps {
  * for detail, edit inline before saving. Presentation-only — the parent owns the
  * selection/edit state and the eventual write.
  */
-export function ResourceReviewCard({ resource, selected, onToggleSelect, onResourceEdited, t = identityT }: ResourceReviewCardProps) {
+export function ResourceReviewCard({ resource, selected, onToggleSelect, onResourceEdited, t: appT }: ResourceReviewCardProps) {
+  const t = useUiText(appT)
   const [expanded, setExpanded] = useState(false)
   const [editing, setEditing] = useState(false)
   const [editValues, setEditValues] = useState<Record<string, string>>({})

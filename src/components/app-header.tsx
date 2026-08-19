@@ -3,6 +3,7 @@ import { LayoutGrid, LogOut, UserRoundSearch, type LucideIcon } from "lucide-rea
 import { Button } from "./button"
 import { PwaInstallButton } from "./pwa-install-button"
 import { useBranding } from "../hooks/use-branding"
+import { useUiText, type TFn } from "../lib/ui-text"
 import { cn } from "../lib/utils"
 
 export interface AppHeaderProps {
@@ -29,8 +30,14 @@ export interface AppHeaderProps {
   hideActions?: boolean
   /** URL for the App Store button (default: "/apps") */
   appStoreUrl?: string
-  /** Label for the PWA install button (default: "Install"). Set to false to hide. */
+  /** Label for the PWA install button (default: a translated "Install"). Set to false to hide. */
   installLabel?: string | false
+  /**
+   * The app's translate function, used where it has a translation for one of this
+   * package's keys. Omit it and the strings come from this package's own
+   * catalogue in the active language, or English.
+   */
+  t?: TFn
 }
 
 export function AppHeader({
@@ -44,9 +51,11 @@ export function AppHeader({
   maxWidth = "max-w-5xl",
   hideActions,
   appStoreUrl = "/apps",
-  installLabel = "Install",
+  installLabel,
+  t: appT,
 }: AppHeaderProps) {
   const brand = useBranding()
+  const t = useUiText(appT)
 
   return (
     <header className="border-b border-foreground/10 bg-foreground/[0.02]">
@@ -62,25 +71,25 @@ export function AppHeader({
         </div>
         <div className="flex items-center gap-1 shrink-0">
           {actions}
-          {installLabel !== false && <PwaInstallButton label={installLabel} />}
+          {installLabel !== false && <PwaInstallButton label={installLabel ?? t("Install")} />}
           {!hideActions && (authenticated ? (
             <>
               {onSwitchPatient && (
                 <Button variant="ghost" size="sm" onClick={onSwitchPatient}>
                   <UserRoundSearch className="size-4" />
-                  <span className="hidden sm:inline">Switch Patient</span>
+                  <span className="hidden sm:inline">{t("Switch Patient")}</span>
                 </Button>
               )}
               <Button variant="ghost" size="sm" onClick={onSignOut}>
                 <LogOut className="size-4" />
-                <span className="hidden sm:inline">Sign Out</span>
+                <span className="hidden sm:inline">{t("Sign Out")}</span>
               </Button>
             </>
           ) : (
             <Button variant="ghost" size="sm" asChild>
               <a href={appStoreUrl}>
                 <LayoutGrid className="size-4" />
-                <span className="hidden sm:inline">App Store</span>
+                <span className="hidden sm:inline">{t("App Store")}</span>
               </a>
             </Button>
           ))}

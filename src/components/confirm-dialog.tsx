@@ -4,6 +4,7 @@ import * as React from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "./dialog"
 import { Button } from "./button"
 import { AlertTriangle } from "lucide-react"
+import { useUiText } from "../lib/ui-text"
 
 // ============================================================================
 // Confirm Dialog
@@ -28,6 +29,7 @@ function useConfirm() {
 }
 
 function ConfirmProvider({ children }: { children: React.ReactNode }) {
+  const t = useUiText()
   const [state, setState] = React.useState<ConfirmDialogState>({
     open: false,
     message: "",
@@ -62,7 +64,7 @@ function ConfirmProvider({ children }: { children: React.ReactNode }) {
                 <AlertTriangle className="size-5 text-amber-500" />
               </div>
               <div>
-                <DialogTitle>Confirm Action</DialogTitle>
+                <DialogTitle>{t("Confirm Action")}</DialogTitle>
                 <DialogDescription className="mt-1">
                   {state.message}
                 </DialogDescription>
@@ -71,10 +73,10 @@ function ConfirmProvider({ children }: { children: React.ReactNode }) {
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => { handleResponse(false) }}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button variant="destructive" onClick={() => { handleResponse(true) }}>
-              Confirm
+              {t("Confirm")}
             </Button>
           </DialogFooter>
         </DialogContent>

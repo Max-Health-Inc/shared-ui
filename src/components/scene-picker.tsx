@@ -1,10 +1,7 @@
 "use client"
 
 import { useScene, SCENES, type Scene } from "../hooks/use-scene"
-// `TFn` lives under fhir-record/ for historical reasons but is a generic
-// "optional translate function" contract, re-exported from the package root.
-// Reused here rather than declaring a second identical type.
-import { identityT, type TFn } from "./fhir-record/i18n"
+import { useUiText, type TFn } from "../lib/ui-text"
 import { cn } from "../lib/utils"
 import { Label } from "./label"
 import {
@@ -27,10 +24,11 @@ export interface ScenePickerProps {
   /** Overrides the default description text. Pass `null` to omit it. */
   description?: string | null
   /**
-   * The app's translate function. Omit it and the English source strings are used
-   * verbatim — react-i18next is an optional peer dependency of this package, so
-   * this component never imports it (see `LanguageSwitcher`, which is exported
-   * only from the `/i18n` subpath for that reason).
+   * The app's translate function, used where it has a translation for one of this
+   * package's keys. Omit it and the strings come from this package's own
+   * catalogue in the active language, or English — react-i18next is an optional
+   * peer dependency of this package, so this component never imports it (see
+   * `LanguageSwitcher`, which is exported only from the `/i18n` subpath).
    */
   t?: TFn
   className?: string
@@ -59,9 +57,10 @@ function ScenePicker({
   showLabel = true,
   label,
   description,
-  t = identityT,
+  t: appT,
   className,
 }: ScenePickerProps) {
+  const t = useUiText(appT)
   const { scene, setScene } = useScene({ storageKey, defaultScene })
 
   const labelText = label ?? t(DEFAULT_LABEL)
@@ -81,7 +80,10 @@ function ScenePicker({
       <Select
         value={scene}
         onValueChange={(value) => {
-          setScene(value as Scene)
+          // Narrowed against SCENES rather than asserted, so an unknown value from
+          // the select is ignored instead of stored as a scene that does not exist.
+          const picked = SCENES.find((option) => option.id === value)
+          if (picked) setScene(picked.id)
         }}
       >
         <SelectTrigger className="w-full" aria-label={labelText}>

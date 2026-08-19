@@ -56,6 +56,20 @@ export { CHART_COLORS } from "./lib/chart-colors"
 // FHIR helpers
 export { formatHumanName, formatFhirDate } from "./lib/fhir-helpers"
 
+// This package's own strings and how they resolve. `setUiLanguage` is called for
+// you by `createAppI18n` (see the `/i18n` subpath); it is exported for an app
+// that wires i18n by hand.
+export {
+  setUiLanguage,
+  getUiLanguage,
+  useUiText,
+  uiText,
+  identityT,
+  interpolate,
+  type TFn,
+} from "./lib/ui-text"
+export { UI_TEXT, UI_TEXT_LANGUAGES } from "./lib/ui-text-catalog"
+
 // FHIR data-verification model (shared "who asserted this / is it verified")
 export {
   VERIFICATION_STATUS_SYSTEM,
@@ -97,7 +111,8 @@ export {
   type FailedResource,
 } from "./components/fhir-record/editable-fields"
 export { type FhirRecordClient } from "./components/fhir-record/client"
-export { type TFn } from "./components/fhir-record/i18n"
+// `TFn` is exported above, from lib/ui-text — its single definition. The
+// fhir-record path re-exports it for anything importing that file directly.
 export { ResourceReviewCard, type ResourceReviewCardProps } from "./components/fhir-record/resource-review-card"
 export { RecordEditModal, type RecordEditModalProps } from "./components/fhir-record/record-edit-modal"
 export { RecordDetailModal, type RecordDetailModalProps } from "./components/fhir-record/record-detail-modal"

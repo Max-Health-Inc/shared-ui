@@ -1,6 +1,7 @@
 import i18next, { type i18n as I18nInstance } from "i18next"
 import { initReactI18next } from "react-i18next"
 import LanguageDetector from "i18next-browser-languagedetector"
+import { setUiLanguage } from "./ui-text"
 
 /**
  * Optional DRY i18n mechanism for Max Health apps.
@@ -158,6 +159,20 @@ export function createAppI18n(
       caches: ["localStorage"],
     },
     debug: opts?.debug ?? false,
+  })
+
+  // This package's own components (header, auth states, dialogs) resolve their
+  // text against `ui-text.ts`, which cannot subscribe to i18next because
+  // react-i18next is only an optional peer here. Publishing the active language
+  // to it is what makes the shared chrome follow a language switch, without the
+  // app having to pass a `t` into every shared component or carry this package's
+  // keys in its own translations.json.
+  setUiLanguage(instance.resolvedLanguage ?? instance.language)
+  instance.on("languageChanged", () => {
+    setUiLanguage(instance.resolvedLanguage ?? instance.language)
+  })
+  instance.on("initialized", () => {
+    setUiLanguage(instance.resolvedLanguage ?? instance.language)
   })
 
   return instance

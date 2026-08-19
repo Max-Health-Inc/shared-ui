@@ -2,14 +2,17 @@ import { Download } from "lucide-react"
 import { Button } from "./button"
 import { usePwaInstall, type UsePwaInstallReturn } from "../hooks/use-pwa-install"
 import { cn } from "../lib/utils"
+import { useUiText, type TFn } from "../lib/ui-text"
 
 export interface PwaInstallButtonProps {
-  /** Button label text (default: "Install App") */
+  /** Button label text (default: a translated "Install App") */
   label?: string
   /** Additional Tailwind classes */
   className?: string
   /** Override the internal hook — useful if the parent needs access to the same state */
   pwa?: UsePwaInstallReturn
+  /** The app's translate function; omit it and this package's own catalogue is used. */
+  t?: TFn
 }
 
 /**
@@ -21,7 +24,8 @@ export interface PwaInstallButtonProps {
  * <PwaInstallButton label="Install AIHR" />
  * ```
  */
-export function PwaInstallButton({ label = "Install App", className, pwa }: PwaInstallButtonProps) {
+export function PwaInstallButton({ label, className, pwa, t: appT }: PwaInstallButtonProps) {
+  const t = useUiText(appT)
   const internal = usePwaInstall()
   const { isInstallable, isInstalled, promptInstall } = pwa ?? internal
 
@@ -35,7 +39,7 @@ export function PwaInstallButton({ label = "Install App", className, pwa }: PwaI
       onClick={() => { void promptInstall() }}
     >
       <Download className="size-4" />
-      <span className="hidden sm:inline">{label}</span>
+      <span className="hidden sm:inline">{label ?? t("Install App")}</span>
     </Button>
   )
 }

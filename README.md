@@ -50,6 +50,34 @@ import "@max-health-inc/shared-ui/theme.css"
 ### Theme
 - `theme.css` — CSS custom properties (light + dark mode) for the MaxHealth design system
 
+### Text in this package
+
+The components here render some text of their own — "Sign Out", "Session Expired",
+"Confirm Action". That text belongs to the component, so its translations ship with it in
+`src/lib/ui-text-catalog.ts` (currently de, fr, es, it) rather than being re-translated in
+every consuming app.
+
+An app that calls `createAppI18n()` gets it with no wiring: the helper publishes the active
+language to this package, and the shared chrome follows a language switch.
+
+```tsx
+import { createAppI18n } from "@max-health-inc/shared-ui/i18n"
+export default createAppI18n(translations) // shared chrome now follows the app's language
+```
+
+Wiring i18n by hand instead? Call `setUiLanguage(lng)` whenever the language changes.
+
+To reword any of it, pass the app's `t` — it wins for every key the app actually
+translates, and the catalogue covers the rest:
+
+```tsx
+<SmartAppShell t={t} … />   // also forwarded to AppHeader
+```
+
+**Adding a string to a component here:** put the English source in the JSX via
+`useUiText()` (or `uiText()` in a class component) and add its row to the catalogue. Do not
+inline English in the markup — an app has no way to translate that.
+
 ## Development
 
 ```bash
