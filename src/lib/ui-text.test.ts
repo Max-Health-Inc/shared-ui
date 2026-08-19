@@ -133,3 +133,27 @@ describe("precedence", () => {
     expect(resolve(undefined, "Sign Out")).toBe("Cerrar sesión")
   })
 })
+
+/**
+ * The wiring that was actually missing: an app calling `createAppI18n` must make
+ * this package's chrome follow its language, with no per-component plumbing.
+ */
+describe("createAppI18n integration", () => {
+  it("publishes the app's language to this package, and follows a switch", async () => {
+    const { createAppI18n } = await import("./i18n")
+    const instance = createAppI18n(
+      { _languages: ["de", "fr", "es", "it"], "App own string": ["Eigener Text", "", "", ""] },
+      { detect: false },
+    )
+
+    await instance.changeLanguage("de")
+    expect(getUiLanguage()).toBe("de")
+    expect(uiText("Sign Out")).toBe("Abmelden")
+
+    await instance.changeLanguage("it")
+    expect(uiText("Sign Out")).toBe("Esci")
+
+    await instance.changeLanguage("en")
+    expect(uiText("Sign Out")).toBe("Sign Out")
+  })
+})
