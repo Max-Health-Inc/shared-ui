@@ -4,6 +4,7 @@ import * as React from "react"
 import { cn } from "../lib/utils"
 import { ChevronsUpDown } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "./popover"
+import { useUiText, type TFn } from "../lib/ui-text"
 
 interface ComboboxOption {
   value: string
@@ -23,19 +24,23 @@ interface ComboboxProps {
   className?: string
   /** Visual variant. "default" follows the app theme; "dark" is for dark overlay contexts (e.g. 3D toolbars). */
   variant?: "default" | "dark"
+  /** The app's translate function; omit it and this package's own catalogue is used. */
+  t?: TFn
 }
 
 function Combobox({
   value,
   options,
-  placeholder = "Select...",
-  searchPlaceholder = "Search...",
-  emptyMessage = "No results found",
+  placeholder,
+  searchPlaceholder,
+  emptyMessage,
   onChange,
   disabled = false,
   className,
   variant = "default",
+  t: appT,
 }: ComboboxProps) {
+  const t = useUiText(appT)
   const [open, setOpen] = React.useState(false)
   const [search, setSearch] = React.useState("")
   const inputRef = React.useRef<HTMLInputElement>(null)
@@ -83,7 +88,7 @@ function Combobox({
               ? isDark ? "text-white/90" : "text-foreground"
               : isDark ? "text-white/50" : "text-muted-foreground"
           )}>
-            {selectedOption?.label ?? placeholder}
+            {selectedOption?.label ?? placeholder ?? t("Select...")}
           </span>
           <ChevronsUpDown className={cn("size-4 shrink-0", isDark ? "opacity-60" : "opacity-50")} />
         </button>
@@ -101,7 +106,7 @@ function Combobox({
             type="text"
             value={search}
             onChange={(e) => { setSearch(e.target.value) }}
-            placeholder={searchPlaceholder}
+            placeholder={searchPlaceholder ?? t("Search...")}
             className={cn(
               "flex h-8 w-full rounded-md px-3 py-1 text-sm",
               "focus-visible:outline-none",
@@ -154,7 +159,7 @@ function Combobox({
               "py-4 text-center text-sm",
               isDark ? "text-white/40" : "text-muted-foreground"
             )}>
-              {emptyMessage}
+              {emptyMessage ?? t("No results found")}
             </p>
           )}
         </div>

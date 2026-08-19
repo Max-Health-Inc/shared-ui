@@ -1,10 +1,6 @@
 /**
- * Optional translation function for the FHIR record components. These components
- * keep react-i18next an *optional* peer dependency (matching the rest of
- * shared-ui), so callers pass their app's `t`; when omitted, the key is returned
- * with `{{var}}` placeholders interpolated so English fallbacks still read well.
+ * Kept as the historical import path for the FHIR record components' translate
+ * contract. The definition moved to `lib/ui-text.ts`, which also carries this
+ * package's own translations, so there is one `TFn` rather than two identical ones.
  */
-export type TFn = (key: string, vars?: Record<string, string | number>) => string
-
-export const identityT: TFn = (key, vars) =>
-  vars ? key.replace(/\{\{(\w+)\}\}/g, (_, k: string) => String(vars[k] ?? `{{${k}}}`)) : key
+export { identityT, type TFn } from "../../lib/ui-text"

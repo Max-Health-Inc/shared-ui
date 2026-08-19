@@ -2,6 +2,7 @@ import * as React from "react"
 import { Input } from "./input"
 import { Label } from "./label"
 import { cn } from "../lib/utils"
+import { useUiText, type TFn } from "../lib/ui-text"
 
 /** Common user profile data shared across admin UI and patient portal */
 export interface UserProfileData {
@@ -23,6 +24,8 @@ export interface UserProfileFormFieldsProps {
   className?: string
   /** Additional fields rendered after the standard ones */
   children?: React.ReactNode
+  /** The app's translate function; omit it and this package's own catalogue is used. */
+  t?: TFn
 }
 
 /** Shared user profile form fields (first name, last name, email) used across apps */
@@ -34,17 +37,20 @@ export function UserProfileFormFields({
   labels = {},
   className,
   children,
+  t: appT,
 }: UserProfileFormFieldsProps) {
+  const t = useUiText(appT)
+
   return (
     <div className={cn("space-y-4", className)}>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="profile-firstName">
-            {labels.firstName ?? "First Name"}
+            {labels.firstName ?? t("First Name")}
           </Label>
           <Input
             id="profile-firstName"
-            placeholder="e.g., John"
+            placeholder={t("e.g., John")}
             value={values.firstName}
             onChange={(e) => { onChange("firstName", e.target.value) }}
             disabled={readOnly.firstName}
@@ -56,11 +62,11 @@ export function UserProfileFormFields({
         </div>
         <div className="space-y-2">
           <Label htmlFor="profile-lastName">
-            {labels.lastName ?? "Last Name"}
+            {labels.lastName ?? t("Last Name")}
           </Label>
           <Input
             id="profile-lastName"
-            placeholder="e.g., Smith"
+            placeholder={t("e.g., Smith")}
             value={values.lastName}
             onChange={(e) => { onChange("lastName", e.target.value) }}
             disabled={readOnly.lastName}
@@ -74,7 +80,7 @@ export function UserProfileFormFields({
 
       <div className="space-y-2">
         <Label htmlFor="profile-email">
-          {labels.email ?? "Email Address"}
+          {labels.email ?? t("Email Address")}
         </Label>
         <Input
           id="profile-email"

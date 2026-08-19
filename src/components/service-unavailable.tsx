@@ -1,5 +1,6 @@
 import { ServerCrash, WifiOff, ShieldAlert, AlertTriangle } from "lucide-react"
 import type { ReactNode } from "react"
+import { useUiText, type TFn } from "../lib/ui-text"
 
 export type ServiceErrorVariant = "unavailable" | "offline" | "unauthorized" | "generic"
 
@@ -14,6 +15,8 @@ export interface ServiceUnavailableProps {
   action?: ReactNode
   /** Called when the default Retry button is clicked. Defaults to page reload. */
   onRetry?: () => void
+  /** The app's translate function; omit it and this package's own catalogue is used. */
+  t?: TFn
 }
 
 const VARIANTS: Record<ServiceErrorVariant, {
@@ -65,7 +68,9 @@ export function ServiceUnavailable({
   description,
   action,
   onRetry,
+  t: appT,
 }: ServiceUnavailableProps) {
+  const t = useUiText(appT)
   const config = VARIANTS[variant]
   const Icon = config.icon
 
@@ -74,10 +79,10 @@ export function ServiceUnavailable({
       <Icon className="size-16 text-muted-foreground/40" />
       <div className="space-y-2">
         <h1 className="text-xl font-semibold text-foreground">
-          {title ?? config.defaultTitle}
+          {title ?? t(config.defaultTitle)}
         </h1>
         <p className="max-w-md text-sm text-muted-foreground">
-          {description ?? config.defaultDescription}
+          {description ?? t(config.defaultDescription)}
         </p>
       </div>
       {action ?? (
@@ -85,7 +90,7 @@ export function ServiceUnavailable({
           onClick={onRetry ?? (() => { window.location.reload() })}
           className="inline-flex items-center justify-center rounded-md bg-primary px-5 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors"
         >
-          Retry
+          {t("Retry")}
         </button>
       )}
     </div>

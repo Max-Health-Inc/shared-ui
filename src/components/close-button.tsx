@@ -1,5 +1,6 @@
 import * as React from "react"
 import { cn } from "../lib/utils"
+import { uiText } from "../lib/ui-text"
 import { X } from "lucide-react"
 
 interface CloseButtonProps extends React.ComponentProps<"button"> {
@@ -17,7 +18,7 @@ function CloseButton({ size = "sm", className, ...props }: CloseButtonProps) {
     <button
       type="button"
       data-slot="close-button"
-      aria-label="Close"
+      aria-label={uiText("Close")}
       className={cn(
         "inline-flex items-center justify-center rounded-sm transition-colors",
         "hover:bg-foreground/10 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",

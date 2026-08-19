@@ -7,7 +7,7 @@ import { Badge } from "../badge"
 import { Loader2, Pencil, Save, X, AlertTriangle } from "lucide-react"
 import { asDisplayString, getByPath, getEditableFields, setByPath } from "./editable-fields"
 import type { FhirRecordClient } from "./client"
-import { identityT, type TFn } from "./i18n"
+import { useUiText, type TFn } from "../../lib/ui-text"
 import { isResourceVerified, markAsProvisional, type VerifiableResource } from "../../lib/fhir-verification"
 
 export interface RecordEditModalProps {
@@ -30,8 +30,9 @@ export interface RecordEditModalProps {
  * to the shared verification model.
  */
 export function RecordEditModal({
-  open, onOpenChange, resource, client, onSaved, isPractitioner = false, t = identityT,
+  open, onOpenChange, resource, client, onSaved, isPractitioner = false, t: appT,
 }: RecordEditModalProps) {
+  const t = useUiText(appT)
   const resourceType = typeof resource?.resourceType === "string" ? resource.resourceType : undefined
   const fields = useMemo(() => getEditableFields(resourceType), [resourceType])
 

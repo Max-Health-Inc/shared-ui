@@ -1,6 +1,7 @@
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "../lib/utils"
+import { uiText } from "../lib/ui-text"
 import { X } from "lucide-react"
 
 const messageBannerVariants = cva(
@@ -46,7 +47,7 @@ function MessageBanner({
           type="button"
           onClick={onClose}
           className="shrink-0 rounded-sm p-0.5 opacity-70 hover:opacity-100 transition-opacity"
-          aria-label="Close"
+          aria-label={uiText("Close")}
         >
           <X className="size-4" />
         </button>
