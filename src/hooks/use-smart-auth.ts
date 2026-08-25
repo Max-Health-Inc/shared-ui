@@ -87,8 +87,9 @@ export function useSmartAuth({
         .catch((err: unknown) => {
           const msg =
             err instanceof Error ? err.message : "Auth callback failed"
+          // Single-use: left in the URL, a reload resubmits it and reports invalid_code instead.
+          window.history.replaceState({}, "", window.location.pathname)
           if (/state mismatch/i.test(msg)) {
-            window.history.replaceState({}, "", window.location.pathname)
             smartAuth.clearToken()
             setError(
               "Your session was reset (e.g. after a password change). Please sign in again.",

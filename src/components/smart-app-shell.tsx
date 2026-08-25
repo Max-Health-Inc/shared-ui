@@ -1,5 +1,5 @@
 import { createContext, useContext, type ComponentType, type ReactNode } from "react"
-import { LogIn, AlertTriangle, WifiOff, ShieldAlert, RefreshCw, type LucideIcon } from "lucide-react"
+import { LogIn, LogOut, AlertTriangle, WifiOff, ShieldAlert, RefreshCw, type LucideIcon } from "lucide-react"
 import { AppHeader, type AppHeaderProps } from "./app-header"
 import { Button } from "./button"
 import { Spinner } from "./spinner"
@@ -82,7 +82,7 @@ export function SmartAppShell({
   const content = (
     <PatientContext.Provider value={patientId}>
     <div className="flex flex-col h-full min-h-screen bg-background">
-      <AppHeader {...header} t={header.t ?? appT} authenticated={state === "authenticated"} onSignOut={handleLogout} onSwitchPatient={switchPatient && canSwitchPatient ? handleLogin : undefined} />
+      <AppHeader {...header} t={header.t ?? appT} authenticated={state === "authenticated" || state === "error" || state === "session-expired"} onSignOut={handleLogout} onSwitchPatient={switchPatient && canSwitchPatient ? handleLogin : undefined} />
 
       <main className={`${maxWidth} mx-auto px-4 py-6 flex-1 overflow-y-auto w-full`}>
         {state === "loading" || state === "callback" ? (
@@ -112,13 +112,17 @@ export function SmartAppShell({
                 <LogIn className="size-4" />
                 {t("Sign In Again")}
               </Button>
+              <Button variant="ghost" size="sm" onClick={handleLogout}>
+                <LogOut className="size-4" />
+                {t("Sign out and use a different account")}
+              </Button>
             </div>
           )
         ) : state === "error" ? (
           renderError ? (
             renderError(error, handleLogin)
           ) : (
-            <AuthErrorBoundary error={error} onRetry={handleLogin} t={t} />
+            <AuthErrorBoundary error={error} onRetry={handleLogin} onSignOut={handleLogout} t={t} />
           )
         ) : state === "unauthenticated" ? (
           renderUnauthenticated ? (
@@ -208,7 +212,7 @@ function classifyAuthError(error: string | null): AuthErrorInfo {
   }
 }
 
-function AuthErrorBoundary({ error, onRetry, t }: { error: string | null; onRetry: () => void; t: TFn }) {
+function AuthErrorBoundary({ error, onRetry, onSignOut, t }: { error: string | null; onRetry: () => void; onSignOut: () => void; t: TFn }) {
   const info = classifyAuthError(error)
   const ErrorIcon = info.icon
 
@@ -231,6 +235,15 @@ function AuthErrorBoundary({ error, onRetry, t }: { error: string | null; onRetr
           {t("Try Again")}
         </Button>
       </div>
+      {/*
+        Retry re-runs the flow as the SAME signed-in user, so for anything about who
+        that user is — a patient reaching a practitioner-only screen, a denied consent —
+        it fails identically. Signing out is the only action that changes the outcome.
+      */}
+      <Button variant="ghost" size="sm" onClick={onSignOut}>
+        <LogOut className="size-4" />
+        {t("Sign out and use a different account")}
+      </Button>
       {error && (
         <details className="text-xs text-muted-foreground/60 max-w-sm">
           <summary className="cursor-pointer hover:text-muted-foreground">{t("Technical details")}</summary>
