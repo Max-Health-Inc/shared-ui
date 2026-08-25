@@ -82,7 +82,14 @@ export function SmartAppShell({
   const content = (
     <PatientContext.Provider value={patientId}>
     <div className="flex flex-col h-full min-h-screen bg-background">
-      <AppHeader {...header} t={header.t ?? appT} authenticated={state === "authenticated" || state === "error" || state === "session-expired"} onSignOut={handleLogout} onSwitchPatient={switchPatient && canSwitchPatient ? handleLogin : undefined} />
+      {/*
+        Sign Out shows in every state except the one where there is definitely no session
+        to leave. Stated as "not unauthenticated" rather than a list of states that may
+        have one: a new state added to SmartAppState then defaults to offering the way
+        out, instead of silently hiding it the way "error" and "session-expired" were.
+        A hung callback is a stuck state too, and leaving is the only thing that helps.
+      */}
+      <AppHeader {...header} t={header.t ?? appT} authenticated={state !== "unauthenticated"} onSignOut={handleLogout} onSwitchPatient={switchPatient && canSwitchPatient ? handleLogin : undefined} />
 
       <main className={`${maxWidth} mx-auto px-4 py-6 flex-1 overflow-y-auto w-full`}>
         {state === "loading" || state === "callback" ? (
