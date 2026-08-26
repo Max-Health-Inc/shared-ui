@@ -23,8 +23,10 @@ export interface SmartAppShellProps {
   smartAuth: SmartAuthLike
   /** Override options for the useSmartAuth hook. */
   hookOptions?: Omit<UseSmartAuthOptions, "smartAuth">
-  /** Props forwarded to AppHeader. */
-  header: Omit<AppHeaderProps, "authenticated" | "onSignOut" | "onSwitchPatient">
+  /** Props forwarded to AppHeader. `userName` and `accountUrl` are injected by the shell. */
+  header: Omit<AppHeaderProps, "authenticated" | "onSignOut" | "onSwitchPatient" | "userName" | "accountUrl">
+  /** Member account/management URL. When set, the signed-in identity in the header links here. */
+  accountUrl?: string
   /** App title shown on the unauthenticated landing screen. */
   title: string
   /** Description shown on the unauthenticated landing screen. */
@@ -70,10 +72,11 @@ export function SmartAppShell({
   renderUnauthenticated,
   renderSessionExpired,
   switchPatient = false,
+  accountUrl,
   t: appT,
 }: SmartAppShellProps) {
   const t = useUiText(appT)
-  const { state, error, handleLogin, handleLogout, patientId, canSwitchPatient } = useSmartAuth({
+  const { state, error, handleLogin, handleLogout, patientId, userName, canSwitchPatient } = useSmartAuth({
     smartAuth,
     ...hookOptions,
   })
@@ -89,7 +92,7 @@ export function SmartAppShell({
         out, instead of silently hiding it the way "error" and "session-expired" were.
         A hung callback is a stuck state too, and leaving is the only thing that helps.
       */}
-      <AppHeader {...header} t={header.t ?? appT} authenticated={state !== "unauthenticated"} onSignOut={handleLogout} onSwitchPatient={switchPatient && canSwitchPatient ? handleLogin : undefined} />
+      <AppHeader {...header} t={header.t ?? appT} authenticated={state !== "unauthenticated"} onSignOut={handleLogout} onSwitchPatient={switchPatient && canSwitchPatient ? handleLogin : undefined} userName={userName} accountUrl={accountUrl} />
 
       <main className={`${maxWidth} mx-auto px-4 py-6 flex-1 overflow-y-auto w-full`}>
         {state === "loading" || state === "callback" ? (

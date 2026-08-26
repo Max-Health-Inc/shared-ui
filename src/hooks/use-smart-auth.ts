@@ -22,8 +22,31 @@ export interface SmartAuthLike {
   authorize(): Promise<void>
   logout(): void
   startEhrLaunch?(launch: string, iss: string): Promise<void>
-  /** Optional: return the current token (used to derive patientId, fhirUser + granted scope reactively). */
-  getToken?(): { patient?: string; fhirUser?: string; scope?: string } | null
+  /** Optional: return the current token (used to derive patientId, fhirUser, granted scope + the signed-in name reactively). */
+  getToken?(): { patient?: string; fhirUser?: string; scope?: string; id_token?: string } | null
+}
+
+/**
+ * Best-effort display name from an id_token's standard OIDC claims. Decoded, not
+ * verified — this is for showing "who's signed in", never a trust decision.
+ */
+function displayNameFromIdToken(idToken: string | undefined): string | undefined {
+  if (!idToken) return undefined
+  try {
+    const payload = idToken.split(".")[1]
+    if (!payload) return undefined
+    const json = JSON.parse(
+      decodeURIComponent(
+        atob(payload.replace(/-/g, "+").replace(/_/g, "/"))
+          .split("")
+          .map((c) => "%" + c.charCodeAt(0).toString(16).padStart(2, "0"))
+          .join(""),
+      ),
+    ) as { name?: string; preferred_username?: string; email?: string }
+    return json.name || json.preferred_username || json.email || undefined
+  } catch {
+    return undefined
+  }
 }
 
 export interface UseSmartAuthOptions {
@@ -166,6 +189,8 @@ export function useSmartAuth({
   const patientId = token?.patient ?? undefined
   const fhirUser = token?.fhirUser ?? undefined
   const isPractitioner = !!fhirUser && /\/Practitioner\//i.test(fhirUser)
+  // Signed-in display name from the id_token — lets the shell show who is logged in.
+  const userName = displayNameFromIdToken(token?.id_token)
   // "Switch Patient" only works when the session can actually re-run a patient
   // picker: a practitioner who also holds the `launch/patient` scope (standalone
   // launch). EHR launches grant `launch` (patient fixed by the launch context,
@@ -176,5 +201,5 @@ export function useSmartAuth({
   const canSwitchPatient =
     isPractitioner && (token?.scope ?? "").split(/\s+/).includes("launch/patient")
 
-  return { state, error, handleLogin, handleLogout, patientId, fhirUser, isPractitioner, canSwitchPatient }
+  return { state, error, handleLogin, handleLogout, patientId, fhirUser, userName, isPractitioner, canSwitchPatient }
 }
