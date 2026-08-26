@@ -63,6 +63,12 @@ export interface UseSmartAuthOptions {
   ehrLaunch?: boolean
   /** Skip auth entirely (e.g. SHL viewer mode). State stays "unauthenticated". */
   skip?: boolean
+  /**
+   * Resolve the signed-in display name once authenticated — e.g. by dereferencing the
+   * SMART `fhirUser` to a Practitioner/Patient and reading its name. FHIR access stays in
+   * the app; this hook only calls it and prefers its result over the id_token's OIDC claims.
+   */
+  resolveUserName?: () => Promise<string | undefined>
 }
 
 export function useSmartAuth({
@@ -71,6 +77,7 @@ export function useSmartAuth({
   startAuth,
   ehrLaunch = true,
   skip = false,
+  resolveUserName,
 }: UseSmartAuthOptions) {
   const [state, setState] = useState<SmartAppState>(() => {
     if (skip) return "unauthenticated"
@@ -84,6 +91,7 @@ export function useSmartAuth({
   })
   const [error, setError] = useState<string | null>(null)
   const callbackHandled = useRef(false)
+  const [resolvedName, setResolvedName] = useState<string | undefined>(undefined)
 
   useEffect(() => {
     if (skip) return
@@ -184,6 +192,23 @@ export function useSmartAuth({
     smartAuth.logout()
   }, [smartAuth])
 
+  // Resolve the app-supplied display name once per authenticated transition. Held in a ref so
+  // a changing callback identity does not re-fetch; cleared when the session ends.
+  const resolveRef = useRef(resolveUserName)
+  useEffect(() => { resolveRef.current = resolveUserName }, [resolveUserName])
+  useEffect(() => {
+    if (state !== "authenticated") return
+    const resolve = resolveRef.current
+    if (!resolve) return
+    let cancelled = false
+    // Set only in the async callback (never synchronously in the effect body); `?? undefined`
+    // clears a prior session's name when a re-login resolves to nothing.
+    void resolve()
+      .then((name) => { if (!cancelled) setResolvedName(name ?? undefined) })
+      .catch(() => { /* name is best-effort; the id_token fallback covers a failure */ })
+    return () => { cancelled = true }
+  }, [state])
+
   // Derive patientId + the user's FHIR role reactively — updates when state
   // becomes "authenticated". `fhirUser` (the SMART claim) points at the signed-in
   // user's own resource, so a `.../Practitioner/<id>` URL marks a clinician (vs a
@@ -193,8 +218,10 @@ export function useSmartAuth({
   const patientId = token?.patient ?? undefined
   const fhirUser = token?.fhirUser ?? undefined
   const isPractitioner = !!fhirUser && /\/Practitioner\//i.test(fhirUser)
-  // Signed-in display name from the id_token — lets the shell show who is logged in.
-  const userName = displayNameFromIdToken(token?.id_token)
+  // Who is signed in: the app-resolved name (e.g. from fhirUser) when available, else the
+  // id_token's OIDC claims. Many SMART tokens carry no name claim, so the resolver is the
+  // reliable path and this is the fallback.
+  const userName = resolvedName ?? displayNameFromIdToken(token?.id_token)
   // "Switch Patient" only works when the session can actually re-run a patient
   // picker: a practitioner who also holds the `launch/patient` scope (standalone
   // launch). EHR launches grant `launch` (patient fixed by the launch context,
