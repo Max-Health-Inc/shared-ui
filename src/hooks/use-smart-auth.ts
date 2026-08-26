@@ -43,7 +43,9 @@ function displayNameFromIdToken(idToken: string | undefined): string | undefined
           .join(""),
       ),
     ) as { name?: string; preferred_username?: string; email?: string }
-    return json.name || json.preferred_username || json.email || undefined
+    return [json.name, json.preferred_username, json.email].find(
+      (v): v is string => typeof v === "string" && v.trim().length > 0,
+    )
   } catch {
     return undefined
   }
