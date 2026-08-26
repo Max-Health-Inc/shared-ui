@@ -1,5 +1,5 @@
 import type { ComponentType, ReactNode } from "react"
-import { LayoutGrid, LogOut, UserRoundSearch, type LucideIcon } from "lucide-react"
+import { CircleUser, LayoutGrid, LogOut, UserRoundSearch, type LucideIcon } from "lucide-react"
 import { Button } from "./button"
 import { PwaInstallButton } from "./pwa-install-button"
 import { useBranding } from "../hooks/use-branding"
@@ -17,6 +17,10 @@ export interface AppHeaderProps {
   onSignOut?: () => void
   /** Called when the user wants to switch patient context (re-launch without re-login) */
   onSwitchPatient?: () => void
+  /** Signed-in user's display name — shown when authenticated so it is clear who is logged in. */
+  userName?: string
+  /** Member account/management URL. When set, the signed-in identity links here (opens in a new tab). */
+  accountUrl?: string
   /** Optional extra content rendered after the title (e.g. a launch-mode badge) */
   children?: ReactNode
   /**
@@ -46,6 +50,8 @@ export function AppHeader({
   authenticated,
   onSignOut,
   onSwitchPatient,
+  userName,
+  accountUrl,
   children,
   actions,
   maxWidth = "max-w-5xl",
@@ -74,6 +80,19 @@ export function AppHeader({
           {installLabel !== false && <PwaInstallButton label={installLabel ?? t("Install")} />}
           {!hideActions && (authenticated ? (
             <>
+              {userName && (accountUrl ? (
+                <Button variant="ghost" size="sm" asChild>
+                  <a href={accountUrl} target="_blank" rel="noreferrer" title={t("Manage your account")}>
+                    <CircleUser className="size-4" />
+                    <span className="hidden sm:inline max-w-[14ch] truncate">{userName}</span>
+                  </a>
+                </Button>
+              ) : (
+                <span className="hidden sm:flex items-center gap-1.5 px-2 text-xs text-muted-foreground" title={userName}>
+                  <CircleUser className="size-4" />
+                  <span className="max-w-[14ch] truncate">{userName}</span>
+                </span>
+              ))}
               {onSwitchPatient && (
                 <Button variant="ghost" size="sm" onClick={onSwitchPatient}>
                   <UserRoundSearch className="size-4" />
