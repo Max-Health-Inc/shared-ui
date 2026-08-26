@@ -37,6 +37,7 @@ export const UI_TEXT: Record<string, readonly string[]> = {
     "La sua sessione è scaduta. Acceda di nuovo per continuare.",
   ],
   "Sign In Again": ["Erneut anmelden", "Se reconnecter", "Iniciar sesión de nuevo", "Accedi di nuovo"],
+  "Use a different account": ["Anderes Konto verwenden", "Utiliser un autre compte", "Usar otra cuenta", "Usa un altro account"],
   "Sign In with SMART": [
     "Mit SMART anmelden",
     "Se connecter avec SMART",
