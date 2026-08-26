@@ -80,19 +80,20 @@ export function AppHeader({
           {installLabel !== false && <PwaInstallButton label={installLabel ?? t("Install")} />}
           {!hideActions && (authenticated ? (
             <>
-              {userName && (accountUrl ? (
+              {/* accountUrl always links (name when known, else "Account"); a nameless, link-less chip shows nothing. */}
+              {accountUrl ? (
                 <Button variant="ghost" size="sm" asChild>
                   <a href={accountUrl} target="_blank" rel="noreferrer" title={t("Manage your account")}>
                     <CircleUser className="size-4" />
-                    <span className="hidden sm:inline max-w-[14ch] truncate">{userName}</span>
+                    <span className="hidden sm:inline max-w-[14ch] truncate">{userName ?? t("Account")}</span>
                   </a>
                 </Button>
-              ) : (
+              ) : userName ? (
                 <span className="hidden sm:flex items-center gap-1.5 px-2 text-xs text-muted-foreground" title={userName}>
                   <CircleUser className="size-4" />
                   <span className="max-w-[14ch] truncate">{userName}</span>
                 </span>
-              ))}
+              ) : null}
               {onSwitchPatient && (
                 <Button variant="ghost" size="sm" onClick={onSwitchPatient}>
                   <UserRoundSearch className="size-4" />

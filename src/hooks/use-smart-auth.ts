@@ -28,21 +28,23 @@ export interface SmartAuthLike {
 
 /**
  * Best-effort display name from an id_token's standard OIDC claims. Decoded, not
- * verified — this is for showing "who's signed in", never a trust decision.
+ * verified — for showing "who's signed in", never a trust decision.
+ *
+ * base64url is PADDED before atob (a payload of length % 4 === 1 throws otherwise) and read
+ * as UTF-8 (atob alone is one char per byte and mangles a non-ASCII name).
  */
-function displayNameFromIdToken(idToken: string | undefined): string | undefined {
-  if (!idToken) return undefined
+export function displayNameFromIdToken(idToken: string | undefined): string | undefined {
+  const segment = idToken?.split(".")[1]
+  if (!segment) return undefined
   try {
-    const payload = idToken.split(".")[1]
-    if (!payload) return undefined
-    const json = JSON.parse(
-      decodeURIComponent(
-        atob(payload.replace(/-/g, "+").replace(/_/g, "/"))
-          .split("")
-          .map((c) => "%" + c.charCodeAt(0).toString(16).padStart(2, "0"))
-          .join(""),
-      ),
-    ) as { name?: string; preferred_username?: string; email?: string }
+    const base64 = segment.replace(/-/g, "+").replace(/_/g, "/")
+    const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "=")
+    const bytes = Uint8Array.from(atob(padded), (c) => c.charCodeAt(0))
+    const json = JSON.parse(new TextDecoder().decode(bytes)) as {
+      name?: string
+      preferred_username?: string
+      email?: string
+    }
     return [json.name, json.preferred_username, json.email].find(
       (v): v is string => typeof v === "string" && v.trim().length > 0,
     )
