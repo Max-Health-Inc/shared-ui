@@ -1,6 +1,6 @@
 {
   "name": "@max-health-inc/shared-ui",
-  "version": "0.14.0",
+  "version": "0.14.1",
   "type": "module",
   "license": "MIT",
   "description": "Shared React UI components, hooks, and utilities for SMART on FHIR healthcare apps",
@@ -67,33 +67,33 @@
     }
   },
   "dependencies": {
-    "@radix-ui/react-slot": "^1.2.4",
-    "brandc": "^0.6.0",
+    "@radix-ui/react-slot": "^1.3.3",
+    "brandc": "^0.6.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "lucide-react": "^1.14.0",
-    "radix-ui": "^1.4.3",
-    "sonner": "^2.0.7",
-    "tailwind-merge": "^3.5.0"
+    "lucide-react": "^1.37.0",
+    "radix-ui": "^1.6.7",
+    "sonner": "^2.0.8",
+    "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@max-health-inc/config": "^3.1.0",
-    "@tailwindcss/vite": "^4.2.4",
-    "@types/bun": "^1.3.13",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react-swc": "^4.3.0",
-    "eslint": "^10.3.0",
+    "@max-health-inc/config": "^3.3.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/bun": "^1.4.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "@vitejs/plugin-react-swc": "^4.3.3",
+    "eslint": "^10.9.1",
     "eslint-plugin-react-hooks": "^7.1.1",
-    "eslint-plugin-react-refresh": "^0.5.2",
-    "happy-dom": "^20.9.0",
-    "i18next": "^26.0.0",
+    "eslint-plugin-react-refresh": "^0.5.5",
+    "happy-dom": "^20.12.0",
+    "i18next": "^26.4.0",
     "i18next-browser-languagedetector": "^8.0.0",
-    "react-i18next": "^17.0.0",
+    "react-i18next": "^17.0.12",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.59.2",
-    "vite": "^8.0.10",
-    "vite-plugin-dts": "^4.5.0"
+    "typescript-eslint": "^8.68.0",
+    "vite": "^8.2.2",
+    "vite-plugin-dts": "^5.0.3"
   }
 }
