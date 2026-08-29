@@ -36,3 +36,60 @@
     display: none;
   }
 }
+
+/*
+ * Safe-area utilities for edge-to-edge mobile.
+ *
+ * Android 15 (Chrome 135+) and iOS both draw web content BEHIND the system UI — the
+ * gesture bar, the home indicator, the notch — so an app-shell bar anchored to the
+ * bottom of the viewport sits UNDER the navigation bar and is partly untappable. The
+ * browser reports how much room it took in `env(safe-area-inset-*)`; nothing applies
+ * it for you.
+ *
+ * Two things are required and neither is enough alone:
+ *   1. the document opts in with `viewport-fit=cover` on its viewport meta — without
+ *      it every inset resolves to 0 and these utilities are silently inert;
+ *   2. the shell measures itself in `dvh`, not `vh`. `100vh` is the LARGE viewport,
+ *      which deliberately ignores retracting browser UI, so an `h-screen` shell is
+ *      taller than what is on screen and pushes its own bottom bar out of view. That
+ *      is a separate bug with the same symptom, and `h-dvh` is the fix.
+ *
+ * The insets are 0 on desktop and on any device without system overlay, so these are
+ * inert there rather than conditional.
+ *
+ * The `-*` forms ADD the inset to a spacing step, because a bar needs its designed
+ * padding AND the inset: `pb-safe-3` is `py-3`'s bottom plus whatever the gesture bar
+ * takes. Composing `py-3 pb-safe` instead cannot work — both declare `padding-bottom`,
+ * so one silently wins and the bar loses either its breathing room or the inset.
+ */
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+@utility pr-safe {
+  padding-right: env(safe-area-inset-right);
+}
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+@utility pl-safe {
+  padding-left: env(safe-area-inset-left);
+}
+@utility px-safe {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+@utility py-safe {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@utility pt-safe-* {
+  padding-top: calc(--spacing(--value(integer)) + env(safe-area-inset-top));
+}
+@utility pb-safe-* {
+  padding-bottom: calc(--spacing(--value(integer)) + env(safe-area-inset-bottom));
+}
+@utility px-safe-* {
+  padding-left: calc(--spacing(--value(integer)) + env(safe-area-inset-left));
+  padding-right: calc(--spacing(--value(integer)) + env(safe-area-inset-right));
+}
