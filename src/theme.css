@@ -6,10 +6,15 @@
  * shared-ui, hono-ui and prefab) and are imported below. `brandc/base.css` adds the
  * shared cursor-pointer restoration; this file layers the surface base + utilities.
  *
+ * `base.css` is taken into `layer(base)` on purpose. Imported unlayered it beat every
+ * `@layer utilities` rule, so `cursor-default` on <Label> and `peer-disabled:cursor-not-allowed`
+ * on a form label silently rendered as a pointer. In the base layer it still restores the
+ * cursor Tailwind v4 dropped, and any explicit `cursor-*` utility outranks it again.
+ *
  * Rebrand or change a colour = edit `brandc`, not this file.
  */
 @import "brandc/theme.css";
-@import "brandc/base.css";
+@import "brandc/base.css" layer(base);
 
 @layer base {
   * {
