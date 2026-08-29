@@ -63,8 +63,10 @@ export function AppHeader({
   const brand = useBranding()
   const t = useUiText(appT)
 
+  // pt-safe/px-safe: in a standalone PWA the header is the topmost surface, so it owns
+  // the status-bar and notch insets. Both are 0 wherever the browser reports no overlay.
   return (
-    <header className="border-b border-foreground/10 bg-foreground/[0.02]">
+    <header className="border-b border-foreground/10 bg-foreground/[0.02] pt-safe px-safe">
       <div className={cn(maxWidth, "mx-auto px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between gap-2")}>
         <div className="flex items-center gap-2 min-w-0">
           {brand?.logoUrl ? (
