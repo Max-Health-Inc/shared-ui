@@ -6,6 +6,14 @@
  * shared-ui, hono-ui and prefab) and are imported below. `brandc/base.css` adds the
  * shared cursor-pointer restoration; this file layers the surface base + utilities.
  *
+ * All THREE brandc entry points are imported, not two. `theme.css` defines the token
+ * values and `tailwind.css` is the `@theme inline` bridge that maps them onto Tailwind
+ * utility names — without it Tailwind cannot see the tokens, so `bg-background` and the
+ * `shadow-*` steps this package's own components use fall back to Tailwind's stock
+ * palette and shadows. Importing only the values is what made every consuming app
+ * hand-write its own bridge in `src/index.css`; four of them did, each an incomplete
+ * copy missing `success`/`warning`/`info`, the `main-*` scale and the shadow steps.
+ *
  * `base.css` is taken into `layer(base)` on purpose. Imported unlayered it beat every
  * `@layer utilities` rule, so `cursor-default` on <Label> and `peer-disabled:cursor-not-allowed`
  * on a form label silently rendered as a pointer. In the base layer it still restores the
@@ -14,6 +22,7 @@
  * Rebrand or change a colour = edit `brandc`, not this file.
  */
 @import "brandc/theme.css";
+@import "brandc/tailwind.css";
 @import "brandc/base.css" layer(base);
 
 @layer base {

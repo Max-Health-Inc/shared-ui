@@ -48,7 +48,15 @@ import "@max-health-inc/shared-ui/theme.css"
 - `createAuthFetch()` / `onAuthError()` / `reportAuthError()` — Auth fetch wrapper
 
 ### Theme
-- `theme.css` — CSS custom properties (light + dark mode) for the MaxHealth design system
+- `theme.css` — the MaxHealth design system: brandc's token values, the `@theme inline`
+  bridge that maps them onto Tailwind utility names, and this package's base layer and
+  utilities.
+
+Importing it is all a consuming app needs. An app that also declares its own
+`@theme inline { --color-*: var(--*) }` block in `src/index.css` is maintaining a
+second, narrower copy of that bridge — delete it and take this one, which carries the
+full token surface (`success`/`warning`/`info`, the `main-*` scale, the shadow, text
+and spacing steps) and follows brandc when it changes.
 
 ### Text in this package
 
