@@ -35,6 +35,7 @@ import "@max-health-inc/shared-ui/theme.css"
 - Button, Card, Badge, Input, Label, Select, Tabs, Dialog, Table, ScrollArea, Progress, Tooltip, DropdownMenu, Separator
 - AppHeader, PatientBanner, ErrorBoundary, Spinner, Toaster
 - FilterToolbar, PageHeader, StatCard, ResponsiveTabsList
+- Faq — the org-wide question/answer disclosure list (one answer open at a time)
 
 ### Hooks
 - `useSmartAuth` — SMART on FHIR auth state management
