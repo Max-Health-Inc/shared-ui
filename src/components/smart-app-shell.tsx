@@ -118,18 +118,15 @@ export function SmartAppShell({
                   {error ?? t("Your session has expired. Please sign in again to continue.")}
                 </p>
               </div>
+              {/*
+                One action. Ending the still-live IdP session, so a different account can sign
+                in, used to sit here as a second button — but the header renders Sign Out in
+                this state (`authenticated` is true for anything except `unauthenticated`) and
+                it calls this very handler, so the page offered the same escape twice.
+              */}
               <Button size="lg" onClick={handleLogin}>
                 <LogIn className="size-4" />
                 {t("Sign In Again")}
-              </Button>
-              {/*
-                The local token is already cleared in this state, so "Sign out" reads as
-                nonsense. This button's real job is to end the still-live IdP session so a
-                different account can sign in — say exactly that.
-              */}
-              <Button variant="ghost" size="sm" onClick={handleLogout}>
-                <LogOut className="size-4" />
-                {t("Use a different account")}
               </Button>
             </div>
           )
