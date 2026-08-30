@@ -56,7 +56,8 @@ Importing it is all a consuming app needs. An app that also declares its own
 `@theme inline { --color-*: var(--*) }` block in `src/index.css` is maintaining a
 second, narrower copy of that bridge — delete it and take this one, which carries the
 full token surface (`success`/`warning`/`info`, the `main-*` scale, the shadow, text
-and spacing steps) and follows brandc when it changes.
+and spacing steps, and the whole radius ladder through `4xl`) and follows brandc when
+it changes.
 
 ### Text in this package
 
