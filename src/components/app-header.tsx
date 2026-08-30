@@ -32,7 +32,15 @@ export interface AppHeaderProps {
   maxWidth?: string
   /** Hide all action buttons (Sign Out, App Store) — useful for shared/public views */
   hideActions?: boolean
-  /** URL for the App Store button (default: "/apps") */
+  /**
+   * Absolute URL of the App Store. Omit it and the button is not rendered.
+   *
+   * There is deliberately no default. It used to be a relative "/apps", which resolves only
+   * when the proxy itself serves the app; on an app's own domain it pointed at a page that
+   * does not exist, and three apps shipped that broken link before anyone noticed. A missing
+   * URL now shows nothing rather than something that 404s. Apps built on
+   * `createSmartAppConfig` pass `${config.proxyBase}/apps`.
+   */
   appStoreUrl?: string
   /** Label for the PWA install button (default: a translated "Install"). Set to false to hide. */
   installLabel?: string | false
@@ -56,7 +64,7 @@ export function AppHeader({
   actions,
   maxWidth = "max-w-5xl",
   hideActions,
-  appStoreUrl = "/apps",
+  appStoreUrl,
   installLabel,
   t: appT,
 }: AppHeaderProps) {
@@ -107,14 +115,17 @@ export function AppHeader({
                 <span className="hidden sm:inline">{t("Sign Out")}</span>
               </Button>
             </>
-          ) : (
+          ) : appStoreUrl ? (
             <Button variant="ghost" size="sm" asChild>
-              <a href={appStoreUrl}>
+              {/* A new tab: the store is a different app, and these are SMART apps a user is
+                  mid-task in. Navigating away in place discards an unsaved consent, an
+                  in-progress questionnaire or a loaded imaging study. */}
+              <a href={appStoreUrl} target="_blank" rel="noopener noreferrer">
                 <LayoutGrid className="size-4" />
                 <span className="hidden sm:inline">{t("App Store")}</span>
               </a>
             </Button>
-          ))}
+          ) : null)}
         </div>
       </div>
     </header>
