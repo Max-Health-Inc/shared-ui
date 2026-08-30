@@ -75,14 +75,22 @@ export function AppHeader({
   // the status-bar and notch insets. Both are 0 wherever the browser reports no overlay.
   return (
     <header className="border-b border-foreground/10 bg-foreground/[0.02] pt-safe px-safe">
-      <div className={cn(maxWidth, "mx-auto px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between gap-2")}>
-        <div className="flex items-center gap-2 min-w-0">
+      {/*
+        `flex-wrap` + min-w-0 on the TITLE rather than on its group. With min-w-0 on the group,
+        justify-between handed it whatever was left over and it accepted a width below its own
+        controls, so on a narrow screen the language switcher and friends overflowed their box and
+        ran under the actions — the sign-out button read as cut off. At its real min-content the
+        group cannot do that, and the actions drop to a second row instead. Unchanged on any
+        screen wide enough to fit one row, which is every desktop.
+      */}
+      <div className={cn(maxWidth, "mx-auto px-3 sm:px-4 py-2 sm:py-3 flex flex-wrap items-center justify-between gap-x-2 gap-y-1")}>
+        <div className="flex items-center gap-2">
           {brand?.logoUrl ? (
             <img src={brand.logoUrl} alt={brand.name} className="h-5 sm:h-6 w-auto shrink-0" />
           ) : (
             <Icon className="size-5 text-maxhealth shrink-0" />
           )}
-          <h1 className="font-semibold truncate text-sm sm:text-base">{title}</h1>
+          <h1 className="font-semibold truncate min-w-0 text-sm sm:text-base">{title}</h1>
           {children}
         </div>
         <div className="flex items-center gap-1 shrink-0">
