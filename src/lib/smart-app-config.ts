@@ -11,6 +11,22 @@
  */
 
 const isBrowser = typeof window !== "undefined"
+
+/**
+ * The app's OWN root URL.
+ *
+ * Not `window.location.origin` and not a hardcoded "/": an app can be served from a sub-path,
+ * which Vite compiles in as BASE_URL, and wherever one deployment hosts several apps the bare
+ * origin is a different app's root. Two callers below needed this and each spelled it out
+ * inline; AppHeader's home link is the third, which is what made it worth naming. Always ends
+ * in a slash, so callers append a bare path with no separator.
+ *
+ * Returns just the base path outside a browser (SSR, test runners), never a bare "undefined".
+ */
+export function appBaseUrl(): string {
+  return `${isBrowser ? window.location.origin : ""}${import.meta.env.BASE_URL || "/"}`
+}
+
 export interface SmartAppConfig {
   proxyBase: string
   proxyPrefix: string
@@ -33,7 +49,7 @@ export function createSmartAppConfig(defaults: SmartAppDefaults): SmartAppConfig
     fhirServerId: import.meta.env.VITE_FHIR_SERVER_ID ?? "hapi-fhir-server",
     fhirVersion: import.meta.env.VITE_FHIR_VERSION ?? "R4",
     clientId: import.meta.env.VITE_CLIENT_ID ?? defaults.clientId,
-    redirectUri: import.meta.env.VITE_REDIRECT_URI ?? `${isBrowser ? window.location.origin : ""}${import.meta.env.BASE_URL || "/"}callback`,
+    redirectUri: import.meta.env.VITE_REDIRECT_URI ?? `${appBaseUrl()}callback`,
     scopes: import.meta.env.VITE_SCOPES ?? defaults.scopes,
   }
 }
@@ -85,7 +101,7 @@ export function createSmartAuth<T>({ config, SmartAuth, storagePrefix }: CreateS
   const smartAuth = new SmartAuth({
     clientId: config.clientId,
     redirectUri: config.redirectUri,
-    postLogoutRedirectUri: (isBrowser ? window.location.origin : "") + (import.meta.env.BASE_URL || "/"),
+    postLogoutRedirectUri: appBaseUrl(),
     fhirBaseUrl,
     scopes: config.scopes,
     storagePrefix,
