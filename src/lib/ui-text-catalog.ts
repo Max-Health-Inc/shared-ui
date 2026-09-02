@@ -17,6 +17,7 @@ export const UI_TEXT: Record<string, readonly string[]> = {
   "Sign Out": ["Abmelden", "Se déconnecter", "Cerrar sesión", "Esci"],
   "Switch Patient": ["Patient wechseln", "Changer de patient", "Cambiar de paciente", "Cambia paziente"],
   "Manage your account": ["Konto verwalten", "Gérer mon compte", "Gestionar cuenta", "Gestisci account"],
+  "Go to the start page": ["Zur Startseite", "Aller à la page d'accueil", "Ir a la página de inicio", "Vai alla pagina iniziale"],
   "Account": ["Konto", "Compte", "Cuenta", "Account"],
   "App Store": ["App Store", "App Store", "App Store", "App Store"],
   Install: ["Installieren", "Installer", "Instalar", "Installa"],

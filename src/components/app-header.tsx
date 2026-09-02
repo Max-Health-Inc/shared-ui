@@ -2,6 +2,7 @@ import type { ComponentType, ReactNode } from "react"
 import { CircleUser, LayoutGrid, LogOut, UserRoundSearch, type LucideIcon } from "lucide-react"
 import { Button } from "./button"
 import { PwaInstallButton } from "./pwa-install-button"
+import { appBaseUrl } from "../lib/smart-app-config"
 import { useBranding } from "../hooks/use-branding"
 import { useUiText, type TFn } from "../lib/ui-text"
 import { cn } from "../lib/utils"
@@ -32,6 +33,19 @@ export interface AppHeaderProps {
   maxWidth?: string
   /** Hide all action buttons (Sign Out, App Store) — useful for shared/public views */
   hideActions?: boolean
+  /**
+   * Where the logo and title link. Defaults to the app's own root ({@link appBaseUrl}), which
+   * is the one thing every user already expects a header logo to do, and the only way back to
+   * the dashboard from a deep view in apps that have no other home affordance.
+   *
+   * SAME TAB, deliberately, unlike the App Store button: this is a way back into the app the
+   * user is already in, not a trip to a different one.
+   *
+   * Pass `false` for a header that must not navigate — a kiosk, or an embedded view whose host
+   * owns navigation. `min-w-0` sits on the anchor rather than on the title group, for the
+   * reason the group's own comment gives; the anchor holds no controls, so it can shrink.
+   */
+  homeUrl?: string | false
   /**
    * Absolute URL of the App Store. Omit it and the button is not rendered.
    *
@@ -64,12 +78,21 @@ export function AppHeader({
   actions,
   maxWidth = "max-w-5xl",
   hideActions,
+  homeUrl,
   appStoreUrl,
   installLabel,
   t: appT,
 }: AppHeaderProps) {
   const brand = useBranding()
   const t = useUiText(appT)
+  const home = homeUrl === false ? null : homeUrl ?? appBaseUrl()
+
+  const mark = brand?.logoUrl ? (
+    <img src={brand.logoUrl} alt={brand.name} className="h-5 sm:h-6 w-auto shrink-0" />
+  ) : (
+    <Icon className="size-5 text-maxhealth shrink-0" />
+  )
+  const heading = <h1 className="font-semibold truncate min-w-0 text-sm sm:text-base">{title}</h1>
 
   // pt-safe/px-safe: in a standalone PWA the header is the topmost surface, so it owns
   // the status-bar and notch insets. Both are 0 wherever the browser reports no overlay.
@@ -85,12 +108,21 @@ export function AppHeader({
       */}
       <div className={cn(maxWidth, "mx-auto px-3 sm:px-4 py-2 sm:py-3 flex flex-wrap items-center justify-between gap-x-2 gap-y-1")}>
         <div className="flex items-center gap-2">
-          {brand?.logoUrl ? (
-            <img src={brand.logoUrl} alt={brand.name} className="h-5 sm:h-6 w-auto shrink-0" />
+          {home ? (
+            <a
+              href={home}
+              title={t("Go to the start page")}
+              className="flex items-center gap-2 min-w-0 rounded-sm transition-opacity hover:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-maxhealth"
+            >
+              {mark}
+              {heading}
+            </a>
           ) : (
-            <Icon className="size-5 text-maxhealth shrink-0" />
+            <>
+              {mark}
+              {heading}
+            </>
           )}
-          <h1 className="font-semibold truncate min-w-0 text-sm sm:text-base">{title}</h1>
           {children}
         </div>
         <div className="flex items-center gap-1 shrink-0">

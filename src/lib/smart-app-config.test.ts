@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test"
-import { buildFhirBaseUrl, createSmartAppConfig, createSmartAuth } from "./smart-app-config"
+import { appBaseUrl, buildFhirBaseUrl, createSmartAppConfig, createSmartAuth } from "./smart-app-config"
 import type { SmartAppConfig } from "./smart-app-config"
 
 function makeConfig(overrides: Partial<SmartAppConfig> = {}): SmartAppConfig {
@@ -71,6 +71,21 @@ describe("buildFhirBaseUrl", () => {
     // Should not start with / when there's no origin — caller should handle
     // At minimum: must not start with //
     expect(url).not.toMatch(/^\/\//)
+  })
+})
+
+describe("appBaseUrl", () => {
+  it("always ends in a slash, so callers can append a bare path", () => {
+    expect(appBaseUrl().endsWith("/")).toBe(true)
+  })
+
+  it("never yields an 'undefined' segment when no base is configured", () => {
+    expect(appBaseUrl()).not.toContain("undefined")
+  })
+
+  it("is the prefix the callback and post-logout URLs are built from", () => {
+    const cfg = createSmartAppConfig({ clientId: "x", scopes: "openid" })
+    expect(cfg.redirectUri).toBe(`${appBaseUrl()}callback`)
   })
 })
 

@@ -51,7 +51,7 @@ export { NativeSelect, type NativeSelectProps } from "./components/native-select
 
 // Utilities
 export { cn } from "./lib/utils"
-export { createSmartAppConfig, createSmartAuth, buildFhirBaseUrl, type SmartAppConfig } from "./lib/smart-app-config"
+export { createSmartAppConfig, createSmartAuth, buildFhirBaseUrl, appBaseUrl, type SmartAppConfig } from "./lib/smart-app-config"
 export { CHART_COLORS } from "./lib/chart-colors"
 
 // FHIR helpers
