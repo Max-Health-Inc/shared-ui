@@ -25,7 +25,6 @@ export { Toaster, type ThemedToasterProps } from "./components/sonner"
 export { ErrorBoundary, type ErrorBoundaryProps } from "./components/error-boundary"
 export { ServiceUnavailable, type ServiceUnavailableProps, type ServiceErrorVariant } from "./components/service-unavailable"
 export { AppHeader, type AppHeaderProps } from "./components/app-header"
-export { PatientBanner, type PatientBannerProps, type BannerPatient } from "./components/patient-banner"
 export { UserProfileFormFields, type UserProfileFormFieldsProps, type UserProfileData } from "./components/user-profile-fields"
 export { SmartAppShell, usePatientId, type SmartAppShellProps } from "./components/smart-app-shell"
 export { PwaInstallButton, type PwaInstallButtonProps } from "./components/pwa-install-button"
@@ -71,53 +70,14 @@ export {
 } from "./lib/ui-text"
 export { UI_TEXT, UI_TEXT_LANGUAGES } from "./lib/ui-text-catalog"
 
-// FHIR data-verification model (shared "who asserted this / is it verified")
-export {
-  VERIFICATION_STATUS_SYSTEM,
-  ORIGINAL_SNAPSHOT_EXT,
-  DATA_VERIFICATION_TAG_SYSTEM,
-  parseFhirUser,
-  isPatientRole,
-  getVerificationCode,
-  isVerifiedCode,
-  isResourceVerified,
-  describeVerification,
-  hasSnapshot,
-  getSnapshot,
-  setVerificationLevel,
-  markAsProvisional,
-  markAsConfirmed,
-  stampAuthorship,
-  buildProvenance,
-  type VerificationLevel,
-  type FhirUserRole,
-  type ClassifiedFhirUser,
-  type AuthorshipOptions,
-  type ProvenanceOptions,
-  type Coding,
-  type CodeableConcept,
-  type Extension,
-  type Reference,
-  type VerifiableResource,
-} from "./lib/fhir-verification"
-
-// FHIR record components (add / edit / verify + AI-extraction review)
-export {
-  EDITABLE_FIELDS,
-  EDITABLE_TYPES,
-  getByPath,
-  setByPath,
-  type EditableField,
-  type ImportedResource,
-  type FailedResource,
-} from "./components/fhir-record/editable-fields"
-export { type FhirRecordClient } from "./components/fhir-record/client"
-// `TFn` is exported above, from lib/ui-text — its single definition. The
-// fhir-record path re-exports it for anything importing that file directly.
-export { ResourceReviewCard, type ResourceReviewCardProps } from "./components/fhir-record/resource-review-card"
-export { RecordEditModal, type RecordEditModalProps } from "./components/fhir-record/record-edit-modal"
-export { RecordDetailModal, type RecordDetailModalProps } from "./components/fhir-record/record-detail-modal"
-export { ResourceReviewFlow, type ResourceReviewFlowProps } from "./components/fhir-record/resource-review-flow"
+/*
+ * The FHIR verification model and the clinical record components moved to
+ * `@max-health-inc/ui`. They encoded product-specific clinical decisions rather than reusable
+ * UI, so they belong to the product that makes them.
+ *
+ * What stays here is what any SMART on FHIR app can use: the primitives, the app shell, the
+ * translate contract, and the FHIR formatting helpers those components consume from this side.
+ */
 
 // Auth utilities
 export { onAuthError, reportAuthError, createAuthFetch } from "./lib/auth-error"
