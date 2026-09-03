@@ -2,10 +2,9 @@
 
 import { Monitor, Moon, Sun } from "lucide-react"
 import { useTheme, THEMES, type Theme } from "../hooks/use-theme"
-// `TFn` lives under fhir-record/ for historical reasons but is a generic "optional
-// translate function" contract, re-exported from the package root. Reused here rather
-// than declaring a second identical type (same as ScenePicker).
-import { identityT, type TFn } from "./fhir-record/i18n"
+// The generic "optional translate function" contract, taken from its single definition
+// rather than declaring a second identical type (same as ScenePicker).
+import { identityT, type TFn } from "../lib/ui-text"
 import { Button } from "./button"
 import {
   DropdownMenu,
