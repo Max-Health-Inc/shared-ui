@@ -1,6 +1,6 @@
 {
   "name": "@max-health-inc/shared-ui",
-  "version": "0.22.0",
+  "version": "0.23.0",
   "type": "module",
   "license": "MIT",
   "description": "Shared React UI components, hooks, and utilities for SMART on FHIR healthcare apps",
