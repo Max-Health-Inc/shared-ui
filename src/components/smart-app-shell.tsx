@@ -128,7 +128,7 @@ export function SmartAppShell({
               <div className="w-full text-center space-y-3">
                 <AlertTriangle className="size-12 mx-auto text-amber-500" />
                 <h2 className="text-xl font-semibold break-words">{t("Session Expired")}</h2>
-                <p className="w-full max-w-md text-muted-foreground">
+                <p className="mx-auto w-full max-w-md text-muted-foreground">
                   {error ?? t("Your session has expired. Please sign in again to continue.")}
                 </p>
               </div>
@@ -162,7 +162,7 @@ export function SmartAppShell({
                   <Icon className="size-16 mx-auto text-muted-foreground/30" />
                 )}
                 <h2 className="text-xl font-semibold break-words sm:text-2xl">{title}</h2>
-                <p className="w-full max-w-md text-muted-foreground">{description}</p>
+                <p className="mx-auto w-full max-w-md text-muted-foreground">{description}</p>
               </div>
               <Button size="lg" onClick={handleLogin}>
                 <LogIn className="size-4" />
