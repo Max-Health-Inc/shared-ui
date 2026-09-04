@@ -35,6 +35,21 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+
+  /*
+   * Tailwind v4's preflight sets buttons to `cursor: default` (matching the browser
+   * default) where v3 gave them `cursor: pointer`. Nothing in the upgrade replaces it, so
+   * every <button> that does not spell out a cursor itself stopped showing one: this
+   * package's Button does, but the Radix-backed triggers do not, which left the select,
+   * dropdown, tabs, popover and collapsible triggers across every app with an arrow
+   * cursor. The selectors are the ones Tailwind's own upgrade guide prescribes.
+   *
+   * :not(:disabled) keeps `disabled:cursor-not-allowed` intact wherever a component sets it.
+   */
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
 }
 
 /* Utility: hide scrollbar but keep scrolling */

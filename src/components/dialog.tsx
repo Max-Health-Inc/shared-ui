@@ -68,7 +68,15 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 sm:rounded-lg",
+          // w-[calc(100%-2rem)], not w-full: a phone-width dialog ran edge to edge with square
+          // corners, and `max-w-lg` still caps it on a wide screen. The width is stated here
+          // rather than as a second `max-w-*` because most callers pass their own max-w and a
+          // responsive one of ours would outrank theirs above the breakpoint.
+          //
+          // max-h + overflow is what makes a tall dialog usable at all: the content is
+          // centred by translate(-50%), so anything past the viewport was cut off at BOTH
+          // ends with no way to scroll to it.
+          "fixed left-[50%] top-[50%] z-50 grid max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 overflow-y-auto rounded-lg border bg-background p-4 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 sm:p-6",
           className
         )}
         style={layerStyle}
@@ -111,7 +119,9 @@ function DialogFooter({
   return (
     <div
       data-slot="dialog-footer"
-      className={cn("flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2", className)}
+      // gap-2 rather than sm:space-x-2: stacked on a phone the buttons had no separation
+      // at all, since the only spacing the footer declared started at the sm breakpoint.
+      className={cn("flex flex-col-reverse gap-2 sm:flex-row sm:justify-end", className)}
       {...props}
     />
   )

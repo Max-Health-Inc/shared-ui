@@ -53,24 +53,27 @@ function SectionHeader({
   return (
     <div data-slot="section-header" {...props}>
       <div
+        // flex-wrap + min-w-0: a title and its actions on one non-wrapping row
+        // squeezed the title to nothing on a phone, and long titles pushed the
+        // actions off screen. gap-x/gap-y keep the wrapped rows apart.
         className={cn(
-          "flex items-center justify-between",
+          "flex flex-wrap items-center justify-between gap-x-3 gap-y-2",
           isCollapsible && "cursor-pointer select-none",
           className
         )}
         onClick={isCollapsible ? handleToggle : undefined}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2">
           {isCollapsible && (
             <ChevronRight
               className={cn(
-                "size-4 text-foreground/40 transition-transform duration-200",
+                "size-4 shrink-0 text-foreground/40 transition-transform duration-200",
                 !isCollapsed && "rotate-90"
               )}
             />
           )}
-          <div>
-            <h2 className={sizeClasses[size]}>{title}</h2>
+          <div className="min-w-0">
+            <h2 className={cn(sizeClasses[size], "break-words")}>{title}</h2>
             {subtitle && (
               <p className="mt-1 text-sm text-foreground/50">{subtitle}</p>
             )}
