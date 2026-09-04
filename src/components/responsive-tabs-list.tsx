@@ -38,8 +38,11 @@ function ResponsiveTabsList({
   return (
     <TabsList
       className={cn(
-        // Mobile: horizontal scroll rail
-        "flex w-full overflow-x-auto scrollbar-hide snap-x snap-mandatory",
+        // Mobile: horizontal scroll rail. justify-start is load-bearing, not tidying:
+        // TabsList centres its items, and a centred flex line that overflows spills
+        // equally in BOTH directions, so the leading tabs sat outside the scroll origin
+        // and could not be reached at all (scrollLeft 0 with the first tab at -42px).
+        "flex w-full justify-start overflow-x-auto scrollbar-hide snap-x snap-mandatory",
         "bg-muted/50 rounded-t-2xl",
         // Desktop: grid layout
         "md:grid md:w-full",

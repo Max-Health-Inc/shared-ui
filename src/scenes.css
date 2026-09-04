@@ -105,9 +105,14 @@
      (consent-app, dtr-app, patient-portal, connect, trust) had each copied this rule
      into their own global CSS as `.min-h-screen.bg-background`, which stops matching
      the moment the shell changes a class — as it did when it moved to `min-h-dvh`.
-     One rule here replaces all five. */
+     One rule here replaces all five.
+
+     !important for the same reason the header rule above needs it: this file's rules
+     sit in `@layer base`, and `bg-background` is a utility, so on layer order alone
+     the utility wins and the shell stays opaque. The five app-level copies got away
+     without it only because unlayered app CSS outranks any layer. */
   body[data-scene]:not([data-scene="none"]) [data-slot="app-shell"] {
-    background-color: transparent;
+    background-color: transparent !important;
   }
 
   /* ── Scene: Room Edges ─────────────────────────────────── */

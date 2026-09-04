@@ -78,10 +78,10 @@ export function ServiceUnavailable({
     <div className="flex min-h-screen flex-col items-center justify-center gap-6 p-8 text-center bg-background">
       <Icon className="size-16 text-muted-foreground/40" />
       <div className="space-y-2">
-        <h1 className="text-xl font-semibold text-foreground">
+        <h1 className="text-xl font-semibold text-foreground break-words">
           {title ?? t(config.defaultTitle)}
         </h1>
-        <p className="max-w-md text-sm text-muted-foreground">
+        <p className="w-full max-w-md text-sm text-muted-foreground">
           {description ?? t(config.defaultDescription)}
         </p>
       </div>

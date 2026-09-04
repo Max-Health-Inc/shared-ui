@@ -125,10 +125,10 @@ export function SmartAppShell({
             renderSessionExpired(error, handleLogin)
           ) : (
             <div className="flex flex-col items-center justify-center py-24 gap-6">
-              <div className="text-center space-y-3">
+              <div className="w-full text-center space-y-3">
                 <AlertTriangle className="size-12 mx-auto text-amber-500" />
-                <h2 className="text-xl font-semibold">{t("Session Expired")}</h2>
-                <p className="text-muted-foreground max-w-md">
+                <h2 className="text-xl font-semibold break-words">{t("Session Expired")}</h2>
+                <p className="w-full max-w-md text-muted-foreground">
                   {error ?? t("Your session has expired. Please sign in again to continue.")}
                 </p>
               </div>
@@ -155,14 +155,14 @@ export function SmartAppShell({
             renderUnauthenticated(handleLogin)
           ) : (
             <div className="flex flex-col items-center justify-center py-24 gap-6">
-              <div className="text-center space-y-2">
+              <div className="w-full text-center space-y-2">
                 {brand?.logoUrl ? (
                   <img src={brand.logoUrl} alt={brand.name} className="h-16 mx-auto" />
                 ) : (
                   <Icon className="size-16 mx-auto text-muted-foreground/30" />
                 )}
-                <h2 className="text-2xl font-semibold">{title}</h2>
-                <p className="text-muted-foreground max-w-md">{description}</p>
+                <h2 className="text-xl font-semibold break-words sm:text-2xl">{title}</h2>
+                <p className="w-full max-w-md text-muted-foreground">{description}</p>
               </div>
               <Button size="lg" onClick={handleLogin}>
                 <LogIn className="size-4" />
@@ -247,8 +247,8 @@ function AuthErrorBoundary({ error, onRetry, onSignOut, t }: { error: string | n
       <div className="rounded-full bg-muted p-4">
         <ErrorIcon className="size-10 text-muted-foreground" />
       </div>
-      <div className="text-center space-y-2 max-w-md">
-        <h2 className="text-xl font-semibold">{t(info.title)}</h2>
+      <div className="w-full max-w-md text-center space-y-2">
+        <h2 className="text-xl font-semibold break-words">{t(info.title)}</h2>
         <p className="text-muted-foreground text-sm leading-relaxed">{t(info.message)}</p>
       </div>
       <div className="flex gap-3">
@@ -271,7 +271,7 @@ function AuthErrorBoundary({ error, onRetry, onSignOut, t }: { error: string | n
         {t("Sign out and use a different account")}
       </Button>
       {error && (
-        <details className="text-xs text-muted-foreground/60 max-w-sm">
+        <details className="w-full max-w-sm text-xs text-muted-foreground/60">
           <summary className="cursor-pointer hover:text-muted-foreground">{t("Technical details")}</summary>
           <code className="block mt-1 p-2 bg-muted rounded text-[11px] break-all">{error}</code>
         </details>
