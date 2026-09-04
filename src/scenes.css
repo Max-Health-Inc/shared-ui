@@ -97,6 +97,19 @@
     backdrop-filter: blur(8px);
   }
 
+  /* Let the scene through the app shell. SmartAppShell's root paints a solid
+     `bg-background` over the whole viewport, so without this the scene is covered by
+     the very shell it sits behind — a scene app looked identical to a plain one.
+
+     Keyed on the shell's data-slot rather than on its utility classes. Five apps
+     (consent-app, dtr-app, patient-portal, connect, trust) had each copied this rule
+     into their own global CSS as `.min-h-screen.bg-background`, which stops matching
+     the moment the shell changes a class — as it did when it moved to `min-h-dvh`.
+     One rule here replaces all five. */
+  body[data-scene]:not([data-scene="none"]) [data-slot="app-shell"] {
+    background-color: transparent;
+  }
+
   /* ── Scene: Room Edges ─────────────────────────────────── */
 
   body[data-scene="room-edges"]::before {
