@@ -68,7 +68,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
       }
 
       return (
-        <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
+        <div className="flex min-h-dvh items-center justify-center bg-background text-foreground">
           <div className="text-center max-w-[480px] p-8">
             <div className="text-5xl mb-4" aria-hidden="true">⚠</div>
             <h1 className="text-xl font-semibold mb-2 break-words sm:text-2xl">{uiText("Something Went Wrong")}</h1>
