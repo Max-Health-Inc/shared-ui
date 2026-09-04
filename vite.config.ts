@@ -15,9 +15,14 @@ export default defineConfig({
   ],
   build: {
     lib: {
-      entry: resolve(__dirname, 'src/index.ts'),
+      // Multi-entry, because the subpath exports are not reachable from the barrel:
+      // `./i18n` emitted a .d.ts but no .js, so pointing that export at dist would have
+      // resolved to a file the build never wrote.
+      entry: {
+        index: resolve(__dirname, 'src/index.ts'),
+        'i18n/index': resolve(__dirname, 'src/i18n/index.ts'),
+      },
       formats: ['es'],
-      fileName: 'index',
     },
     rollupOptions: {
       external: [

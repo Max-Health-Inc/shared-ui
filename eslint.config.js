@@ -25,7 +25,7 @@ export default tseslint.config(
   // the eslint config itself and the build-tool plugin (shipped as JS so Node can
   // import it from node_modules without .ts type-stripping).
   {
-    files: ["eslint.config.js", "src/vite/*.js"],
+    files: ["eslint.config.js", "src/vite/*.js", "scripts/*.mjs"],
     ...tseslint.configs.disableTypeChecked,
   },
 
