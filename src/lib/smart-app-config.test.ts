@@ -1,5 +1,5 @@
-import { describe, expect, it } from "bun:test"
-import { appBaseUrl, buildFhirBaseUrl, createSmartAppConfig, createSmartAuth } from "./smart-app-config"
+import { afterEach, describe, expect, it } from "bun:test"
+import { appBaseUrl, buildFhirBaseUrl, createSmartAppConfig, createSmartAuth, setAppBasePath } from "./smart-app-config"
 import type { SmartAppConfig } from "./smart-app-config"
 
 function makeConfig(overrides: Partial<SmartAppConfig> = {}): SmartAppConfig {
@@ -84,7 +84,7 @@ describe("appBaseUrl", () => {
   })
 
   it("is the prefix the callback and post-logout URLs are built from", () => {
-    const cfg = createSmartAppConfig({ clientId: "x", scopes: "openid" })
+    const cfg = createSmartAppConfig({ clientId: "x", scopes: "openid", env: {} })
     expect(cfg.redirectUri).toBe(`${appBaseUrl()}callback`)
   })
 })
@@ -92,25 +92,84 @@ describe("appBaseUrl", () => {
 describe("createSmartAppConfig", () => {
   it("does not crash in non-browser environments", () => {
     expect(() =>
-      createSmartAppConfig({ clientId: "test", scopes: "openid" }),
+      createSmartAppConfig({ clientId: "test", scopes: "openid", env: {} }),
     ).not.toThrow()
   })
 
   it("uses defaults for clientId and scopes", () => {
-    const cfg = createSmartAppConfig({ clientId: "my-app", scopes: "openid fhirUser" })
+    const cfg = createSmartAppConfig({ clientId: "my-app", scopes: "openid fhirUser", env: {} })
     expect(cfg.clientId).toBe("my-app")
     expect(cfg.scopes).toBe("openid fhirUser")
   })
 
   it("falls back to default proxyPrefix", () => {
-    const cfg = createSmartAppConfig({ clientId: "x", scopes: "openid" })
+    const cfg = createSmartAppConfig({ clientId: "x", scopes: "openid", env: {} })
     expect(cfg.proxyPrefix).toBe("proxy-smart-backend")
   })
 
   it("falls back to default fhirServerId and fhirVersion", () => {
-    const cfg = createSmartAppConfig({ clientId: "x", scopes: "openid" })
+    const cfg = createSmartAppConfig({ clientId: "x", scopes: "openid", env: {} })
     expect(cfg.fhirServerId).toBe("hapi-fhir-server")
     expect(cfg.fhirVersion).toBe("R4")
+  })
+})
+
+describe("the env the app passes in", () => {
+  // These pin the 0.23.0 regression: this package started shipping BUILT output, so every
+  // `import.meta.env.X` it read had already been substituted with the PACKAGE's own build-time
+  // value. Consumer variables silently became their fallbacks and BASE_URL froze to "/". The
+  // values now arrive as an argument, which is the only form a prebuilt module can honour.
+  const env = {
+    BASE_URL: "/apps/consent/",
+    VITE_PROXY_BASE: "https://proxy.example.com",
+    VITE_PROXY_PREFIX: "custom-backend",
+    VITE_FHIR_SERVER_ID: "other-server",
+    VITE_FHIR_VERSION: "R5",
+    VITE_CLIENT_ID: "env-client",
+    VITE_SCOPES: "openid launch/patient",
+  }
+
+  // The test runner supplies a window, so appBaseUrl() prefixes the origin exactly as it
+  // does in a browser. Derived here rather than hardcoded so the assertions state the part
+  // that is under test: the base path.
+  const origin = typeof window !== "undefined" ? window.location.origin : ""
+
+  afterEach(() => {
+    setAppBasePath("/")
+  })
+
+  it("overrides every default it supplies", () => {
+    const cfg = createSmartAppConfig({ clientId: "fallback", scopes: "openid", env })
+    expect(cfg.proxyBase).toBe("https://proxy.example.com")
+    expect(cfg.proxyPrefix).toBe("custom-backend")
+    expect(cfg.fhirServerId).toBe("other-server")
+    expect(cfg.fhirVersion).toBe("R5")
+    expect(cfg.clientId).toBe("env-client")
+    expect(cfg.scopes).toBe("openid launch/patient")
+  })
+
+  it("puts the redirect URI under the app's base, not the origin root", () => {
+    const cfg = createSmartAppConfig({ clientId: "x", scopes: "openid", env })
+    expect(cfg.redirectUri).toBe(`${origin}/apps/consent/callback`)
+  })
+
+  it("lets an explicit redirect URI win over the derived one", () => {
+    const cfg = createSmartAppConfig({
+      clientId: "x",
+      scopes: "openid",
+      env: { ...env, VITE_REDIRECT_URI: "https://app.example.com/elsewhere" },
+    })
+    expect(cfg.redirectUri).toBe("https://app.example.com/elsewhere")
+  })
+
+  it("makes the app's base reachable to callers that have no env of their own", () => {
+    createSmartAppConfig({ clientId: "x", scopes: "openid", env })
+    expect(appBaseUrl()).toBe(`${origin}/apps/consent/`)
+  })
+
+  it("treats an absent or empty BASE_URL as the origin root", () => {
+    createSmartAppConfig({ clientId: "x", scopes: "openid", env: { BASE_URL: "" } })
+    expect(appBaseUrl()).toBe(`${origin}/`)
   })
 })
 
