@@ -166,7 +166,7 @@ export function SmartAppShell({
               </div>
               <Button size="lg" onClick={handleLogin}>
                 <LogIn className="size-4" />
-                {t("Sign In with SMART")}
+                {t("SMART Login")}
               </Button>
             </div>
           )
