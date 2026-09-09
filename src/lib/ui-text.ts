@@ -44,6 +44,8 @@ export function interpolate(text: string, vars?: Record<string, string | number>
 export const identityT: TFn = (key, vars) => interpolate(key, vars)
 
 let language: string | undefined
+/** The column `language` maps to in every {@link UI_TEXT} row; -1 when English or unknown. */
+let column = -1
 const listeners = new Set<() => void>()
 
 /**
@@ -55,6 +57,10 @@ const listeners = new Set<() => void>()
 export function setUiLanguage(next: string | undefined): void {
   if (next === language) return
   language = next
+  // Resolved here rather than per lookup: every shared component resolves its strings
+  // on every render, and the language changes once.
+  const base = next?.split("-")[0]
+  column = base === undefined ? -1 : UI_TEXT_LANGUAGES.indexOf(base)
   for (const listener of listeners) listener()
 }
 
@@ -75,9 +81,6 @@ function snapshot(): string | undefined {
 }
 
 function fromCatalog(key: string): string | undefined {
-  const base = language?.split("-")[0]
-  if (base === undefined) return undefined
-  const column = UI_TEXT_LANGUAGES.indexOf(base)
   if (column < 0) return undefined
   return UI_TEXT[key]?.[column]
 }
