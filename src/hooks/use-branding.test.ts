@@ -1,5 +1,5 @@
-import { describe, expect, it } from "bun:test"
-import { parseBrandBundle } from "./use-branding"
+import { afterEach, describe, expect, it } from "bun:test"
+import { parseBrandBundle, resolveBrandBundleUrl, setBrandingSource } from "./use-branding"
 
 const BRAND_EXT_URL = "http://hl7.org/fhir/StructureDefinition/organization-brand"
 
@@ -201,5 +201,35 @@ describe("parseBrandBundle", () => {
 
   it("returns fallback for array input (not a FHIR object)", () => {
     expect(parseBrandBundle([1, 2, 3])).toEqual({ name: "Proxy Smart", logoUrl: null, website: null })
+  })
+})
+
+describe("resolveBrandBundleUrl", () => {
+  const FHIR = "https://api.example.org/proxy/hapi/R4"
+  const answer = (body: unknown, status = 200): typeof fetch =>
+    async () => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } })
+
+  afterEach(() => setBrandingSource(null))
+
+  it("keeps the same-origin bundle when the app registered no FHIR server", async () => {
+    expect(await resolveBrandBundleUrl(answer({}))).toBe("/branding.json")
+  })
+
+  it("uses the bundle the server advertises in its SMART configuration", async () => {
+    setBrandingSource(`${FHIR}/`)
+    expect(await resolveBrandBundleUrl(answer({ user_access_brand_bundle: "https://brands.example.org/b.json" })))
+      .toBe("https://brands.example.org/b.json")
+  })
+
+  it("falls back to the FHIR server's origin, not the app's, when nothing is advertised", async () => {
+    setBrandingSource(FHIR)
+    expect(await resolveBrandBundleUrl(answer({ issuer: "x" }))).toBe("https://api.example.org/branding.json")
+    expect(await resolveBrandBundleUrl(answer({}, 404))).toBe("https://api.example.org/branding.json")
+  })
+
+  it("falls back the same way when the configuration cannot be fetched", async () => {
+    setBrandingSource(FHIR)
+    const failing: typeof fetch = async () => { throw new TypeError("network") }
+    expect(await resolveBrandBundleUrl(failing)).toBe("https://api.example.org/branding.json")
   })
 })

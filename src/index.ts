@@ -100,7 +100,7 @@ export { safeFetch, safeFetchResult, type SafeFetchOptions, type ApiError } from
 export { errorStatus, serviceErrorVariant } from "./lib/service-error"
 
 // Hooks
-export { useBranding, type BrandInfo } from "./hooks/use-branding"
+export { useBranding, setBrandingSource, resolveBrandBundleUrl, parseBrandBundle, type BrandInfo } from "./hooks/use-branding"
 export { ModalStackProvider, useModalLayer, useLayerZIndex, LayerContext, type ModalStackProviderProps } from "./hooks/use-modal-stack"
 export {
   useSmartAuth,

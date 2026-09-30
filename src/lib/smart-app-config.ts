@@ -1,6 +1,8 @@
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference
 /// <reference path="../vite-env.d.ts" />
 
+import { setBrandingSource } from "../hooks/use-branding"
+
 /**
  * Shared SMART app configuration factory.
  * Each app provides its own defaults (clientId, scopes) AND its own `import.meta.env`.
@@ -151,6 +153,7 @@ export function createSmartAuth<T>({ config, SmartAuth, storagePrefix }: CreateS
   fhirBaseUrl: string
 } {
   const fhirBaseUrl = buildFhirBaseUrl(config)
+  setBrandingSource(fhirBaseUrl)
   const smartAuth = new SmartAuth({
     clientId: config.clientId,
     redirectUri: config.redirectUri,

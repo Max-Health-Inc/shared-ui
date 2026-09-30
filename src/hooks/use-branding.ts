@@ -25,24 +25,27 @@ interface BundleEntry {
   }
 }
 
-interface BrandBundle {
-  entry?: (BundleEntry | null | undefined)[]
-}
-
 export interface BrandInfo {
   name: string
   logoUrl: string | null
   website: string | null
 }
 
-/** Extract brand name and logo from the /branding.json FHIR Bundle */
+function isBundleEntry(value: unknown): value is BundleEntry {
+  return typeof value === 'object' && value !== null && 'resource' in value && typeof value.resource === 'object' && value.resource !== null
+}
+
+const FALLBACK_BRAND: BrandInfo = { name: 'Proxy Smart', logoUrl: null, website: null }
+
+/** Extract brand name and logo from a User-Access Brand Bundle. */
 export function parseBrandBundle(bundle: unknown): BrandInfo {
-  const fallback: BrandInfo = { name: 'Proxy Smart', logoUrl: null, website: null }
+  const fallback = FALLBACK_BRAND
   if (typeof bundle !== 'object' || bundle === null) return fallback
-  const entries = (bundle as BrandBundle).entry
+  const entries: unknown = 'entry' in bundle ? bundle.entry : undefined
   if (!Array.isArray(entries)) return fallback
 
-  const org = entries.find(e => e?.resource?.resourceType === 'Organization')?.resource
+  const list: readonly unknown[] = entries
+  const org = list.filter(isBundleEntry).find(e => e.resource?.resourceType === 'Organization')?.resource
   if (!org) return fallback
 
   const name = org.name != null && org.name !== "" ? org.name : fallback.name
@@ -70,12 +73,40 @@ export function parseBrandBundle(bundle: unknown): BrandInfo {
 
 let cachedBrand: BrandInfo | null = null
 let fetchPromise: Promise<BrandInfo> | null = null
+let fhirBaseUrl: string | null = null
+
+/** Point branding at the FHIR server the app launches against, whose SMART configuration names the brand bundle. */
+export function setBrandingSource(url: string | null): void {
+  fhirBaseUrl = url ? url.replace(/\/+$/, '') : null
+  cachedBrand = null
+}
+
+function brandBundleUrlFrom(config: unknown): string | null {
+  if (typeof config !== 'object' || config === null || !('user_access_brand_bundle' in config)) return null
+  const url = config.user_access_brand_bundle
+  return typeof url === 'string' && url !== '' ? url : null
+}
+
+export async function resolveBrandBundleUrl(fetchFn: typeof fetch = fetch): Promise<string> {
+  if (!fhirBaseUrl) return '/branding.json'
+  try {
+    const res = await fetchFn(`${fhirBaseUrl}/.well-known/smart-configuration`, { headers: { Accept: 'application/json' } })
+    if (res.ok) {
+      const advertised = brandBundleUrlFrom(await res.json())
+      if (advertised) return advertised
+    }
+  } catch {
+    // fall through to the server's conventional location
+  }
+  return new URL('/branding.json', fhirBaseUrl).href
+}
 
 function fetchBrand(): Promise<BrandInfo> {
   if (cachedBrand) return Promise.resolve(cachedBrand)
   if (fetchPromise) return fetchPromise
 
-  fetchPromise = fetch('/branding.json')
+  fetchPromise = resolveBrandBundleUrl()
+    .then(url => fetch(url, { headers: { Accept: 'application/fhir+json, application/json' } }))
     .then(res => {
       if (!res.ok) throw new Error(String(res.status))
       return res.json()
@@ -85,7 +116,7 @@ function fetchBrand(): Promise<BrandInfo> {
       return cachedBrand
     })
     .catch(() => {
-      cachedBrand = { name: 'Proxy Smart', logoUrl: null, website: null }
+      cachedBrand = FALLBACK_BRAND
       return cachedBrand
     })
     .finally(() => { fetchPromise = null })
@@ -93,7 +124,7 @@ function fetchBrand(): Promise<BrandInfo> {
   return fetchPromise
 }
 
-/** Fetch brand info from /branding.json (cached, singleton) */
+/** The User-Access Brand of the FHIR server the app launched against (cached, singleton). */
 export function useBranding(): BrandInfo | null {
   const [brand, setBrand] = useState<BrandInfo | null>(cachedBrand)
 
