@@ -82,6 +82,7 @@ export { UI_TEXT, UI_TEXT_LANGUAGES } from "./lib/ui-text-catalog"
 // Auth utilities
 export { onAuthError, reportAuthError, createAuthFetch } from "./lib/auth-error"
 export { safeFetch, safeFetchResult, type SafeFetchOptions, type ApiError } from "./lib/safe-fetch"
+export { errorStatus, serviceErrorVariant } from "./lib/service-error"
 
 // Hooks
 export { useBranding, type BrandInfo } from "./hooks/use-branding"

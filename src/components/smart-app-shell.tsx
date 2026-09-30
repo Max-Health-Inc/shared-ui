@@ -3,6 +3,7 @@ import { LogIn, LogOut, AlertTriangle, WifiOff, ShieldAlert, RefreshCw, type Luc
 import { AppHeader, type AppHeaderProps } from "./app-header"
 import { Button } from "./button"
 import { Spinner } from "./spinner"
+import { ServiceUnavailable } from "./service-unavailable"
 import { useBranding } from "../hooks/use-branding"
 import { useSmartAuth, type SmartAuthLike, type UseSmartAuthOptions } from "../hooks/use-smart-auth"
 import { useUiText, type TFn } from "../lib/ui-text"
@@ -240,42 +241,34 @@ function classifyAuthError(error: string | null): AuthErrorInfo {
 
 function AuthErrorBoundary({ error, onRetry, onSignOut, t }: { error: string | null; onRetry: () => void; onSignOut: () => void; t: TFn }) {
   const info = classifyAuthError(error)
-  const ErrorIcon = info.icon
 
   return (
-    <div className="flex flex-col items-center justify-center py-24 gap-6">
-      <div className="rounded-full bg-muted p-4">
-        <ErrorIcon className="size-10 text-muted-foreground" />
-      </div>
-      <div className="w-full max-w-md text-center space-y-2">
-        <h2 className="text-xl font-semibold break-words">{t(info.title)}</h2>
-        <p className="text-muted-foreground text-sm leading-relaxed">{t(info.message)}</p>
-      </div>
-      <div className="flex gap-3">
-        <Button variant="outline" onClick={() => { window.location.reload() }}>
-          <RefreshCw className="size-4" />
-          {t("Reload Page")}
-        </Button>
-        <Button onClick={onRetry}>
-          <LogIn className="size-4" />
-          {t("Try Again")}
-        </Button>
-      </div>
-      {/*
-        Retry re-runs the flow as the SAME signed-in user, so for anything about who
-        that user is — a patient reaching a practitioner-only screen, a denied consent —
-        it fails identically. Signing out is the only action that changes the outcome.
-      */}
-      <Button variant="ghost" size="sm" onClick={onSignOut}>
-        <LogOut className="size-4" />
-        {t("Sign out and use a different account")}
-      </Button>
-      {error && (
-        <details className="w-full max-w-sm text-xs text-muted-foreground/60">
-          <summary className="cursor-pointer hover:text-muted-foreground">{t("Technical details")}</summary>
-          <code className="block mt-1 p-2 bg-muted rounded text-[11px] break-all">{error}</code>
-        </details>
-      )}
-    </div>
+    <ServiceUnavailable
+      layout="inline"
+      icon={info.icon}
+      title={t(info.title)}
+      description={t(info.message)}
+      details={error ?? undefined}
+      t={t}
+      action={
+        <div className="flex flex-col items-center gap-3">
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={() => { window.location.reload() }}>
+              <RefreshCw className="size-4" />
+              {t("Reload Page")}
+            </Button>
+            <Button onClick={onRetry}>
+              <LogIn className="size-4" />
+              {t("Try Again")}
+            </Button>
+          </div>
+          {/* Retry repeats the flow as the same user; only signing out changes the outcome. */}
+          <Button variant="ghost" size="sm" onClick={onSignOut}>
+            <LogOut className="size-4" />
+            {t("Sign out and use a different account")}
+          </Button>
+        </div>
+      }
+    />
   )
 }

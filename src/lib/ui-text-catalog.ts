@@ -130,6 +130,20 @@ export const UI_TEXT: Record<string, readonly string[]> = {
     "Se ha producido un error inesperado. Inténtelo de nuevo.",
     "Si è verificato un errore inatteso. Riprovi.",
   ],
+  "Not Found": ["Nicht gefunden", "Introuvable", "No encontrado", "Non trovato"],
+  "This information could not be found.": [
+    "Diese Informationen wurden nicht gefunden.",
+    "Ces informations sont introuvables.",
+    "No se ha encontrado esta información.",
+    "Queste informazioni non sono state trovate.",
+  ],
+  "You do not have access to this information.": [
+    "Sie haben keinen Zugriff auf diese Informationen.",
+    "Vous n'avez pas accès à ces informations.",
+    "No tiene acceso a esta información.",
+    "Non ha accesso a queste informazioni.",
+  ],
+  Back: ["Zurück", "Retour", "Atrás", "Indietro"],
   Retry: ["Wiederholen", "Réessayer", "Reintentar", "Riprova"],
   "A new version is available.": [
     "Eine neue Version ist verfügbar.",
