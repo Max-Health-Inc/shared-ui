@@ -3,14 +3,9 @@ import { ServiceUnavailable } from "./service-unavailable"
 
 export interface ErrorBoundaryProps {
   children: ReactNode
-  /** Optional custom fallback UI. Receives the error and a reset function. */
   fallback?: (error: Error, reset: () => void) => ReactNode
-  /** Called when an error is caught — useful for telemetry/logging */
   onError?: (error: Error, errorInfo: ErrorInfo) => void
-  /**
-   * When any value in this array changes, the boundary resets automatically.
-   * Useful for recovering after navigation or prop changes.
-   */
+  /** Resets the boundary when any value changes. */
   resetKeys?: unknown[]
 }
 
@@ -19,17 +14,6 @@ interface ErrorBoundaryState {
   error: Error | null
 }
 
-/**
- * Shared React error boundary for all Max Health apps.
- * Catches render-time exceptions and shows a themed fallback.
- *
- * Features:
- * - Theme-aware default fallback (respects dark mode via Tailwind)
- * - Custom fallback via render prop
- * - `onError` callback for telemetry
- * - `resetKeys` for automatic recovery
- * - Manual reset via button
- */
 class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props)

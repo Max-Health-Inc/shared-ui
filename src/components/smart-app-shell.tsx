@@ -85,30 +85,11 @@ export function SmartAppShell({
 
   const content = (
     <PatientContext.Provider value={patientId}>
-    {/*
-      min-h-dvh, not min-h-screen. `100vh` is the LARGE viewport, which deliberately
-      ignores retracting browser UI, so the shell measured taller than what is on
-      screen — theme.css states this as half of the safe-area contract, and the shell
-      was the one place breaking it.
-
-      data-slot gives the scene stylesheet something stable to key on. Five apps had
-      each copied a `.min-h-screen.bg-background { background-color: transparent }`
-      rule into their own CSS to let the background scene through; that selector is a
-      pair of utility classes, so this very change would have silently broken all five.
-      scenes.css now carries the rule against this attribute instead.
-    */}
+    {/* min-h-dvh: 100vh ignores retracting browser UI. data-slot is what scenes.css keys on. */}
     <div data-slot="app-shell" className="flex flex-col h-full min-h-dvh bg-background">
-      {/*
-        Sign Out shows in every state except the one where there is definitely no session
-        to leave. Stated as "not unauthenticated" rather than a list of states that may
-        have one: a new state added to SmartAppState then defaults to offering the way
-        out, instead of silently hiding it the way "error" and "session-expired" were.
-        A hung callback is a stuck state too, and leaving is the only thing that helps.
-      */}
+      {/* Any new state defaults to offering Sign Out. */}
       <AppHeader {...header} t={header.t ?? appT} authenticated={state !== "unauthenticated"} onSignOut={handleLogout} onSwitchPatient={switchPatient && canSwitchPatient ? handleLogin : undefined} userName={userName} accountUrl={accountUrl} />
 
-      {/* px-safe-4/pb-safe-6 add the device insets to the designed padding: in landscape
-          a notch eats the left gutter, and the gesture bar overlaps the last row. */}
       <main className={`${maxWidth} mx-auto px-safe-4 pt-6 pb-safe-6 flex-1 overflow-y-auto w-full`}>
         {state === "loading" || state === "callback" ? (
           renderLoading ? (
@@ -133,12 +114,7 @@ export function SmartAppShell({
                   {error ?? t("Your session has expired. Please sign in again to continue.")}
                 </p>
               </div>
-              {/*
-                One action. Ending the still-live IdP session, so a different account can sign
-                in, used to sit here as a second button — but the header renders Sign Out in
-                this state (`authenticated` is true for anything except `unauthenticated`) and
-                it calls this very handler, so the page offered the same escape twice.
-              */}
+              {/* The header already offers Sign Out here. */}
               <Button size="lg" onClick={handleLogin}>
                 <LogIn className="size-4" />
                 {t("Sign In Again")}

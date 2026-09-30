@@ -8,24 +8,16 @@ import { serviceErrorVariant, type ServiceErrorVariant } from "../lib/service-er
 export type { ServiceErrorVariant }
 
 export interface ServiceUnavailableProps {
-  /** Which screen to show. Derived from `error` when omitted, else "unavailable". */
   variant?: ServiceErrorVariant
-  /** The failure itself; its status picks the variant and its message fills the details. */
   error?: unknown
   title?: string
   description?: string
-  /** Shown collapsed under "Technical details". Defaults to the error's message. */
   details?: string
   icon?: LucideIcon
-  /** Replaces the default Back and Retry buttons. */
   action?: ReactNode
-  /** Defaults to a page reload. */
   onRetry?: () => void
-  /** Renders a Back button when set. */
   onBack?: () => void
-  /** "page" fills the viewport; "inline" sits inside an app's layout. */
   layout?: "page" | "inline"
-  /** The app's translate function; omit it and this package's own catalogue is used. */
   t?: TFn
 }
 
@@ -62,10 +54,6 @@ const VARIANTS: Record<ServiceErrorVariant, { icon: LucideIcon; title: string; d
   },
 }
 
-/**
- * The org's error screen: for a failed request pass `error` and it picks the message from the
- * status. Always offers a way on, Retry by default and Back when `onBack` is set.
- */
 export function ServiceUnavailable({
   variant,
   error,
