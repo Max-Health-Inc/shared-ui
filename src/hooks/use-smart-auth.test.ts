@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { displayNameFromIdToken } from "./use-smart-auth"
+import { deepLinkOf, displayNameFromIdToken } from "./use-smart-auth"
 
 /** Build an id_token whose payload is base64url, UNPADDED — the shape a real IdP emits. */
 function idTokenFor(payload: Record<string, unknown>): string {
@@ -27,5 +27,16 @@ describe("displayNameFromIdToken", () => {
     expect(displayNameFromIdToken(idTokenFor({ name: "   " }))).toBeUndefined()
     expect(displayNameFromIdToken(undefined)).toBeUndefined()
     expect(displayNameFromIdToken("not-a-jwt")).toBeUndefined()
+  })
+})
+
+describe("deepLinkOf", () => {
+  test("keeps the fragment as well as the query, so a code in the hash survives sign-in", () => {
+    expect(deepLinkOf({ search: "?tab=records", hash: "#medicare-import=abc" })).toBe("?tab=records#medicare-import=abc")
+    expect(deepLinkOf({ search: "", hash: "#medicare-import=abc" })).toBe("#medicare-import=abc")
+  })
+
+  test("has nothing to keep on a bare URL", () => {
+    expect(deepLinkOf({ search: "", hash: "" })).toBeNull()
   })
 })

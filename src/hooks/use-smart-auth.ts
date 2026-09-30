@@ -33,6 +33,12 @@ export interface SmartAuthLike {
  * base64url is PADDED before atob (a payload of length % 4 === 1 throws otherwise) and read
  * as UTF-8 (atob alone is one char per byte and mangles a non-ASCII name).
  */
+/** What a sign-in round trip would otherwise lose: the query and the fragment, which a handoff code can live in. */
+export function deepLinkOf(location: Pick<Location, "search" | "hash">): string | null {
+  const link = `${location.search}${location.hash}`
+  return link.length > 0 ? link : null
+}
+
 export function displayNameFromIdToken(idToken: string | undefined): string | undefined {
   const segment = idToken?.split(".")[1]
   if (!segment) return undefined
@@ -176,9 +182,8 @@ export function useSmartAuth({
   }, [ehrLaunch, onAuthenticated, skip, smartAuth])
 
   const handleLogin = useCallback(() => {
-    if (isBrowser && window.location.search) {
-      sessionStorage.setItem(DEEPLINK_KEY, window.location.search)
-    }
+    const deepLink = isBrowser ? deepLinkOf(window.location) : null
+    if (deepLink) sessionStorage.setItem(DEEPLINK_KEY, deepLink)
     const auth = startAuth ?? (() => smartAuth.authorize())
     void auth().catch((err: unknown) => {
       setError(
