@@ -81,6 +81,10 @@
     overflow-x: hidden;
   }
 
+  html:has(> body[data-scene]:not([data-scene="none"])[data-scroll-locked]) {
+    overflow: hidden;
+  }
+
   /* (No `[data-scroll-locked]{perspective:none}` workaround needed: since the
      perspective now lives in each floor's transform rather than on <body>, body
      is never a containing block for fixed descendants, so portaled dialogs stay
