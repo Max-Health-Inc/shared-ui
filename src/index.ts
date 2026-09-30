@@ -54,7 +54,20 @@ export { createSmartAppConfig, createSmartAuth, buildFhirBaseUrl, appBaseUrl, se
 export { CHART_COLORS } from "./lib/chart-colors"
 
 // FHIR helpers
-export { formatHumanName, formatFhirDate } from "./lib/fhir-helpers"
+export { formatHumanName } from "./lib/fhir-helpers"
+
+export {
+  formatDate,
+  formatDate as formatFhirDate,
+  formatDateTime,
+  formatMonth,
+  formatTime,
+  formatRelativeTime,
+  displayLocale,
+  type DateInput,
+  type DateFormatOptions,
+  type DateTimeFormatOptions,
+} from "./lib/datetime"
 
 // This package's own strings and how they resolve. `setUiLanguage` is called for
 // you by `createAppI18n` (see the `/i18n` subpath); it is exported for an app
@@ -63,6 +76,7 @@ export {
   setUiLanguage,
   getUiLanguage,
   useUiText,
+  useUiLanguage,
   uiText,
   identityT,
   interpolate,

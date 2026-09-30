@@ -110,3 +110,7 @@ export function useUiText(override?: TFn): TFn {
     return uiText(key, vars)
   }
 }
+
+export function useUiLanguage(): string | undefined {
+  return useSyncExternalStore(subscribe, snapshot, snapshot)
+}
