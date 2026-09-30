@@ -63,6 +63,7 @@ export {
   formatMonth,
   formatTime,
   formatRelativeTime,
+  parseFhirDate,
   displayLocale,
   type DateInput,
   type DateFormatOptions,

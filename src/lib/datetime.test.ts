@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "bun:test"
-import { formatDate, formatDateTime, formatMonth, formatRelativeTime, formatTime } from "./datetime"
+import { formatDate, formatDateTime, formatMonth, formatRelativeTime, formatTime, parseFhirDate } from "./datetime"
 import { setUiLanguage } from "./ui-text"
 
 afterEach(() => setUiLanguage(undefined))
@@ -92,5 +92,18 @@ describe("formatRelativeTime", () => {
   it("speaks the UI language", () => {
     setUiLanguage("de")
     expect(formatRelativeTime(new Date(now - 3 * 24 * 3600 * 1000), now)).toBe("vor 3 Tagen")
+  })
+})
+
+describe("parseFhirDate", () => {
+  it("reads a date-only value as a local calendar day", () => {
+    const date = parseFhirDate("1997-11-02")
+    expect([date?.getFullYear(), date?.getMonth(), date?.getDate(), date?.getHours()]).toEqual([1997, 10, 2, 0])
+  })
+
+  it("reads an instant at its absolute time and rejects garbage", () => {
+    expect(parseFhirDate("2026-09-24T08:55:00Z")?.getTime()).toBe(Date.UTC(2026, 8, 24, 8, 55))
+    expect(parseFhirDate("soon")).toBeNull()
+    expect(parseFhirDate(undefined)).toBeNull()
   })
 })

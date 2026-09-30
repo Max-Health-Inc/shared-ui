@@ -51,6 +51,10 @@ function parse(value: DateInput): ParsedDate | null {
   return date && { date, precision: "instant" }
 }
 
+export function parseFhirDate(value: DateInput): Date | null {
+  return parse(value)?.date ?? null
+}
+
 function format(date: Date, options: Intl.DateTimeFormatOptions): string {
   return new Intl.DateTimeFormat(displayLocale(), options).format(date)
 }
