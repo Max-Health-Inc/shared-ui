@@ -26,7 +26,7 @@ function Collapsible({ open, onOpenChange, children, className, ...props }: Coll
 
   return (
     <CollapsibleContext.Provider value={{ open: isOpen, toggle }}>
-      <div data-slot="collapsible" className={className} {...props}>
+      <div data-slot="collapsible" data-state={isOpen ? "open" : "closed"} className={className} {...props}>
         {children}
       </div>
     </CollapsibleContext.Provider>
@@ -34,11 +34,13 @@ function Collapsible({ open, onOpenChange, children, className, ...props }: Coll
 }
 
 function CollapsibleTrigger({ children, className, ...props }: React.ComponentProps<"button">) {
-  const { toggle } = React.useContext(CollapsibleContext)
+  const { open, toggle } = React.useContext(CollapsibleContext)
   return (
     <button
       type="button"
       data-slot="collapsible-trigger"
+      data-state={open ? "open" : "closed"}
+      aria-expanded={open}
       onClick={toggle}
       className={className}
       {...props}
