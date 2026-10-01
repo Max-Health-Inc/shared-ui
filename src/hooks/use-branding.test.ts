@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "bun:test"
+import { afterEach, beforeEach, describe, expect, it } from "bun:test"
 import { parseBrandBundle, resolveBrandBundleUrl, setBrandingSource } from "./use-branding"
 
 const BRAND_EXT_URL = "http://hl7.org/fhir/StructureDefinition/organization-brand"
@@ -209,6 +209,7 @@ describe("resolveBrandBundleUrl", () => {
   const answer = (body: unknown, status = 200): typeof fetch =>
     async () => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } })
 
+  beforeEach(() => setBrandingSource(null))
   afterEach(() => setBrandingSource(null))
 
   it("keeps the same-origin bundle when the app registered no FHIR server", async () => {
