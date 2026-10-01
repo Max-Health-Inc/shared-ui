@@ -24,6 +24,22 @@ import { createHash } from "node:crypto"
 import { writeFile } from "node:fs/promises"
 import { join } from "node:path"
 
+/**
+ * `Content-Disposition` for a streamed download: an ASCII fallback for old clients plus the
+ * RFC 5987 `filename*` form, so a German or Japanese file name survives. Runs inside the worker
+ * (embedded via toString), so it must stay self-contained.
+ * @param {unknown} filename
+ * @returns {string}
+ */
+export function contentDisposition(filename) {
+  const name = typeof filename === "string" && filename.trim() ? filename.trim() : "download"
+  const ascii = name.replace(/[^ -~]/g, "_").replace(/["%;]/g, "_").split(String.fromCharCode(92)).join("_")
+  return "attachment; filename=\"" + ascii + "\"; filename*=UTF-8''" + encodeURIComponent(name)
+}
+
+/** Path segment the worker serves streamed downloads under, relative to its scope. */
+export const STREAM_DOWNLOAD_PATH = "__stream-download__/"
+
 /** Token replaced at build time with the app's cache-name prefix. */
 const APP_NAME_PLACEHOLDER = "__APP_NAME__"
 /** Token replaced at build time with a unique, content-derived build id. */
@@ -58,6 +74,14 @@ const CACHE_NAME = "${APP_NAME_PLACEHOLDER}-${BUILD_ID_PLACEHOLDER}";
 
 const PRECACHE_ASSETS = ${PRECACHE_PLACEHOLDER};
 
+// Streamed downloads: a page hands a ReadableStream over a MessagePort and navigates a hidden
+// frame to the URL returned in READY; the response streams from the page, so the download shows
+// in the browser's list with live progress instead of appearing as a finished Blob.
+const STREAM_PATH = ${JSON.stringify(STREAM_DOWNLOAD_PATH)};
+const STREAM_TTL_MS = 60000;
+const pendingStreams = new Map();
+${contentDisposition.toString()}
+
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_ASSETS))
@@ -80,9 +104,19 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const { request } = event;
+  const url = new URL(request.url);
+  const streamAt = url.origin === self.location.origin ? url.pathname.indexOf("/" + STREAM_PATH) : -1;
+  if (streamAt !== -1) {
+    event.respondWith(Promise.resolve(streamResponse(url.pathname.slice(streamAt + STREAM_PATH.length + 1))));
+    return;
+  }
   if (request.method !== "GET") return;
 
-  const url = new URL(request.url);
+  // Only this app's own, unauthenticated, whole-resource requests are cached. A cross-origin
+  // GET (DICOMweb frames, FHIR reads on the API host) carries patient data and is often
+  // megabytes: cloning it into Cache Storage left PHI at rest and doubled the I/O.
+  if (url.origin !== self.location.origin) return;
+  if (request.headers.has("authorization") || request.headers.has("range")) return;
   if (url.pathname.startsWith("/api/")) return;
 
   if (url.pathname.match(/\\.(png|jpg|jpeg|webp|svg|gif|ico|woff2?|css|js|wasm|dcm)$/)) {
@@ -94,8 +128,51 @@ self.addEventListener("fetch", (event) => {
 });
 
 self.addEventListener("message", (event) => {
-  if (event.data && event.data.type === "SKIP_WAITING") self.skipWaiting();
+  const data = event.data;
+  if (data && data.type === "SKIP_WAITING") self.skipWaiting();
+  if (data && data.type === "STREAM_DOWNLOAD" && event.ports && event.ports[0]) {
+    registerStream(data, event.ports[0]);
+  }
 });
+
+function registerStream(data, port) {
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2);
+  const timer = setTimeout(() => pendingStreams.delete(id), STREAM_TTL_MS);
+  pendingStreams.set(id, { data, port, timer });
+  port.postMessage({ type: "READY", url: new URL(STREAM_PATH + id, self.registration.scope).href });
+}
+
+function streamResponse(id) {
+  const entry = pendingStreams.get(id);
+  if (!entry) return new Response("", { status: 404 });
+  pendingStreams.delete(id);
+  clearTimeout(entry.timer);
+  const { data, port } = entry;
+  const body = new ReadableStream({
+    pull(controller) {
+      return new Promise((resolve) => {
+        port.onmessage = (event) => {
+          const message = event.data || {};
+          if (message.type === "CHUNK") controller.enqueue(message.chunk);
+          else if (message.type === "END") controller.close();
+          else controller.error(new Error(message.reason || "download aborted"));
+          resolve();
+        };
+        port.postMessage({ type: "PULL" });
+      });
+    },
+    cancel() {
+      port.postMessage({ type: "CANCEL" });
+    },
+  });
+  const headers = new Headers({
+    "Content-Type": data.contentType || "application/octet-stream",
+    "Content-Disposition": contentDisposition(data.filename),
+    "X-Content-Type-Options": "nosniff",
+  });
+  if (typeof data.size === "number" && data.size >= 0) headers.set("Content-Length", String(data.size));
+  return new Response(body, { headers });
+}
 
 // A cached HTML document served for a .css/.js asset request is the SPA fallback
 // (index.html, 200) returned for a momentarily-missing hashed file during a deploy.

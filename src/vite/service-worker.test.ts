@@ -3,6 +3,7 @@ import {
   SERVICE_WORKER_SOURCE,
   BUILD_ID_PLACEHOLDER,
   stampServiceWorker,
+  contentDisposition,
 } from "./service-worker"
 
 test("stampServiceWorker replaces every build-id placeholder", () => {
@@ -106,6 +107,8 @@ function loadWorker(respond: (request: Request) => Response) {
     },
     clients: { claim: async () => {} },
     skipWaiting: async () => {},
+    location: new URL("https://app.test/"),
+    registration: { scope: "https://app.test/" },
   }
   const { caches, stores } = makeCacheStorage()
   const fetched: string[] = []
@@ -116,16 +119,28 @@ function loadWorker(respond: (request: Request) => Response) {
 
   new Function("self", "caches", "fetch", renderWorker())(worker, caches, fetch_)
 
-  async function handleFetch(url: string): Promise<Response> {
+  /** Dispatch a fetch; resolves to null when the worker leaves the request to the browser. */
+  async function dispatchFetch(url: string, init?: RequestInit): Promise<Response | null> {
     const handler = listeners.get("fetch")
     if (!handler) throw new Error("worker registered no fetch handler")
     let responded: Promise<Response> | undefined
-    handler({ request: new Request(url), respondWith: (p: Promise<Response>) => void (responded = p) })
-    if (!responded) throw new Error(`worker did not respond to ${url}`)
-    return await responded
+    handler({ request: new Request(url, init), respondWith: (p: Promise<Response>) => void (responded = p) })
+    return responded ? await responded : null
   }
 
-  return { handleFetch, caches, stores, fetched }
+  async function handleFetch(url: string): Promise<Response> {
+    const response = await dispatchFetch(url)
+    if (!response) throw new Error(`worker did not respond to ${url}`)
+    return response
+  }
+
+  function postMessage(data: unknown, ports: MessagePort[] = []) {
+    const handler = listeners.get("message")
+    if (!handler) throw new Error("worker registered no message handler")
+    handler({ data, ports })
+  }
+
+  return { handleFetch, dispatchFetch, postMessage, caches, stores, fetched }
 }
 
 const html = () => new Response("<!doctype html>", { headers: { "content-type": "text/html" } })
@@ -201,4 +216,61 @@ test("the SW source deliberately omits skipWaiting on install (prompt-to-reload)
     SERVICE_WORKER_SOURCE.indexOf('addEventListener("activate"'),
   )
   expect(installBlock).not.toContain("self.skipWaiting")
+})
+
+describe("generated worker: patient data never reaches Cache Storage", () => {
+  it("leaves a cross-origin request (DICOMweb, FHIR) entirely to the browser", async () => {
+    const worker = loadWorker(() => new Response("frame"))
+    const response = await worker.dispatchFetch("https://api.proxy-smart.com/dicomweb/studies/1/series/2/instances/3/frames/1")
+    expect(response).toBeNull()
+    expect(worker.stores.size).toBe(0)
+  })
+
+  it("does not cache a same-origin request that carries a bearer token", async () => {
+    const worker = loadWorker(() => new Response("record"))
+    const response = await worker.dispatchFetch("https://app.test/fhir/Patient/1", { headers: { Authorization: "Bearer x" } })
+    expect(response).toBeNull()
+  })
+
+  it("does not cache a partial (Range) response", async () => {
+    const worker = loadWorker(() => new Response("part"))
+    expect(await worker.dispatchFetch("https://app.test/video.mp4", { headers: { Range: "bytes=0-99" } })).toBeNull()
+  })
+})
+
+describe("generated worker: streamed downloads", () => {
+  it("serves bytes the page pushes over the port as an attachment", async () => {
+    const worker = loadWorker(() => new Response("network"))
+    const channel = new MessageChannel()
+    const ready = new Promise<string>((resolve) => {
+      channel.port1.onmessage = (event: MessageEvent<{ type: string; url: string }>) => resolve(event.data.url)
+    })
+    worker.postMessage({ type: "STREAM_DOWNLOAD", filename: "Röntgen.zip", contentType: "application/zip" }, [channel.port2])
+    const url = await ready
+
+    const chunks = [new TextEncoder().encode("PK"), new TextEncoder().encode("data")]
+    channel.port1.onmessage = (event: MessageEvent<{ type: string }>) => {
+      if (event.data.type !== "PULL") return
+      const chunk = chunks.shift()
+      channel.port1.postMessage(chunk ? { type: "CHUNK", chunk } : { type: "END" })
+    }
+
+    const response = await worker.handleFetch(url)
+    expect(response.headers.get("content-disposition")).toContain("filename*=UTF-8''R%C3%B6ntgen.zip")
+    expect(response.headers.get("content-type")).toBe("application/zip")
+    expect(await response.text()).toBe("PKdata")
+    expect(worker.fetched, "a streamed download never goes to the network").toEqual([])
+    channel.port1.close()
+  })
+
+  it("answers an unknown or already-used download id with 404", async () => {
+    const worker = loadWorker(() => new Response("network"))
+    const response = await worker.handleFetch("https://app.test/__stream-download__/nope")
+    expect(response.status).toBe(404)
+  })
+})
+
+test("contentDisposition keeps the real name for modern clients and a safe ASCII one for old ones", () => {
+  expect(contentDisposition('Knie "links".zip')).toBe(`attachment; filename="Knie _links_.zip"; filename*=UTF-8''Knie%20%22links%22.zip`)
+  expect(contentDisposition("")).toBe(`attachment; filename="download"; filename*=UTF-8''download`)
 })

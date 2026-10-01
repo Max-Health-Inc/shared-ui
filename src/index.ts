@@ -50,6 +50,7 @@ export { NativeSelect, type NativeSelectProps } from "./components/native-select
 
 // Utilities
 export { cn } from "./lib/utils"
+export { streamDownload, pumpToPort, prefersBlobDownload, type StreamDownloadOptions, type StreamDownloadMode, type DownloadPort } from "./lib/stream-download"
 export { createSmartAppConfig, createSmartAuth, buildFhirBaseUrl, appBaseUrl, setAppBasePath, type SmartAppConfig, type SmartAppEnv } from "./lib/smart-app-config"
 export { CHART_COLORS } from "./lib/chart-colors"
 

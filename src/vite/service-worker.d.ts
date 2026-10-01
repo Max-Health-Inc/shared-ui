@@ -3,6 +3,12 @@ import type { Plugin } from "vite"
 /** The literal token replaced at build time with the build id. */
 export declare const BUILD_ID_PLACEHOLDER: string
 
+/** `Content-Disposition` for a streamed download: ASCII fallback plus RFC 5987 `filename*`. */
+export declare function contentDisposition(filename: unknown): string
+
+/** Path segment, relative to the worker's scope, that streamed downloads are served under. */
+export declare const STREAM_DOWNLOAD_PATH: string
+
 /** The canonical service-worker source, with build-time placeholders. */
 export declare const SERVICE_WORKER_SOURCE: string
 
