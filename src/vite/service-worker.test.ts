@@ -274,3 +274,41 @@ test("contentDisposition keeps the real name for modern clients and a safe ASCII
   expect(contentDisposition('Knie "links".zip')).toBe(`attachment; filename="Knie _links_.zip"; filename*=UTF-8''Knie%20%22links%22.zip`)
   expect(contentDisposition("")).toBe(`attachment; filename="download"; filename*=UTF-8''download`)
 })
+
+describe("generated worker: navigations", () => {
+  it("hands a navigation's own request to fetch, so a sign-in redirect reaches the browser to follow", async () => {
+    let seen: Request | undefined
+    const worker = loadWorker((request) => {
+      seen = request
+      return new Response(null, { status: 302, headers: { Location: "https://idp.test/authorize" } })
+    })
+    const response = await worker.dispatchFetch("https://app.test/dashboard", { redirect: "manual" })
+    expect(seen?.redirect).toBe("manual")
+    expect(response?.status).toBe(302)
+    expect(await worker.caches.match("https://app.test/dashboard")).toBeUndefined()
+  })
+})
+
+describe("serviceWorkerPlugin", () => {
+  async function build(environment: string | undefined, outDir: string) {
+    const { serviceWorkerPlugin } = await import("./service-worker")
+    const { mkdtemp, readdir } = await import("node:fs/promises")
+    const { tmpdir } = await import("node:os")
+    const { join } = await import("node:path")
+    const written = await mkdtemp(join(tmpdir(), "sw-"))
+    const plugin = serviceWorkerPlugin({ cacheName: "app" })
+    plugin.configResolved({ build: { ssr: false, outDir } })
+    await plugin.writeBundle.call(environment ? { environment: { name: environment } } : {}, { dir: written }, { "assets/a.js": {} })
+    return readdir(written)
+  }
+
+  it("writes the worker into the directory the bundle is written to", async () => {
+    // React Router builds through Vite environments: the client writes to build/client while
+    // the top-level config still says dist.
+    expect(await build("client", "dist-that-does-not-exist")).toContain("sw.js")
+  })
+
+  it("writes nothing for a server environment", async () => {
+    expect(await build("ssr", "dist-that-does-not-exist")).not.toContain("sw.js")
+  })
+})

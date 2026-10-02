@@ -275,8 +275,13 @@ export function serviceWorkerPlugin(options) {
       isSsr = config.build.ssr !== false
       outDir = config.build.outDir
     },
-    async writeBundle(_outputOptions, bundle) {
-      if (isSsr) return
+    async writeBundle(outputOptions, bundle) {
+      // Under Vite's environments API (React Router framework mode) each environment writes its own
+      // bundle: only the client gets a worker, and it goes where that bundle went, not to the
+      // top-level outDir, which no environment writes to.
+      const environment = this?.environment?.name
+      if (environment ? environment !== "client" : isSsr) return
+      const dir = outputOptions.dir ?? outDir
 
       const hash = createHash("sha256")
       for (const name of Object.keys(bundle).sort()) hash.update(name)
@@ -290,7 +295,7 @@ export function serviceWorkerPlugin(options) {
         buildId,
       )
 
-      await writeFile(join(outDir, fileName), source, "utf8")
+      await writeFile(join(dir, fileName), source, "utf8")
     },
   }
 }
