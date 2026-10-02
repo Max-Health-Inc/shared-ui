@@ -1,7 +1,9 @@
 import * as React from "react"
 import { cn } from "../lib/utils"
+import { useFormFieldControl } from "./form-field-context"
 
-function Input({ className, type, ...props }: React.ComponentProps<"input">) {
+function Input({ className, type, ...rest }: React.ComponentProps<"input">) {
+  const props = useFormFieldControl(rest)
   return (
     <input
       type={type}

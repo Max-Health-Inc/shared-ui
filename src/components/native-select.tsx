@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { cn } from "../lib/utils"
+import { useFormFieldControl } from "./form-field-context"
 
 type NativeSelectSize = "sm" | "md" | "lg"
 type NativeSelectVariant = "default" | "filled" | "light"
@@ -51,15 +52,15 @@ const variants: Record<
 
 const NativeSelect = React.forwardRef<HTMLSelectElement, NativeSelectProps>(
   (
-    { selectSize = "md", variant = "default", error = false, className, style, children, ...props },
+    { selectSize = "md", variant = "default", error = false, className, style, children, ...rest },
     ref
   ) => {
+    const props = useFormFieldControl({ "aria-invalid": error || undefined, ...rest })
     const v = variants[variant]
     return (
       <div className="relative w-full">
         <select
           ref={ref}
-          aria-invalid={error || undefined}
           className={cn(
             v.base,
             sizes[selectSize],

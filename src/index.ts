@@ -45,6 +45,7 @@ export { Combobox, type ComboboxProps, type ComboboxOption } from "./components/
 export { Popover, PopoverTrigger, PopoverContent, PopoverAnchor } from "./components/popover"
 export { ConfirmProvider, useConfirm } from "./components/confirm-dialog"
 export { Form, FormField, FormError, FormActions } from "./components/form"
+export { useFormFieldControl } from "./components/form-field-context"
 export { Loader, LoaderOverlay } from "./components/loader"
 export { NativeSelect, type NativeSelectProps } from "./components/native-select"
 
