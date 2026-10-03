@@ -26,6 +26,17 @@ export interface SmartAuthLike {
   getToken?(): { patient?: string; fhirUser?: string; scope?: string; id_token?: string } | null
 }
 
+/** What a sign-in round trip would otherwise lose: the path, the query and the fragment a handoff code can live in. */
+export function deepLinkOf(location: Pick<Location, "pathname" | "search" | "hash">): string {
+  return `${location.pathname}${location.search}${location.hash}`
+}
+
+/** The saved deep link when it is a same-origin path, else the current path. */
+export function restorableDeepLink(saved: string | null, currentPath: string): string {
+  const sameOrigin = saved !== null && saved.startsWith("/") && !saved.startsWith("//") && !saved.startsWith("/\\")
+  return sameOrigin ? saved : currentPath
+}
+
 /**
  * Best-effort display name from an id_token's standard OIDC claims. Decoded, not
  * verified — for showing "who's signed in", never a trust decision.
@@ -33,12 +44,6 @@ export interface SmartAuthLike {
  * base64url is PADDED before atob (a payload of length % 4 === 1 throws otherwise) and read
  * as UTF-8 (atob alone is one char per byte and mangles a non-ASCII name).
  */
-/** What a sign-in round trip would otherwise lose: the query and the fragment, which a handoff code can live in. */
-export function deepLinkOf(location: Pick<Location, "search" | "hash">): string | null {
-  const link = `${location.search}${location.hash}`
-  return link.length > 0 ? link : null
-}
-
 export function displayNameFromIdToken(idToken: string | undefined): string | undefined {
   const segment = idToken?.split(".")[1]
   if (!segment) return undefined
@@ -121,7 +126,7 @@ export function useSmartAuth({
         .then(() => {
           const saved = sessionStorage.getItem(DEEPLINK_KEY)
           sessionStorage.removeItem(DEEPLINK_KEY)
-          window.history.replaceState({}, "", window.location.pathname + (saved ?? ""))
+          window.history.replaceState({}, "", restorableDeepLink(saved, window.location.pathname))
           onAuthenticated?.()
           setState("authenticated")
         })
@@ -182,8 +187,7 @@ export function useSmartAuth({
   }, [ehrLaunch, onAuthenticated, skip, smartAuth])
 
   const handleLogin = useCallback(() => {
-    const deepLink = isBrowser ? deepLinkOf(window.location) : null
-    if (deepLink) sessionStorage.setItem(DEEPLINK_KEY, deepLink)
+    if (isBrowser) sessionStorage.setItem(DEEPLINK_KEY, deepLinkOf(window.location))
     const auth = startAuth ?? (() => smartAuth.authorize())
     void auth().catch((err: unknown) => {
       setError(
