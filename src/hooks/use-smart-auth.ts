@@ -43,6 +43,15 @@ export function deepLinkOf(
   return `${location.pathname}${query}${location.hash}`
 }
 
+/** What the authorization server said when it redirected back with an error (RFC 6749 §4.1.2.1), else null. */
+export function authorizationErrorOf(search: string): string | null {
+  const params = new URLSearchParams(search)
+  const error = params.get("error")
+  if (!error) return null
+  const description = params.get("error_description")?.trim()
+  return description ? description : error
+}
+
 /** The saved deep link when it is a same-origin path, else the current path. */
 export function restorableDeepLink(saved: string | null, currentPath: string): string {
   const sameOrigin = saved !== null && saved.startsWith("/") && !saved.startsWith("//") && !saved.startsWith("/\\")
@@ -126,6 +135,20 @@ export function useSmartAuth({
     })
 
     const params = new URLSearchParams(window.location.search)
+
+    // A refused authorization comes back with ?error= instead of a code: say why, and leave
+    // the user on the page they started from rather than on the redirect URI.
+    const refused = authorizationErrorOf(window.location.search)
+    if (refused) {
+      const saved = sessionStorage.getItem(DEEPLINK_KEY)
+      sessionStorage.removeItem(DEEPLINK_KEY)
+      window.history.replaceState({}, "", restorableDeepLink(saved, window.location.pathname))
+      void Promise.resolve().then(() => {
+        setError(refused)
+        setState("error")
+      })
+      return
+    }
 
     // Handle OAuth callback
     if (params.has("code")) {

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { deepLinkOf, displayNameFromIdToken, restorableDeepLink } from "./use-smart-auth"
+import { authorizationErrorOf, deepLinkOf, displayNameFromIdToken, restorableDeepLink } from "./use-smart-auth"
 
 /** Build an id_token whose payload is base64url, UNPADDED — the shape a real IdP emits. */
 function idTokenFor(payload: Record<string, unknown>): string {
@@ -66,5 +66,21 @@ describe("restorableDeepLink", () => {
     expect(restorableDeepLink("//evil.example/x", "/callback")).toBe("/callback")
     expect(restorableDeepLink("/\\evil.example", "/callback")).toBe("/callback")
     expect(restorableDeepLink("https://evil.example/", "/callback")).toBe("/callback")
+  })
+})
+
+describe("authorizationErrorOf", () => {
+  test("reads the server's description of a refused authorization", () => {
+    expect(authorizationErrorOf("?error=invalid_scope&error_description=Invalid+scopes%3A+launch&state=x"))
+      .toBe("Invalid scopes: launch")
+  })
+
+  test("falls back to the error code when there is no description", () => {
+    expect(authorizationErrorOf("?error=access_denied&state=x")).toBe("access_denied")
+  })
+
+  test("is null on a successful callback or an ordinary page", () => {
+    expect(authorizationErrorOf("?code=abc&state=x")).toBeNull()
+    expect(authorizationErrorOf("")).toBeNull()
   })
 })
