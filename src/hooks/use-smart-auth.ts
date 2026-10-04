@@ -49,7 +49,8 @@ export function authorizationErrorOf(search: string): string | null {
   const error = params.get("error")
   if (!error) return null
   const description = params.get("error_description")?.trim()
-  return description ? description : error
+  if (description) return description
+  return error
 }
 
 /** The saved deep link when it is a same-origin path, else the current path. */
