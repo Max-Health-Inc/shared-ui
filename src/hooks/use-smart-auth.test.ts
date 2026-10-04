@@ -41,6 +41,21 @@ describe("deepLinkOf", () => {
   })
 })
 
+describe("deepLinkOf without one-time launch params", () => {
+  test("keeps the study query but drops launch and iss, which are spent by the EHR launch", () => {
+    expect(
+      deepLinkOf(
+        { pathname: "/", search: "?StudyInstanceUID=1.2&mode=3d&launch=abc&iss=https%3A%2F%2Ffhir", hash: "" },
+        ["launch", "iss"],
+      ),
+    ).toBe("/?StudyInstanceUID=1.2&mode=3d")
+  })
+
+  test("leaves no dangling question mark when nothing else remains", () => {
+    expect(deepLinkOf({ pathname: "/viewer", search: "?launch=abc&iss=x", hash: "#h" }, ["launch", "iss"])).toBe("/viewer#h")
+  })
+})
+
 describe("restorableDeepLink", () => {
   test("restores a saved same-origin path", () => {
     expect(restorableDeepLink("/admin?x=1#y", "/callback")).toBe("/admin?x=1#y")

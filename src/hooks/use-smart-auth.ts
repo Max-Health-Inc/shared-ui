@@ -26,9 +26,21 @@ export interface SmartAuthLike {
   getToken?(): { patient?: string; fhirUser?: string; scope?: string; id_token?: string } | null
 }
 
-/** What a sign-in round trip would otherwise lose: the path, the query and the fragment a handoff code can live in. */
-export function deepLinkOf(location: Pick<Location, "pathname" | "search" | "hash">): string {
-  return `${location.pathname}${location.search}${location.hash}`
+/** One-time EHR launch parameters, spent by the launch and never worth restoring. */
+const EHR_LAUNCH_PARAMS = ["launch", "iss"] as const
+
+/**
+ * What a sign-in round trip would otherwise lose: the path, the query and the fragment a handoff
+ * code can live in, minus any `drop`ped query parameters.
+ */
+export function deepLinkOf(
+  location: Pick<Location, "pathname" | "search" | "hash">,
+  drop: readonly string[] = [],
+): string {
+  const params = new URLSearchParams(location.search)
+  for (const name of drop) params.delete(name)
+  const query = drop.length > 0 ? (params.size > 0 ? `?${params}` : "") : location.search
+  return `${location.pathname}${query}${location.hash}`
 }
 
 /** The saved deep link when it is a same-origin path, else the current path. */
@@ -158,6 +170,7 @@ export function useSmartAuth({
     ) {
       const launch = params.get("launch") ?? ""
       const iss = params.get("iss") ?? ""
+      sessionStorage.setItem(DEEPLINK_KEY, deepLinkOf(window.location, EHR_LAUNCH_PARAMS))
       void smartAuth.startEhrLaunch(launch, iss).catch((err: unknown) => {
         setError(err instanceof Error ? err.message : "EHR launch failed")
         setState("error")
