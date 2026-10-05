@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { onAuthError } from "../lib/auth-error"
 
 const DEEPLINK_KEY = "__smart_deeplink__"
+const SILENT_ATTEMPT_KEY = "__smart_silent_attempted__"
+const SILENT_REFUSALS = new Set(["login_required", "interaction_required", "consent_required", "account_selection_required"])
 const isBrowser = typeof window !== "undefined"
 
 export type SmartAppState =
@@ -12,6 +14,11 @@ export type SmartAppState =
   | "error"
   | "session-expired"
 
+/** Per-request authorization options; `prompt: "none"` asks the IdP to sign in without interaction. */
+export interface AuthorizeOptions {
+  prompt?: "none"
+}
+
 /** Minimal interface matching any generated SmartAuth class. */
 export interface SmartAuthLike {
   handleCallback(): Promise<unknown>
@@ -19,7 +26,7 @@ export interface SmartAuthLike {
   isTokenExpired(): boolean
   refreshAccessToken(): Promise<unknown>
   clearToken(): void
-  authorize(): Promise<void>
+  authorize(options?: AuthorizeOptions): Promise<void>
   logout(): void
   startEhrLaunch?(launch: string, iss: string): Promise<void>
   /** Optional: return the current token (used to derive patientId, fhirUser, granted scope + the signed-in name reactively). */
@@ -51,6 +58,11 @@ export function authorizationErrorOf(search: string): string | null {
   const description = params.get("error_description")?.trim()
   if (description) return description
   return error
+}
+
+/** True when the IdP answered a `prompt=none` request by saying it needs the user (OIDC Core §3.1.2.6). */
+export function isSilentSignInRefusal(search: string): boolean {
+  return SILENT_REFUSALS.has(new URLSearchParams(search).get("error") ?? "")
 }
 
 /** The saved deep link when it is a same-origin path, else the current path. */
@@ -91,7 +103,7 @@ export interface UseSmartAuthOptions {
   /** Called after successful authentication (callback, refresh, or existing valid token). */
   onAuthenticated?: () => void
   /** Override the default authorize() for login. E.g., dtr-app uses startStandaloneLaunch(). */
-  startAuth?: () => Promise<void>
+  startAuth?: (options?: AuthorizeOptions) => Promise<void>
   /** Handle EHR launch params (launch + iss). Defaults to true. */
   ehrLaunch?: boolean
   /** Skip auth entirely (e.g. SHL viewer mode). State stays "unauthenticated". */
@@ -102,6 +114,12 @@ export interface UseSmartAuthOptions {
    * the app; this hook only calls it and prefers its result over the id_token's OIDC claims.
    */
   resolveUserName?: () => Promise<string | undefined>
+  /**
+   * With no usable token, first try once per browser session to reuse the sign-in the user
+   * already holds at the identity provider (OIDC `prompt=none`), e.g. from another app on the
+   * same realm. If the IdP needs the user, the app shows its sign-in as usual. Default: false
+   */
+  silentSignIn?: boolean
 }
 
 export function useSmartAuth({
@@ -111,6 +129,7 @@ export function useSmartAuth({
   ehrLaunch = true,
   skip = false,
   resolveUserName,
+  silentSignIn = false,
 }: UseSmartAuthOptions) {
   const [state, setState] = useState<SmartAppState>(() => {
     if (skip) return "unauthenticated"
@@ -125,6 +144,8 @@ export function useSmartAuth({
   const [error, setError] = useState<string | null>(null)
   const callbackHandled = useRef(false)
   const [resolvedName, setResolvedName] = useState<string | undefined>(undefined)
+  const startAuthRef = useRef(startAuth)
+  useEffect(() => { startAuthRef.current = startAuth }, [startAuth])
 
   useEffect(() => {
     if (skip) return
@@ -136,6 +157,23 @@ export function useSmartAuth({
     })
 
     const params = new URLSearchParams(window.location.search)
+
+    const trySilentSignIn = (): boolean => {
+      if (!silentSignIn || sessionStorage.getItem(SILENT_ATTEMPT_KEY)) return false
+      sessionStorage.setItem(SILENT_ATTEMPT_KEY, "1")
+      sessionStorage.setItem(DEEPLINK_KEY, deepLinkOf(window.location))
+      const start = startAuthRef.current ?? ((options?: AuthorizeOptions) => smartAuth.authorize(options))
+      void start({ prompt: "none" }).catch(() => { setState("unauthenticated") })
+      return true
+    }
+
+    if (sessionStorage.getItem(SILENT_ATTEMPT_KEY) && isSilentSignInRefusal(window.location.search)) {
+      const saved = sessionStorage.getItem(DEEPLINK_KEY)
+      sessionStorage.removeItem(DEEPLINK_KEY)
+      window.history.replaceState({}, "", restorableDeepLink(saved, window.location.pathname))
+      void Promise.resolve().then(() => { setState("unauthenticated") })
+      return
+    }
 
     // A refused authorization comes back with ?error= instead of a code: say why, and leave
     // the user on the page they started from rather than on the redirect URI.
@@ -162,6 +200,7 @@ export function useSmartAuth({
         .then(() => {
           const saved = sessionStorage.getItem(DEEPLINK_KEY)
           sessionStorage.removeItem(DEEPLINK_KEY)
+          sessionStorage.removeItem(SILENT_ATTEMPT_KEY)
           window.history.replaceState({}, "", restorableDeepLink(saved, window.location.pathname))
           onAuthenticated?.()
           setState("authenticated")
@@ -211,6 +250,7 @@ export function useSmartAuth({
             setState("authenticated")
           } else {
             smartAuth.clearToken()
+            if (trySilentSignIn()) return
             setState("session-expired")
             setError("Your session has expired. Please sign in again.")
           }
@@ -218,10 +258,10 @@ export function useSmartAuth({
       } else {
         onAuthenticated?.()
       }
-    } else {
+    } else if (!trySilentSignIn()) {
       void Promise.resolve().then(() => { setState("unauthenticated") })
     }
-  }, [ehrLaunch, onAuthenticated, skip, smartAuth])
+  }, [ehrLaunch, onAuthenticated, silentSignIn, skip, smartAuth])
 
   const handleLogin = useCallback(() => {
     if (isBrowser) sessionStorage.setItem(DEEPLINK_KEY, deepLinkOf(window.location))
@@ -235,6 +275,7 @@ export function useSmartAuth({
   }, [startAuth, smartAuth])
 
   const handleLogout = useCallback(() => {
+    if (isBrowser) sessionStorage.setItem(SILENT_ATTEMPT_KEY, "1")
     smartAuth.logout()
   }, [smartAuth])
 

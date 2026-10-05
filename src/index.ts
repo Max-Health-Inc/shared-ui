@@ -106,6 +106,8 @@ export { useBranding, setBrandingSource, resolveBrandBundleUrl, parseBrandBundle
 export { ModalStackProvider, useModalLayer, useLayerZIndex, LayerContext, type ModalStackProviderProps } from "./hooks/use-modal-stack"
 export {
   useSmartAuth,
+  isSilentSignInRefusal,
+  type AuthorizeOptions,
   type SmartAppState,
   type SmartAuthLike,
   type UseSmartAuthOptions,
