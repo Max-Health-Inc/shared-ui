@@ -34,7 +34,7 @@ function SheetContent({
       <DialogPrimitive.Content
         data-slot="sheet-content"
         className={cn(
-          "fixed z-50 flex flex-col gap-4 overflow-y-auto bg-background p-4 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out",
+          "fixed z-50 flex flex-col gap-4 overflow-y-auto bg-background p-4 pt-12 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out",
           SIDE_CLASSES[side],
           className,
         )}
