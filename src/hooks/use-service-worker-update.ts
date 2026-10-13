@@ -1,12 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 
-/**
- * Module-level guard: ensures the post-`controllerchange` reload happens at
- * most once for the lifetime of the page, even if multiple hook instances
- * mount or the controller changes more than once. Survives re-renders and
- * remounts (it is intentionally not React state).
- */
-let hasReloaded = false
+/** Pages already reloading: at most one reload per page, however many signals arrive. */
+const reloadedPages = new WeakSet<object>()
+
+/** How long to wait for the new worker to report back before reloading anyway. */
+const DEFAULT_RELOAD_TIMEOUT_MS = 4000
+
+function reloadOnce(): void {
+  if (reloadedPages.has(window)) return
+  reloadedPages.add(window)
+  window.location.reload()
+}
 
 export interface UseServiceWorkerUpdateOptions {
   /** URL of the service worker to register (default: `/sw.js`). */
@@ -16,6 +20,8 @@ export interface UseServiceWorkerUpdateOptions {
    * reports no update — useful for disabling in development. Default: `true`.
    */
   enabled?: boolean
+  /** Reload anyway after this long if the new worker never reports back. Default: 4000. */
+  reloadTimeoutMs?: number
 }
 
 export interface UseServiceWorkerUpdateReturn {
@@ -76,13 +82,14 @@ const NOOP: UseServiceWorkerUpdateReturn = {
 export function useServiceWorkerUpdate(
   opts: UseServiceWorkerUpdateOptions = {},
 ): UseServiceWorkerUpdateReturn {
-  const { swUrl = "/sw.js", enabled = true } = opts
+  const { swUrl = "/sw.js", enabled = true, reloadTimeoutMs = DEFAULT_RELOAD_TIMEOUT_MS } = opts
 
   const [updateAvailable, setUpdateAvailable] = useState(false)
   /** True once the user has asked to reload, until the page navigates away. */
   const [reloading, setReloading] = useState(false)
   /** The worker that has installed and is waiting to take over. */
   const waitingWorkerRef = useRef<ServiceWorker | null>(null)
+  const registrationRef = useRef<ServiceWorkerRegistration | null>(null)
 
   const supported =
     enabled &&
@@ -117,6 +124,7 @@ export function useServiceWorkerUpdate(
         .then((reg) => {
           if (cancelled) return
           registration = reg
+          registrationRef.current = reg
 
           // An update may already be waiting from a prior load.
           if (reg.waiting && navigator.serviceWorker.controller) {
@@ -144,27 +152,29 @@ export function useServiceWorkerUpdate(
   }, [supported, swUrl])
 
   const reload = useCallback(() => {
-    const waiting = waitingWorkerRef.current
-    if (!waiting || typeof navigator === "undefined" || !("serviceWorker" in navigator)) {
-      // Nothing to activate, so no controllerchange is coming. Leave `reloading`
-      // false rather than latching a spinner forever.
+    if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) return
+    const tracked = waitingWorkerRef.current
+    // Ask the registration at click time: on a page left open, the worker seen earlier may
+    // have gone redundant (a newer deploy) or already activated (accepted in another tab).
+    const waiting = registrationRef.current?.waiting ?? (tracked?.state === "installed" ? tracked : null)
+
+    if (!waiting) {
+      // Nothing was ever flagged: a no-op that latches no spinner. Flagged but no longer
+      // waiting: the update is already active, so loading the page picks it up.
+      if (!tracked) return
+      setReloading(true)
+      reloadOnce()
       return
     }
 
     setReloading(true)
-
-    // Reload once the new worker takes control. Guarded so it can never loop.
-    const onControllerChange = () => {
-      if (hasReloaded) return
-      hasReloaded = true
-      window.location.reload()
-    }
-    navigator.serviceWorker.addEventListener("controllerchange", onControllerChange, {
-      once: true,
+    navigator.serviceWorker.addEventListener("controllerchange", reloadOnce, { once: true })
+    waiting.addEventListener("statechange", () => {
+      if (waiting.state === "activated") reloadOnce()
     })
-
     waiting.postMessage({ type: "SKIP_WAITING" })
-  }, [])
+    globalThis.setTimeout(reloadOnce, reloadTimeoutMs)
+  }, [reloadTimeoutMs])
 
   const dismiss = useCallback(() => {
     setUpdateAvailable(false)

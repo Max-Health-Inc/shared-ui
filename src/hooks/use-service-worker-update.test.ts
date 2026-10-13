@@ -119,6 +119,24 @@ function renderHook(opts?: Parameters<typeof useServiceWorkerUpdate>[0]) {
   return captured
 }
 
+
+/** Render the hook with a controller present and drive one update to `installed`. */
+async function flaggedUpdate(opts?: Parameters<typeof useServiceWorkerUpdate>[0]) {
+  container.controller = {}
+  const captured = renderHook(opts)
+  await act(async () => {
+    await Promise.resolve()
+  })
+  const worker = new FakeWorker()
+  container.registration.installing = worker
+  act(() => container.registration.emit("updatefound"))
+  act(() => {
+    worker.state = "installed"
+    worker.emit("statechange")
+  })
+  return { captured, worker }
+}
+
 describe("useServiceWorkerUpdate", () => {
   it("flags updateAvailable when a new worker installs with a controller present", async () => {
     container.controller = {} // a controller exists => this is an UPDATE
@@ -210,6 +228,51 @@ describe("useServiceWorkerUpdate", () => {
 
     act(() => captured.current?.reload())
     expect(captured.current?.reloading).toBe(false)
+  })
+
+  it("reloads straight away when another tab already activated the update", async () => {
+    // A tab left open: the user accepted the update in another tab, whose worker claimed this
+    // one too, so its controllerchange fired before anyone here was listening. Nothing is
+    // waiting any more, and the only right move is to load the version that is now active.
+    const { captured, worker } = await flaggedUpdate()
+    worker.state = "activated"
+    container.registration.waiting = null
+
+    act(() => captured.current?.reload())
+    expect(worker.postMessage.calls.length).toBe(0)
+    expect(reloadCalls).toBe(1)
+  })
+
+  it("activates the registration's current waiting worker, not a stale one", async () => {
+    // A second deploy while the page was open: the first new worker went redundant and a newer
+    // one is waiting. Messaging the redundant one would do nothing, forever.
+    const { captured, worker: stale } = await flaggedUpdate()
+    stale.state = "redundant"
+    const newer = new FakeWorker()
+    newer.state = "installed"
+    container.registration.waiting = newer
+
+    act(() => captured.current?.reload())
+    expect(stale.postMessage.calls.length).toBe(0)
+    expect(newer.postMessage.calls[0]?.[0]).toEqual({ type: "SKIP_WAITING" })
+  })
+
+  it("reloads once the worker reports activated, even if controllerchange never arrives", async () => {
+    const { captured, worker } = await flaggedUpdate()
+    act(() => captured.current?.reload())
+    act(() => {
+      worker.state = "activated"
+      worker.emit("statechange")
+    })
+    expect(reloadCalls).toBe(1)
+  })
+
+  it("falls back to reloading when nothing reports back, instead of spinning forever", async () => {
+    const { captured } = await flaggedUpdate({ reloadTimeoutMs: 5 })
+    act(() => captured.current?.reload())
+    expect(reloadCalls).toBe(0)
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(reloadCalls).toBe(1)
   })
 
   it("does not flag an update on first install (no controller)", async () => {
