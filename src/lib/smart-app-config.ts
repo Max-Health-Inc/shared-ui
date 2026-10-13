@@ -136,6 +136,11 @@ export function buildFhirBaseUrl(cfg: SmartAppConfig): string {
   return `${base}/${segments.join("/")}`
 }
 
+/** The SMART App Store of the proxy this app signs in against, for the header's `appStoreUrl`. */
+export function buildAppStoreUrl(cfg: Pick<SmartAppConfig, "proxyBase">): string {
+  return `${cfg.proxyBase.replace(/\/+$/, "")}/apps`
+}
+
 /**
  * Create a SmartAuth instance using the shared app config.
  *

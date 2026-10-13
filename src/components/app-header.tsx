@@ -24,45 +24,19 @@ export interface AppHeaderProps {
   accountUrl?: string
   /** Optional extra content rendered after the title (e.g. a launch-mode badge) */
   children?: ReactNode
-  /**
-   * Extra controls rendered on the RIGHT, before the built-in actions (e.g. ModeToggle,
-   * SettingsDialog). Shown regardless of `hideActions`, which governs only the built-ins.
-   */
+  /** Extra controls on the right, before the built-in actions; shown regardless of `hideActions`. */
   actions?: ReactNode
   /** Tailwind max-width class for the inner container (default: "max-w-5xl") */
   maxWidth?: string
-  /** Hide all action buttons (Sign Out, App Store) — useful for shared/public views */
+  /** Hide the built-in actions (App Store, account, Sign Out), e.g. for shared/public views */
   hideActions?: boolean
-  /**
-   * Where the logo and title link. Defaults to the app's own root ({@link appBaseUrl}), which
-   * is the one thing every user already expects a header logo to do, and the only way back to
-   * the dashboard from a deep view in apps that have no other home affordance.
-   *
-   * SAME TAB, deliberately, unlike the App Store button: this is a way back into the app the
-   * user is already in, not a trip to a different one.
-   *
-   * Pass `false` for a header that must not navigate — a kiosk, or an embedded view whose host
-   * owns navigation. `min-w-0` sits on the anchor rather than on the title group, for the
-   * reason the group's own comment gives; the anchor holds no controls, so it can shrink.
-   */
+  /** Where the logo and title link, in the same tab. Defaults to {@link appBaseUrl}; `false` for a header that must not navigate. */
   homeUrl?: string | false
-  /**
-   * Absolute URL of the App Store. Omit it and the button is not rendered.
-   *
-   * There is deliberately no default. It used to be a relative "/apps", which resolves only
-   * when the proxy itself serves the app; on an app's own domain it pointed at a page that
-   * does not exist, and three apps shipped that broken link before anyone noticed. A missing
-   * URL now shows nothing rather than something that 404s. Apps built on
-   * `createSmartAppConfig` pass `${config.proxyBase}/apps`.
-   */
+  /** Absolute App Store URL, shown signed in or out and opened in a new tab; omit to hide. Use `buildAppStoreUrl(config)`. */
   appStoreUrl?: string
   /** Label for the PWA install button (default: a translated "Install"). Set to false to hide. */
   installLabel?: string | false
-  /**
-   * The app's translate function, used where it has a translation for one of this
-   * package's keys. Omit it and the strings come from this package's own
-   * catalogue in the active language, or English.
-   */
+  /** The app's translate function; omit to use this package's own catalogue. */
   t?: TFn
 }
 
@@ -94,18 +68,8 @@ export function AppHeader({
   )
   const heading = <h1 className="font-semibold truncate min-w-0 text-sm sm:text-base">{title}</h1>
 
-  // pt-safe/px-safe: in a standalone PWA the header is the topmost surface, so it owns
-  // the status-bar and notch insets. Both are 0 wherever the browser reports no overlay.
   return (
     <header className="border-b border-foreground/10 bg-foreground/[0.02] pt-safe px-safe">
-      {/*
-        `flex-wrap` + min-w-0 on the TITLE rather than on its group. With min-w-0 on the group,
-        justify-between handed it whatever was left over and it accepted a width below its own
-        controls, so on a narrow screen the language switcher and friends overflowed their box and
-        ran under the actions — the sign-out button read as cut off. At its real min-content the
-        group cannot do that, and the actions drop to a second row instead. Unchanged on any
-        screen wide enough to fit one row, which is every desktop.
-      */}
       <div className={cn(maxWidth, "mx-auto px-3 sm:px-4 py-2 sm:py-3 flex flex-wrap items-center justify-between gap-x-2 gap-y-1")}>
         <div className="flex items-center gap-2">
           {home ? (
@@ -128,9 +92,16 @@ export function AppHeader({
         <div className="flex items-center gap-1 shrink-0">
           {actions}
           {installLabel !== false && <PwaInstallButton label={installLabel ?? t("Install")} />}
-          {!hideActions && (authenticated ? (
+          {!hideActions && appStoreUrl && (
+            <Button variant="ghost" size="sm" asChild>
+              <a href={appStoreUrl} target="_blank" rel="noopener noreferrer" title={t("App Store")}>
+                <LayoutGrid className="size-4" />
+                <span className="hidden sm:inline">{t("App Store")}</span>
+              </a>
+            </Button>
+          )}
+          {!hideActions && authenticated && (
             <>
-              {/* accountUrl always links (name when known, else "Account"); a nameless, link-less chip shows nothing. */}
               {accountUrl ? (
                 <Button variant="ghost" size="sm" asChild>
                   <a href={accountUrl} target="_blank" rel="noreferrer" title={t("Manage your account")}>
@@ -155,17 +126,7 @@ export function AppHeader({
                 <span className="hidden sm:inline">{t("Sign Out")}</span>
               </Button>
             </>
-          ) : appStoreUrl ? (
-            <Button variant="ghost" size="sm" asChild>
-              {/* A new tab: the store is a different app, and these are SMART apps a user is
-                  mid-task in. Navigating away in place discards an unsaved consent, an
-                  in-progress questionnaire or a loaded imaging study. */}
-              <a href={appStoreUrl} target="_blank" rel="noopener noreferrer">
-                <LayoutGrid className="size-4" />
-                <span className="hidden sm:inline">{t("App Store")}</span>
-              </a>
-            </Button>
-          ) : null)}
+          )}
         </div>
       </div>
     </header>

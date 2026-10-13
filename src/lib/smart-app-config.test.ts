@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "bun:test"
-import { appBaseUrl, buildFhirBaseUrl, createSmartAppConfig, createSmartAuth, setAppBasePath } from "./smart-app-config"
+import { appBaseUrl, buildAppStoreUrl, buildFhirBaseUrl, createSmartAppConfig, createSmartAuth, setAppBasePath } from "./smart-app-config"
 import type { SmartAppConfig } from "./smart-app-config"
 
 function makeConfig(overrides: Partial<SmartAppConfig> = {}): SmartAppConfig {
@@ -14,6 +14,12 @@ function makeConfig(overrides: Partial<SmartAppConfig> = {}): SmartAppConfig {
     ...overrides,
   }
 }
+
+describe("buildAppStoreUrl", () => {
+  it("points at the store of the proxy the app signs in against", () => {
+    expect(buildAppStoreUrl(makeConfig({ proxyBase: "https://proxy.example.com//" }))).toBe("https://proxy.example.com/apps")
+  })
+})
 
 describe("buildFhirBaseUrl", () => {
   it("assembles the URL from config parts", () => {
