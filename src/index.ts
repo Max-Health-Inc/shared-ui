@@ -14,6 +14,7 @@ export { FilterToolbar, FilterToolbarItem, type FilterToolbarProps, type FilterT
 export { StatCard, colorMap, type StatCardProps, type StatCardColor } from "./components/stat-card"
 export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./components/tooltip"
 export { Dialog, DialogPortal, DialogOverlay, DialogClose, DialogTrigger, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from "./components/dialog"
+export { Sheet, SheetTrigger, SheetClose, SheetContent, SheetTitle, SheetDescription } from "./components/sheet"
 export { Separator } from "./components/separator"
 export { DropdownMenu, DropdownMenuPortal, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuCheckboxItem, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from "./components/dropdown-menu"
 export { Table, TableHeader, TableBody, TableFooter, TableHead, TableRow, TableCell, TableCaption } from "./components/table"
