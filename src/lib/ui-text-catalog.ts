@@ -171,6 +171,26 @@ export const UI_TEXT: Record<string, readonly string[]> = {
     "Preferenze per questa app, salvate su questo dispositivo.",
   ],
 
+  // ── Settings & billing ───────────────────────────────────────────────────
+  "All settings": ["Alle Einstellungen", "Tous les paramètres", "Todos los ajustes", "Tutte le impostazioni"],
+  Free: ["Kostenlos", "Gratuit", "Gratis", "Gratis"],
+  "Most popular": ["Am beliebtesten", "Le plus populaire", "Más popular", "Il più scelto"],
+  "Current plan": ["Aktueller Tarif", "Formule actuelle", "Plan actual", "Piano attuale"],
+  "Contact us": ["Kontakt aufnehmen", "Nous contacter", "Contáctanos", "Contattaci"],
+  "/ month": ["/ Monat", "/ mois", "/ mes", "/ mese"],
+  "/ year": ["/ Jahr", "/ an", "/ año", "/ anno"],
+  "per seat / month": ["pro Platz / Monat", "par siège / mois", "por puesto / mes", "per postazione / mese"],
+  "per seat / year": ["pro Platz / Jahr", "par siège / an", "por puesto / año", "per postazione / anno"],
+  Monthly: ["Monatlich", "Mensuel", "Mensual", "Mensile"],
+  Yearly: ["Jährlich", "Annuel", "Anual", "Annuale"],
+  "Billing period": ["Abrechnungszeitraum", "Période de facturation", "Periodo de facturación", "Periodo di fatturazione"],
+  "Something went wrong. Please try again.": [
+    "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+    "Une erreur s'est produite. Veuillez réessayer.",
+    "Algo salió mal. Inténtalo de nuevo.",
+    "Qualcosa è andato storto. Riprova.",
+  ],
+
   // ── Background scenes ────────────────────────────────────────────────────
   "Background Theme": ["Hintergrund", "Thème d'arrière-plan", "Tema de fondo", "Tema di sfondo"],
   "Choose the 3D background effect for the application.": [
