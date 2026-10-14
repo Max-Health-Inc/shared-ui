@@ -23,7 +23,7 @@ import { setBrandingSource } from "../hooks/use-branding"
  * can be safely imported in Node.js, Bun test runners, and SSR contexts.
  */
 
-const isBrowser = typeof window !== "undefined"
+const browserOrigin = (): string => (typeof window !== "undefined" ? window.location.origin : "")
 
 /**
  * The Vite env values this module needs, as the app's own build resolved them.
@@ -66,7 +66,7 @@ let basePath = "/"
  * Returns just the base path outside a browser (SSR, test runners), never a bare "undefined".
  */
 export function appBaseUrl(): string {
-  return `${isBrowser ? window.location.origin : ""}${basePath}`
+  return `${browserOrigin()}${basePath}`
 }
 
 /** Record the app's base path. Exported for apps that build their config by hand. */
@@ -99,7 +99,7 @@ export function createSmartAppConfig(defaults: SmartAppDefaults): SmartAppConfig
   // Before reading anything else, so appBaseUrl() below (and every later caller) is correct.
   setAppBasePath(env.BASE_URL)
   return {
-    proxyBase: env.VITE_PROXY_BASE ?? (isBrowser ? window.location.origin : ""),
+    proxyBase: env.VITE_PROXY_BASE ?? browserOrigin(),
     proxyPrefix: env.VITE_PROXY_PREFIX ?? "proxy-smart-backend",
     fhirServerId: env.VITE_FHIR_SERVER_ID ?? "hapi-fhir-server",
     fhirVersion: env.VITE_FHIR_VERSION ?? "R4",

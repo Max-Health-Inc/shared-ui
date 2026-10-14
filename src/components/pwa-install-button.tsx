@@ -1,5 +1,6 @@
 import { Download } from "lucide-react"
 import { Button } from "./button"
+import { HeaderLabel } from "./header-label"
 import { usePwaInstall, type UsePwaInstallReturn } from "../hooks/use-pwa-install"
 import { cn } from "../lib/utils"
 import { useUiText, type TFn } from "../lib/ui-text"
@@ -39,7 +40,7 @@ export function PwaInstallButton({ label, className, pwa, t: appT }: PwaInstallB
       onClick={() => { void promptInstall() }}
     >
       <Download className="size-4" />
-      <span className="hidden sm:inline">{label ?? t("Install App")}</span>
+      <HeaderLabel>{label ?? t("Install App")}</HeaderLabel>
     </Button>
   )
 }

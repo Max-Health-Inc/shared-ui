@@ -135,6 +135,8 @@ export {
 export { ModeToggle, type ModeToggleProps } from "./components/mode-toggle"
 export { SettingsDialog, type SettingsDialogProps } from "./components/settings-dialog"
 export { SettingsLayout, type SettingsLayoutProps, type SettingsSection } from "./components/settings-layout"
+export { HeaderLabel } from "./components/header-label"
+export { useHeaderCompact } from "./lib/header-compact"
 export { formatPlanPrice } from "./components/billing/price"
 export {
   PlanCard,

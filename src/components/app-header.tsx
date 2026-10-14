@@ -1,6 +1,8 @@
-import type { ComponentType, ReactNode } from "react"
+import { useRef, type ComponentType, type ReactNode } from "react"
 import { CircleUser, LayoutGrid, LogOut, UserRoundSearch, type LucideIcon } from "lucide-react"
 import { Button } from "./button"
+import { HeaderLabel } from "./header-label"
+import { HeaderCompactContext, useHeaderOverflow } from "../lib/header-compact"
 import { PwaInstallButton } from "./pwa-install-button"
 import { appBaseUrl } from "../lib/smart-app-config"
 import { useBranding } from "../hooks/use-branding"
@@ -60,6 +62,9 @@ export function AppHeader({
   const brand = useBranding()
   const t = useUiText(appT)
   const home = homeUrl === false ? null : homeUrl ?? appBaseUrl()
+  const rowRef = useRef<HTMLDivElement>(null)
+  const compact = useHeaderOverflow(rowRef)
+  const accountLabel = userName ?? t("Account")
 
   const mark = brand?.logoUrl ? (
     <img src={brand.logoUrl} alt={brand.name} className="h-5 sm:h-6 w-auto shrink-0" />
@@ -69,9 +74,10 @@ export function AppHeader({
   const heading = <h1 className="font-semibold truncate min-w-0 text-sm sm:text-base">{title}</h1>
 
   return (
+    <HeaderCompactContext.Provider value={compact}>
     <header className="border-b border-foreground/10 bg-foreground/[0.02] pt-safe px-safe">
-      <div className={cn(maxWidth, "mx-auto px-3 sm:px-4 py-2 sm:py-3 flex flex-wrap items-center justify-between gap-x-2 gap-y-1")}>
-        <div className="flex items-center gap-2">
+      <div ref={rowRef} className={cn(maxWidth, "mx-auto px-3 sm:px-4 py-2 sm:py-3 flex flex-wrap items-center justify-between gap-x-2 gap-y-1")}>
+        <div className="flex shrink-0 items-center gap-2">
           {home ? (
             <a
               href={home}
@@ -96,7 +102,7 @@ export function AppHeader({
             <Button variant="ghost" size="sm" asChild>
               <a href={appStoreUrl} target="_blank" rel="noopener noreferrer" title={t("App Store")}>
                 <LayoutGrid className="size-4" />
-                <span className="hidden sm:inline">{t("App Store")}</span>
+                <HeaderLabel>{t("App Store")}</HeaderLabel>
               </a>
             </Button>
           )}
@@ -104,31 +110,37 @@ export function AppHeader({
             <>
               {accountUrl ? (
                 <Button variant="ghost" size="sm" asChild>
-                  <a href={accountUrl} target="_blank" rel="noreferrer" title={t("Manage your account")}>
+                  <a
+                    href={accountUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    title={userName ? `${userName} · ${t("Manage your account")}` : t("Manage your account")}
+                  >
                     <CircleUser className="size-4" />
-                    <span className="hidden sm:inline max-w-[14ch] truncate">{userName ?? t("Account")}</span>
+                    <span className="sr-only">{accountLabel}</span>
                   </a>
                 </Button>
               ) : userName ? (
-                <span className="hidden sm:flex items-center gap-1.5 px-2 text-xs text-muted-foreground" title={userName}>
+                <span className="flex items-center px-2 text-muted-foreground" title={userName}>
                   <CircleUser className="size-4" />
-                  <span className="max-w-[14ch] truncate">{userName}</span>
+                  <span className="sr-only">{userName}</span>
                 </span>
               ) : null}
               {onSwitchPatient && (
                 <Button variant="ghost" size="sm" onClick={onSwitchPatient}>
                   <UserRoundSearch className="size-4" />
-                  <span className="hidden sm:inline">{t("Switch Patient")}</span>
+                  <HeaderLabel>{t("Switch Patient")}</HeaderLabel>
                 </Button>
               )}
               <Button variant="ghost" size="sm" onClick={onSignOut}>
                 <LogOut className="size-4" />
-                <span className="hidden sm:inline">{t("Sign Out")}</span>
+                <HeaderLabel>{t("Sign Out")}</HeaderLabel>
               </Button>
             </>
           )}
         </div>
       </div>
     </header>
+    </HeaderCompactContext.Provider>
   )
 }
