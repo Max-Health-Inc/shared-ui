@@ -33,17 +33,17 @@ function PageHeader({
     >
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 lg:gap-6">
         <div className="flex-1 min-w-0">
-          <h1 className="text-2xl sm:text-3xl font-medium text-foreground mb-2 sm:mb-3 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-medium text-foreground mb-2 sm:mb-3 tracking-tight break-words">
             {title}
           </h1>
           {description && (
-            <div className="text-foreground/60 text-base sm:text-lg flex items-center">
+            <div className="text-foreground/60 text-sm sm:text-base lg:text-lg flex items-start sm:items-center gap-2 sm:gap-3">
               {icon && (
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-foreground/10 rounded-xl flex items-center justify-center mr-2 sm:mr-3 shadow-sm shrink-0">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-foreground/10 rounded-xl flex items-center justify-center shadow-sm shrink-0">
                   {icon}
                 </div>
               )}
-              <span>{description}</span>
+              <span className="min-w-0 break-words">{description}</span>
             </div>
           )}
         </div>
