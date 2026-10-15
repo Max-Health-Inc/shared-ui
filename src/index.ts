@@ -139,6 +139,7 @@ export { SettingsDialog, type SettingsDialogProps } from "./components/settings-
 export { SettingsLayout, type SettingsLayoutProps, type SettingsSection } from "./components/settings-layout"
 export { SidebarLayout, type SidebarLayoutProps, type SidebarGroup, type SidebarItem } from "./components/sidebar-layout"
 export { CodeBlock, type CodeBlockProps } from "./components/code-block"
+export { CopyButton, type CopyButtonProps } from "./components/copy-button"
 export { HeaderLabel } from "./components/header-label"
 export { useHeaderCompact } from "./lib/header-compact"
 export { formatPlanPrice } from "./components/billing/price"
