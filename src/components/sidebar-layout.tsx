@@ -86,7 +86,7 @@ export function SidebarLayout({ groups, active, onNavigate, header, footer, chil
     <div className={cn("mx-auto flex w-full flex-col gap-6 px-4 py-6 md:flex-row md:gap-10 md:px-6 md:py-10", maxWidth, className)}>
       <aside className="space-y-4 md:sticky md:top-20 md:w-56 md:shrink-0 md:self-start">
         {header}
-        <nav aria-label={t("Sections")} className="-mx-1 flex gap-1 overflow-x-auto px-1 md:mx-0 md:flex-col md:gap-5 md:overflow-visible md:px-0">
+        <nav aria-label={t("Sections")} className="scrollbar-hide -mx-1 flex gap-1 overflow-x-auto px-1 md:mx-0 md:flex-col md:gap-5 md:overflow-visible md:px-0">
           {shown.map((group, index) => (
             <div key={group.label ?? index} className="flex gap-1 md:flex-col md:gap-0.5">
               {group.label && <p className="hidden px-3 pb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground/70 md:block">{group.label}</p>}

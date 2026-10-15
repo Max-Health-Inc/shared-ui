@@ -1,7 +1,9 @@
 import * as React from "react"
 import { cn } from "../lib/utils"
 
-interface EmptyStateProps extends React.ComponentProps<"div"> {
+interface EmptyStateProps extends Omit<React.ComponentProps<"div">, "title"> {
+  /** A heading above `message`, which then reads as its explanation. */
+  title?: string
   message: string
   description?: string
   icon?: React.ReactNode
@@ -9,6 +11,7 @@ interface EmptyStateProps extends React.ComponentProps<"div"> {
 }
 
 function EmptyState({
+  title,
   message,
   description,
   icon,
@@ -28,7 +31,8 @@ function EmptyState({
       {icon && (
         <div className="flex justify-center mb-4">{icon}</div>
       )}
-      <p className="text-foreground/70">{message}</p>
+      {title && <p className="font-medium text-foreground/80">{title}</p>}
+      <p className={title ? "text-sm mt-1" : "text-foreground/70"}>{message}</p>
       {description && (
         <p className="text-sm mt-1">{description}</p>
       )}
