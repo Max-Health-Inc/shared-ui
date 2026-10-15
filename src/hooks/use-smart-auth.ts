@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { onAuthError } from "../lib/auth-error"
+import { silentSignIn as createSilentSignIn } from "../lib/silent-sign-in"
 
 const DEEPLINK_KEY = "__smart_deeplink__"
-const SILENT_ATTEMPT_KEY = "__smart_silent_attempted__"
+const silentAttempt = createSilentSignIn("__smart_silent_attempted__")
 const SILENT_REFUSALS = new Set(["login_required", "interaction_required", "consent_required", "account_selection_required"])
 const isBrowser = typeof window !== "undefined"
 
@@ -159,15 +160,14 @@ export function useSmartAuth({
     const params = new URLSearchParams(window.location.search)
 
     const trySilentSignIn = (): boolean => {
-      if (!silentSignIn || sessionStorage.getItem(SILENT_ATTEMPT_KEY)) return false
-      sessionStorage.setItem(SILENT_ATTEMPT_KEY, "1")
+      if (!silentSignIn || !silentAttempt.claim()) return false
       sessionStorage.setItem(DEEPLINK_KEY, deepLinkOf(window.location))
       const start = startAuthRef.current ?? ((options?: AuthorizeOptions) => smartAuth.authorize(options))
       void start({ prompt: "none" }).catch(() => { setState("unauthenticated") })
       return true
     }
 
-    if (sessionStorage.getItem(SILENT_ATTEMPT_KEY) && isSilentSignInRefusal(window.location.search)) {
+    if (silentAttempt.attempted() && isSilentSignInRefusal(window.location.search)) {
       const saved = sessionStorage.getItem(DEEPLINK_KEY)
       sessionStorage.removeItem(DEEPLINK_KEY)
       window.history.replaceState({}, "", restorableDeepLink(saved, window.location.pathname))
@@ -200,7 +200,7 @@ export function useSmartAuth({
         .then(() => {
           const saved = sessionStorage.getItem(DEEPLINK_KEY)
           sessionStorage.removeItem(DEEPLINK_KEY)
-          sessionStorage.removeItem(SILENT_ATTEMPT_KEY)
+          silentAttempt.rearm()
           window.history.replaceState({}, "", restorableDeepLink(saved, window.location.pathname))
           onAuthenticated?.()
           setState("authenticated")
@@ -275,7 +275,7 @@ export function useSmartAuth({
   }, [startAuth, smartAuth])
 
   const handleLogout = useCallback(() => {
-    if (isBrowser) sessionStorage.setItem(SILENT_ATTEMPT_KEY, "1")
+    silentAttempt.suppress()
     smartAuth.logout()
   }, [smartAuth])
 

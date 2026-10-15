@@ -32,6 +32,8 @@ export interface AppHeaderProps {
   maxWidth?: string
   /** Hide the built-in actions (App Store, account, Sign Out), e.g. for shared/public views */
   hideActions?: boolean
+  /** Keep the header at the top of the viewport while the page scrolls. */
+  sticky?: boolean
   /** Where the logo and title link, in the same tab. Defaults to {@link appBaseUrl}; `false` for a header that must not navigate. */
   homeUrl?: string | false
   /** Absolute App Store URL, shown signed in or out and opened in a new tab; omit to hide. Use `buildAppStoreUrl(config)`. */
@@ -54,6 +56,7 @@ export function AppHeader({
   actions,
   maxWidth = "max-w-5xl",
   hideActions,
+  sticky = false,
   homeUrl,
   appStoreUrl,
   installLabel,
@@ -75,7 +78,12 @@ export function AppHeader({
 
   return (
     <HeaderCompactContext.Provider value={compact}>
-    <header className="border-b border-foreground/10 bg-foreground/[0.02] pt-safe px-safe">
+    <header
+      className={cn(
+        "border-b border-foreground/10 pt-safe px-safe",
+        sticky ? "sticky top-0 z-40 bg-background/90 backdrop-blur" : "bg-foreground/[0.02]",
+      )}
+    >
       <div ref={rowRef} className={cn(maxWidth, "mx-auto px-3 sm:px-4 py-2 sm:py-3 flex flex-wrap items-center justify-between gap-x-2 gap-y-1")}>
         <div className="flex shrink-0 items-center gap-2">
           {home ? (

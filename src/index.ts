@@ -105,6 +105,7 @@ export { errorStatus, serviceErrorVariant } from "./lib/service-error"
 // Hooks
 export { useBranding, setBrandingSource, resolveBrandBundleUrl, parseBrandBundle, type BrandInfo } from "./hooks/use-branding"
 export { useCopyToClipboard, type CopyToClipboard } from "./hooks/use-copy-to-clipboard"
+export { silentSignIn, type SilentSignIn } from "./lib/silent-sign-in"
 export { ModalStackProvider, useModalLayer, useLayerZIndex, LayerContext, type ModalStackProviderProps } from "./hooks/use-modal-stack"
 export {
   useSmartAuth,
