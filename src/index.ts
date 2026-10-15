@@ -104,6 +104,7 @@ export { errorStatus, serviceErrorVariant } from "./lib/service-error"
 
 // Hooks
 export { useBranding, setBrandingSource, resolveBrandBundleUrl, parseBrandBundle, type BrandInfo } from "./hooks/use-branding"
+export { useCopyToClipboard, type CopyToClipboard } from "./hooks/use-copy-to-clipboard"
 export { ModalStackProvider, useModalLayer, useLayerZIndex, LayerContext, type ModalStackProviderProps } from "./hooks/use-modal-stack"
 export {
   useSmartAuth,
@@ -135,6 +136,8 @@ export {
 export { ModeToggle, type ModeToggleProps } from "./components/mode-toggle"
 export { SettingsDialog, type SettingsDialogProps } from "./components/settings-dialog"
 export { SettingsLayout, type SettingsLayoutProps, type SettingsSection } from "./components/settings-layout"
+export { SidebarLayout, type SidebarLayoutProps, type SidebarGroup, type SidebarItem } from "./components/sidebar-layout"
+export { CodeBlock, type CodeBlockProps } from "./components/code-block"
 export { HeaderLabel } from "./components/header-label"
 export { useHeaderCompact } from "./lib/header-compact"
 export { formatPlanPrice } from "./components/billing/price"
