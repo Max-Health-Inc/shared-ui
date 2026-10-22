@@ -16,7 +16,7 @@
       },
       "devDependencies": {
         "@eslint/js": "^10.0.1",
-        "@max-health-inc/config": "^3.3.0",
+        "@max-health-inc/config": "^4.4.1",
         "@tailwindcss/vite": "^4.3.3",
         "@types/bun": "^1.4.2",
         "@types/react": "^19.3.0",
@@ -135,7 +135,7 @@
 
     "@keyv/serialize": ["@keyv/serialize@1.1.1", "", {}, "sha512-dXn3FZhPv0US+7dtJsIi2R+c7qWYiReoEh5zUntWCf4oSpMNib8FDhSoed6m3QyZdx5hK7iLFkYk3rNxwt8vTA=="],
 
-    "@max-health-inc/config": ["@max-health-inc/config@3.3.0", "https://npm.pkg.github.com/download/@max-health-inc/config/3.3.0/b029fee60140cee5919f4779a53e4862d94d4d61", { "peerDependencies": { "@eslint/js": ">=9", "eslint": ">=9", "globals": ">=15", "typescript-eslint": ">=8" }, "bin": { "doccheck": "doccheck/cli.js" } }, "sha512-k2HSkc2iK5DEdSYZ2ZWGKXy/sRUHQWW63m9ENozKqd/rOL3jpqah73WtrzSHIa5Lp2wyz5Ognj0rBVbf8ccWEA=="],
+    "@max-health-inc/config": ["@max-health-inc/config@4.4.1", "https://npm.pkg.github.com/download/@max-health-inc/config/4.4.1/2722eb040aa0a9e5045207e78db368ba0f16001f", { "peerDependencies": { "@eslint/js": ">=9", "eslint": ">=9", "globals": ">=15", "typescript-eslint": ">=8" }, "bin": { "doccheck": "doccheck/cli.js", "release-tag": "vite/release-tag-cli.js", "release-version": "vite/release-cli.js", "wrangler-check": "wrangler/check-cli.js" } }, "sha512-SaZ3gXSF2T884fC7jpbv1Dj6A3ztVWD1Fa21oSlg8KrQzPVir3fvNJynmY38i1aj0ibOrmWJgdc1KCu/ot+ZDQ=="],
 
     "@oxc-project/types": ["@oxc-project/types@0.149.0", "", {}, "sha512-Efcc+iF0j3Bf67YjEqIqWXbX5XddXoK/Mw4K1/JuXwRCZ8N16VR7iT23nlCc9XrveFVh/E5Rqs2StT0V8v9LdA=="],
 
