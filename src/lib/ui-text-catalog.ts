@@ -348,6 +348,36 @@ export const UI_TEXT: Record<string, readonly string[]> = {
   "Saving…": ["Wird gespeichert…", "Enregistrement…", "Guardando…", "Salvataggio…"],
   "Select All": ["Alle auswählen", "Tout sélectionner", "Seleccionar todo", "Seleziona tutto"],
   "Show details": ["Details anzeigen", "Afficher les détails", "Mostrar detalles", "Mostra dettagli"],
+  "The health record did not accept this entry.": [
+    "Die Gesundheitsakte hat diesen Eintrag nicht angenommen.",
+    "Le dossier médical n'a pas accepté cette saisie.",
+    "El historial médico no aceptó esta entrada.",
+    "La documentazione sanitaria non ha accettato questa voce.",
+  ],
+  "This record could not be saved. Please try again later.": [
+    "Dieser Datensatz konnte nicht gespeichert werden. Bitte versuchen Sie es später erneut.",
+    "Cet enregistrement n'a pas pu être sauvegardé. Veuillez réessayer plus tard.",
+    "No se pudo guardar este registro. Inténtelo de nuevo más tarde.",
+    "Impossibile salvare questo record. Riprovi più tardi.",
+  ],
+  "This record was changed in the meantime. Reload and try again.": [
+    "Dieser Datensatz wurde inzwischen geändert. Laden Sie neu und versuchen Sie es erneut.",
+    "Cet enregistrement a été modifié entre-temps. Rechargez et réessayez.",
+    "Este registro se modificó mientras tanto. Recargue e inténtelo de nuevo.",
+    "Questo record è stato modificato nel frattempo. Ricarichi e riprovi.",
+  ],
+  "You do not have permission to save this record.": [
+    "Sie haben keine Berechtigung, diesen Datensatz zu speichern.",
+    "Vous n'avez pas l'autorisation d'enregistrer cet enregistrement.",
+    "No tiene permiso para guardar este registro.",
+    "Non ha l'autorizzazione per salvare questo record.",
+  ],
+  "Your records are saved. Where they came from could not be recorded alongside them.": [
+    "Ihre Datensätze sind gespeichert. Ihre Herkunft konnte nicht mit ihnen festgehalten werden.",
+    "Vos enregistrements sont sauvegardés. Leur provenance n'a pas pu être consignée avec eux.",
+    "Sus registros están guardados. No se pudo registrar su procedencia junto a ellos.",
+    "I suoi record sono salvati. La loro provenienza non ha potuto essere registrata insieme a essi.",
+  ],
   "This record is verified. Your changes will be saved as provisional until re-verified.": [
     "Dieser Datensatz ist verifiziert. Ihre Änderungen werden als vorläufig gespeichert, bis er erneut verifiziert wurde.",
     "Cet enregistrement est vérifié. Vos modifications seront enregistrées comme provisoires jusqu'à une nouvelle vérification.",
