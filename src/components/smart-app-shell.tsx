@@ -2,6 +2,7 @@ import { createContext, useContext, type ComponentType, type ReactNode } from "r
 import { LogIn, LogOut, AlertTriangle, WifiOff, ShieldAlert, RefreshCw, type LucideIcon } from "lucide-react"
 import { AppHeader, type AppHeaderProps } from "./app-header"
 import { Button } from "./button"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "./dialog"
 import { Spinner } from "./spinner"
 import { ServiceUnavailable } from "./service-unavailable"
 import { useBranding } from "../hooks/use-branding"
@@ -77,11 +78,13 @@ export function SmartAppShell({
   t: appT,
 }: SmartAppShellProps) {
   const t = useUiText(appT)
-  const { state, error, handleLogin, handleLogout, patientId, userName, canSwitchPatient } = useSmartAuth({
+  const { state, error, resumable, handleLogin, handleReauthenticate, handleLogout, patientId, userName, canSwitchPatient } = useSmartAuth({
     smartAuth,
     ...hookOptions,
   })
   const brand = useBranding()
+  const signInAgain = resumable ? handleReauthenticate : handleLogin
+  const keepApp = state === "session-expired" && resumable && !renderSessionExpired
 
   const content = (
     <PatientContext.Provider value={patientId}>
@@ -102,9 +105,9 @@ export function SmartAppShell({
               </p>
             </div>
           )
-        ) : state === "session-expired" ? (
+        ) : state === "session-expired" && !keepApp ? (
           renderSessionExpired ? (
-            renderSessionExpired(error, handleLogin)
+            renderSessionExpired(error, signInAgain)
           ) : (
             <div className="flex flex-col items-center justify-center py-24 gap-6">
               <div className="w-full text-center space-y-3">
@@ -151,11 +154,40 @@ export function SmartAppShell({
           children
         )}
       </main>
+      <SessionExpiredDialog open={keepApp} error={error} onSignIn={handleReauthenticate} onSignOut={handleLogout} t={t} />
     </div>
     </PatientContext.Provider>
   )
 
   return wrapper ? wrapper(content) : content
+}
+
+/** Over the app rather than in its place, so a sign-in in the popup resumes where the user was. */
+function SessionExpiredDialog({ open, error, onSignIn, onSignOut, t }: { open: boolean; error: string | null; onSignIn: () => void; onSignOut: () => void; t: TFn }) {
+  const block = (event: Event) => { event.preventDefault() }
+  return (
+    <Dialog open={open}>
+      <DialogContent showCloseButton={false} onEscapeKeyDown={block} onInteractOutside={block}>
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <AlertTriangle className="size-5 text-amber-500" />
+            {t("Session Expired")}
+          </DialogTitle>
+          <DialogDescription>{error ?? t("Your session has expired. Please sign in again to continue.")}</DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="ghost" onClick={onSignOut}>
+            <LogOut className="size-4" />
+            {t("Sign Out")}
+          </Button>
+          <Button onClick={onSignIn}>
+            <LogIn className="size-4" />
+            {t("Sign In Again")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
 }
 
 // ── Auth Error Boundary ─────────────────────────────────────────────────────

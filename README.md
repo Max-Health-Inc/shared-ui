@@ -38,7 +38,9 @@ import "@max-health-inc/shared-ui/theme.css"
 - Faq — the org-wide question/answer disclosure list (one answer open at a time)
 
 ### Hooks
-- `useSmartAuth` — SMART on FHIR auth state management
+- `useSmartAuth` — SMART on FHIR auth state management. When a session ends mid-use, `SmartAppShell` keeps the app
+  on screen under a sign-in dialog and signs in again in a popup (`authorizeInPopup` from `@babelfhir-ts/smart-auth`
+  0.8+), falling back to the redirect when the popup is blocked
 - `useBranding` — Dynamic brand theming from backend
 - `useModalLayer` / `ModalStackProvider` — Z-index stacking for modals
 

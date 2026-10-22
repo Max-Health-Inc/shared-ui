@@ -32,7 +32,13 @@ export interface SmartAuthLike {
   startEhrLaunch?(launch: string, iss: string): Promise<void>
   /** Optional: return the current token (used to derive patientId, fhirUser, granted scope + the signed-in name reactively). */
   getToken?(): { patient?: string; fhirUser?: string; scope?: string; id_token?: string } | null
+  /** Optional: sign in again in a popup, keeping the page; rejects with a `PopupClosedError` when the user closes it. */
+  authorizeInPopup?(): Promise<unknown>
+  /** Optional: in that popup, hand the callback back to the opener and close; true when it did. */
+  relayCallbackToOpener?(): boolean
 }
+
+const POPUP_CLOSED = "PopupClosedError"
 
 /** One-time EHR launch parameters, spent by the launch and never worth restoring. */
 const EHR_LAUNCH_PARAMS = ["launch", "iss"] as const
@@ -143,6 +149,7 @@ export function useSmartAuth({
     return "loading"
   })
   const [error, setError] = useState<string | null>(null)
+  const [resumable, setResumable] = useState(false)
   const callbackHandled = useRef(false)
   const [resolvedName, setResolvedName] = useState<string | undefined>(undefined)
   const startAuthRef = useRef(startAuth)
@@ -151,9 +158,12 @@ export function useSmartAuth({
   useEffect(() => {
     if (skip) return
     if (!isBrowser) return
+    if (smartAuth.relayCallbackToOpener?.()) return
 
+    // Only a mounted app reports an auth error, so its page is worth keeping.
     onAuthError((msg) => {
       setError(msg)
+      setResumable(true)
       setState("session-expired")
     })
 
@@ -274,6 +284,26 @@ export function useSmartAuth({
     })
   }, [startAuth, smartAuth])
 
+  const handleReauthenticate = useCallback(() => {
+    if (!smartAuth.authorizeInPopup) {
+      handleLogin()
+      return
+    }
+    smartAuth.authorizeInPopup().then(
+      () => {
+        silentAttempt.rearm()
+        setError(null)
+        setResumable(false)
+        onAuthenticated?.()
+        setState("authenticated")
+      },
+      (err: unknown) => {
+        if (err instanceof Error && err.name === POPUP_CLOSED) return
+        handleLogin()
+      },
+    )
+  }, [handleLogin, onAuthenticated, smartAuth])
+
   const handleLogout = useCallback(() => {
     silentAttempt.suppress()
     smartAuth.logout()
@@ -319,5 +349,17 @@ export function useSmartAuth({
   const canSwitchPatient =
     isPractitioner && (token?.scope ?? "").split(/\s+/).includes("launch/patient")
 
-  return { state, error, handleLogin, handleLogout, patientId, fhirUser, userName, isPractitioner, canSwitchPatient }
+  return {
+    state,
+    error,
+    resumable,
+    handleLogin,
+    handleReauthenticate,
+    handleLogout,
+    patientId,
+    fhirUser,
+    userName,
+    isPractitioner,
+    canSwitchPatient,
+  }
 }
