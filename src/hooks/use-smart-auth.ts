@@ -1,3 +1,4 @@
+import { decodeJwt, type JWTPayload } from "jose"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { onAuthError } from "../lib/auth-error"
 import { silentSignIn as createSilentSignIn } from "../lib/silent-sign-in"
@@ -81,28 +82,18 @@ export function restorableDeepLink(saved: string | null, currentPath: string): s
 /**
  * Best-effort display name from an id_token's standard OIDC claims. Decoded, not
  * verified — for showing "who's signed in", never a trust decision.
- *
- * base64url is PADDED before atob (a payload of length % 4 === 1 throws otherwise) and read
- * as UTF-8 (atob alone is one char per byte and mangles a non-ASCII name).
  */
 export function displayNameFromIdToken(idToken: string | undefined): string | undefined {
-  const segment = idToken?.split(".")[1]
-  if (!segment) return undefined
+  if (!idToken) return undefined
+  let claims: JWTPayload
   try {
-    const base64 = segment.replace(/-/g, "+").replace(/_/g, "/")
-    const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "=")
-    const bytes = Uint8Array.from(atob(padded), (c) => c.charCodeAt(0))
-    const json = JSON.parse(new TextDecoder().decode(bytes)) as {
-      name?: string
-      preferred_username?: string
-      email?: string
-    }
-    return [json.name, json.preferred_username, json.email].find(
-      (v): v is string => typeof v === "string" && v.trim().length > 0,
-    )
+    claims = decodeJwt(idToken)
   } catch {
     return undefined
   }
+  return [claims.name, claims.preferred_username, claims.email].find(
+    (v): v is string => typeof v === "string" && v.trim().length > 0,
+  )
 }
 
 export interface UseSmartAuthOptions {
