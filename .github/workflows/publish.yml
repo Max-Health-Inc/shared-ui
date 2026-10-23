@@ -1,18 +1,8 @@
 name: Publish to GitHub Packages
 
-# Publishes on merge to main, matching the rest of the org (see mcp-host, billing,
-# worker-utils). Consumers depend on a normal semver range
-# (`"@max-health-inc/shared-ui": "^0.5.0"`) rather than pinning a git SHA.
-#
-# RELEASING = BUMPING THE VERSION IN YOUR PR. A merge whose package.json version is
-# already on the registry publishes nothing and says so in the run summary, so a
-# merge that only touches docs or CI is a safe no-op rather than a red build.
-#
-# The lint/typecheck/test gate is NOT defined here. It lives in checks.yml, which this
-# workflow calls, so that pull requests and releases run the identical suite.
-#
-# The `v*` tag trigger is kept so a release can be re-run by pushing a tag; the
-# already-published check makes running twice harmless.
+# Publishes on merge to main; a version already on the registry is a no-op. Bump the
+# version in your PR to release. checks.yml gates the publish, so PRs and releases run the
+# same suite; `prepublishOnly` builds dist/.
 on:
   push:
     branches: [main]
@@ -21,101 +11,28 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write # to push the release tag
+  contents: write
   packages: write
+  id-token: write
 
 concurrency:
   group: publish-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  # The quality gate lives in checks.yml so that PRs and releases run the SAME suite.
-  # A red lint/typecheck/test here stops the publish job below from running at all.
   checks:
     uses: ./.github/workflows/checks.yml
     secrets: inherit
 
   publish:
     needs: checks
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          registry-url: https://npm.pkg.github.com
-          scope: '@max-health-inc'
-
-      - name: Install dependencies
-        # The committed .npmrc reads its token from ${GITHUB_TOKEN}; the install needs the
-        # org's cross-org read token, same as checks.yml.
-        #
-        # GH_PACKAGES_TOKEN is used by EVERY step in this file — reads and writes — because
-        # it carries write:packages and because one secret name cannot half-exist. This repo
-        # previously split them (PACKAGES_TOKEN to publish, GH_PACKAGES_TOKEN to install)
-        # while only PACKAGES_TOKEN was actually defined, so the install expanded to an EMPTY
-        # token and 401'd for months, invisibly, because nothing here consumed a GH Packages
-        # package until @max-health-inc/config did. Renaming the secret then broke publishing
-        # the same way, from the other side. Matches config and i18n, which publish with
-        # GH_PACKAGES_TOKEN.
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
-        run: bun install
-
-      # Only the build is repeated here, because `npm publish` needs dist/ in THIS
-      # job's workspace. Lint, typecheck and test already ran in the `checks` job.
-      - name: Build
-        run: bun run build
-
-      - name: Is this version already published?
-        id: check
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
-        run: |
-          NAME=$(node -p "require('./package.json').name")
-          VERSION=$(node -p "require('./package.json').version")
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          # `npm view` exits non-zero for an unpublished version — that is the
-          # success path here, so swallow it and test the captured output instead.
-          FOUND=$(npm view "$NAME@$VERSION" version --registry=https://npm.pkg.github.com 2>/dev/null || true)
-          if [ -n "$FOUND" ]; then
-            echo "published=true" >> "$GITHUB_OUTPUT"
-            echo "⏭️ \`$NAME@$VERSION\` is already published — nothing to do. Bump the version in package.json to cut a release." >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "published=false" >> "$GITHUB_OUTPUT"
-            echo "📦 Publishing \`$NAME@$VERSION\`" >> "$GITHUB_STEP_SUMMARY"
-          fi
-
-      - name: Publish to GitHub Packages
-        if: steps.check.outputs.published == 'false'
-        run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
-          # The committed .npmrc resolves _authToken from ${GITHUB_TOKEN}; the publish
-          # needs a write-capable token there too (else it expands empty → E401).
-          GITHUB_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
-
-      # Tag the released commit so a registry version is traceable to a commit.
-      # Skipped when the tag already exists, which is the case when this run was
-      # itself triggered by pushing that tag.
-      - name: Tag the release
-        if: steps.check.outputs.published == 'false'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          TAG="v${{ steps.check.outputs.version }}"
-          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
-            echo "Tag $TAG already exists — skipping." >> "$GITHUB_STEP_SUMMARY"
-            exit 0
-          fi
-          git config user.name  "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag "$TAG"
-          git push origin "$TAG"
-          gh release create "$TAG" --title "$TAG" --generate-notes
+    uses: max-network/.github/.github/workflows/publish-package.yml@main
+    with:
+      runtime: bun
+      scope: '@max-health-inc'
+      gate: false
+      install: bun install && bun run build
+      tag-release: true
+      create-release: true
+    secrets:
+      GH_PACKAGES_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
