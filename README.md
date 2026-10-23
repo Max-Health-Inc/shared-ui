@@ -37,6 +37,7 @@ import "@max-health-inc/shared-ui/theme.css"
 - SignInLanding — the signed-out screen with "SMART Login"; `SmartAppShell` renders it, and apps that need more on that screen (an FAQ, sign-up, identity provider shortcuts) pass it as `notice`, `actions` or children
 - FilterToolbar, PageHeader, StatCard, ResponsiveTabsList
 - Faq — the org-wide question/answer disclosure list (one answer open at a time)
+- LegalDocument — a Privacy Policy or Terms page: effective date, jump-to contents, numbered sections; the app supplies the copy
 
 ### Hooks
 - `useSmartAuth` — SMART on FHIR auth state management. When a session ends mid-use, `SmartAppShell` keeps the app
