@@ -90,6 +90,20 @@ translates, and the catalogue covers the rest:
 `useUiText()` (or `uiText()` in a class component) and add its row to the catalogue. Do not
 inline English in the markup — an app has no way to translate that.
 
+### FHIR display helpers without React
+
+`@max-health-inc/shared-ui/fhir` is the org's one HumanName formatter, importable from a
+Worker, an MCP server or any headless package (the module imports nothing):
+
+```ts
+import { formatHumanNames, humanNameText } from "@max-health-inc/shared-ui/fhir"
+
+formatHumanNames(patient.name) // official name, else the first; undefined when empty
+humanNameText(practitioner.name?.[0]) // text, else prefix + given + family + suffix
+```
+
+`formatHumanName(names)` (root export) is the UI label: the same name, or "Unknown".
+
 ## Development
 
 ```bash

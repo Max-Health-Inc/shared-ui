@@ -1,117 +1,59 @@
 import { describe, expect, it } from "bun:test"
-import { formatHumanName } from "./fhir-helpers"
+import { formatHumanName, formatHumanNames, humanNameText } from "./fhir-helpers"
 
-describe("formatHumanName", () => {
-  it("returns 'Unknown' for undefined input", () => {
-    expect(formatHumanName(undefined)).toBe("Unknown")
+describe("humanNameText", () => {
+  it("is undefined for no name or a name with nothing usable", () => {
+    expect(humanNameText(undefined)).toBeUndefined()
+    expect(humanNameText({})).toBeUndefined()
+    expect(humanNameText({ given: [" "], family: "  ", text: "   " })).toBeUndefined()
   })
 
-  it("returns 'Unknown' for empty array", () => {
-    expect(formatHumanName([])).toBe("Unknown")
+  it("prefers text, the form FHIR defines for display", () => {
+    expect(humanNameText({ text: "Johnny S", family: "Smith", given: ["John"] })).toBe("Johnny S")
   })
 
-  it("formats family + given names", () => {
+  it("composes prefix, given, family and suffix in order", () => {
+    expect(humanNameText({ prefix: ["Prof.", "Dr."], given: ["Anna", "Maria"], family: "Müller", suffix: ["PhD"] })).toBe(
+      "Prof. Dr. Anna Maria Müller PhD",
+    )
+  })
+
+  it("skips blank parts instead of leaving double spaces", () => {
+    expect(humanNameText({ given: ["", "Baby"], family: " Smith " })).toBe("Baby Smith")
+  })
+})
+
+describe("formatHumanNames", () => {
+  it("is undefined for no names", () => {
+    expect(formatHumanNames(undefined)).toBeUndefined()
+    expect(formatHumanNames([])).toBeUndefined()
+  })
+
+  it("prefers the official name over the first", () => {
     expect(
-      formatHumanName([{ family: "Smith", given: ["John"] }]),
+      formatHumanNames([
+        { use: "nickname", given: ["Johnny"] },
+        { use: "official", given: ["John"], family: "Smith" },
+      ]),
     ).toBe("John Smith")
   })
 
-  it("formats multiple given names", () => {
-    expect(
-      formatHumanName([{ family: "Doe", given: ["Jane", "Marie"] }]),
-    ).toBe("Jane Marie Doe")
+  it("falls back to the first name without an official one", () => {
+    expect(formatHumanNames([{ family: "Primary", given: ["First"] }, { family: "Maiden" }])).toBe("First Primary")
   })
+})
 
-  it("includes prefix", () => {
-    expect(
-      formatHumanName([{ prefix: ["Dr."], family: "Smith", given: ["John"] }]),
-    ).toBe("Dr. John Smith")
-  })
-
-  it("includes multiple prefixes", () => {
-    expect(
-      formatHumanName([{ prefix: ["Prof.", "Dr."], given: ["Anna"], family: "Müller" }]),
-    ).toBe("Prof. Dr. Anna Müller")
-  })
-
-  it("falls back to text when no structured parts exist", () => {
-    expect(
-      formatHumanName([{ text: "Dr. John Smith" }]),
-    ).toBe("Dr. John Smith")
-  })
-
-  it("returns 'Unknown' when name entry has no usable fields", () => {
-    expect(formatHumanName([{}])).toBe("Unknown")
-  })
-
-  it("returns 'Unknown' when text is also undefined", () => {
+describe("formatHumanName", () => {
+  it("returns 'Unknown' when nothing formats", () => {
+    expect(formatHumanName(undefined)).toBe("Unknown")
+    expect(formatHumanName([])).toBe("Unknown")
     expect(formatHumanName([{ use: "official" }])).toBe("Unknown")
-  })
-
-  it("returns 'Unknown' when text is empty string", () => {
     expect(formatHumanName([{ text: "" }])).toBe("Unknown")
   })
 
-  it("ignores suffix (not implemented in current logic)", () => {
-    expect(
-      formatHumanName([{ family: "Smith", given: ["John"], suffix: ["Jr."] }]),
-    ).toBe("John Smith")
-  })
-
-  it("uses only the first name entry", () => {
-    expect(
-      formatHumanName([
-        { family: "Primary", given: ["First"] },
-        { family: "Maiden", given: ["Other"] },
-      ]),
-    ).toBe("First Primary")
-  })
-
-  it("handles given name only (no family)", () => {
-    expect(formatHumanName([{ given: ["Baby"] }])).toBe("Baby")
-  })
-
-  it("handles family name only (no given)", () => {
-    expect(formatHumanName([{ family: "Smith" }])).toBe("Smith")
-  })
-
-  it("prefers structured parts over text", () => {
-    expect(
-      formatHumanName([{ family: "Smith", given: ["John"], text: "Johnny S" }]),
-    ).toBe("John Smith")
-  })
-
-  it("handles empty given/prefix arrays", () => {
-    expect(
-      formatHumanName([{ family: "Smith", given: [], prefix: [] }]),
-    ).toBe("Smith")
-  })
-
-  it("trims leading/trailing whitespace from result", () => {
-    // given=[" "] yields parts = [" "], joined.trim() = "" → falls through to Unknown
-    const result = formatHumanName([{ given: [" "] }])
-    expect(result).toBe("Unknown")
-  })
-
-  it("handles whitespace-only family name", () => {
-    const result = formatHumanName([{ family: "  " }])
-    expect(result).toBe("Unknown")
-  })
-
-  it("handles whitespace-only text fallback", () => {
-    const result = formatHumanName([{ text: "   " }])
-    expect(result).toBe("Unknown")
-  })
-
-  it("handles unicode characters in names", () => {
-    expect(
-      formatHumanName([{ family: "Müller-Lüdenscheidt", given: ["Öztürk"] }]),
-    ).toBe("Öztürk Müller-Lüdenscheidt")
-  })
-
-  it("handles very long names", () => {
-    const longName = "A".repeat(500)
-    const result = formatHumanName([{ family: longName }])
-    expect(result).toBe(longName)
+  it("formats the display name of the list", () => {
+    expect(formatHumanName([{ family: "Müller-Lüdenscheidt", given: ["Öztürk"], suffix: ["Jr."] }])).toBe(
+      "Öztürk Müller-Lüdenscheidt Jr.",
+    )
   })
 })
