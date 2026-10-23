@@ -28,6 +28,7 @@ export { ServiceUnavailable, type ServiceUnavailableProps, type ServiceErrorVari
 export { AppHeader, type AppHeaderProps } from "./components/app-header"
 export { UserProfileFormFields, type UserProfileFormFieldsProps, type UserProfileData } from "./components/user-profile-fields"
 export { SmartAppShell, usePatientId, type SmartAppShellProps } from "./components/smart-app-shell"
+export { SignInLanding, type SignInLandingProps } from "./components/sign-in-landing"
 export { PwaInstallButton, type PwaInstallButtonProps } from "./components/pwa-install-button"
 export { ServiceWorkerUpdatePrompt, type ServiceWorkerUpdatePromptProps } from "./components/service-worker-update-banner"
 

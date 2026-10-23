@@ -34,6 +34,7 @@ import "@max-health-inc/shared-ui/theme.css"
 ### Components
 - Button, Card, Badge, Input, Label, Select, Tabs, Dialog, Table, ScrollArea, Progress, Tooltip, DropdownMenu, Separator
 - AppHeader, PatientBanner, ErrorBoundary, Spinner, Toaster
+- SignInLanding — the signed-out screen with "SMART Login"; `SmartAppShell` renders it, and apps that need more on that screen (an FAQ, sign-up, identity provider shortcuts) pass it as `notice`, `actions` or children
 - FilterToolbar, PageHeader, StatCard, ResponsiveTabsList
 - Faq — the org-wide question/answer disclosure list (one answer open at a time)
 

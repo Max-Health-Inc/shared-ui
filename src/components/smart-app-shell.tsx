@@ -5,7 +5,7 @@ import { Button } from "./button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "./dialog"
 import { Spinner } from "./spinner"
 import { ServiceUnavailable } from "./service-unavailable"
-import { useBranding } from "../hooks/use-branding"
+import { SignInLanding } from "./sign-in-landing"
 import { useSmartAuth, type SmartAuthLike, type UseSmartAuthOptions } from "../hooks/use-smart-auth"
 import { useUiText, type TFn } from "../lib/ui-text"
 
@@ -65,7 +65,7 @@ export function SmartAppShell({
   header,
   title,
   description,
-  icon: Icon,
+  icon,
   maxWidth = "max-w-5xl",
   children,
   wrapper,
@@ -82,7 +82,6 @@ export function SmartAppShell({
     smartAuth,
     ...hookOptions,
   })
-  const brand = useBranding()
   const signInAgain = resumable ? handleReauthenticate : handleLogin
   const keepApp = state === "session-expired" && resumable && !renderSessionExpired
 
@@ -134,21 +133,7 @@ export function SmartAppShell({
           renderUnauthenticated ? (
             renderUnauthenticated(handleLogin)
           ) : (
-            <div className="flex flex-col items-center justify-center py-24 gap-6">
-              <div className="w-full text-center space-y-2">
-                {brand?.logoUrl ? (
-                  <img src={brand.logoUrl} alt={brand.name} className="h-16 mx-auto" />
-                ) : (
-                  <Icon className="size-16 mx-auto text-muted-foreground/30" />
-                )}
-                <h2 className="text-xl font-semibold break-words sm:text-2xl">{title}</h2>
-                <p className="mx-auto w-full max-w-md text-muted-foreground">{description}</p>
-              </div>
-              <Button size="lg" onClick={handleLogin}>
-                <LogIn className="size-4" />
-                {t("SMART Login")}
-              </Button>
-            </div>
+            <SignInLanding title={title} description={description} icon={icon} onLogin={handleLogin} t={t} />
           )
         ) : (
           children
