@@ -28,6 +28,12 @@ export interface ServiceWorkerPluginOptions {
   precache?: string[]
   /** Output filename (default `"sw.js"`). */
   fileName?: string
+  privateCaches?: PrivateCache[]
+}
+
+export interface PrivateCache {
+  name: string
+  match: string
 }
 
 /**

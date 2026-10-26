@@ -39,9 +39,10 @@ test("the SW source carries the cache-poison guard on BOTH read and write", () =
  */
 
 /** Render the worker the way the plugin does, without its file IO. */
-function renderWorker(): string {
+function renderWorker(privateCaches: { name: string; match: string }[] = []): string {
   return stampServiceWorker(
-    SERVICE_WORKER_SOURCE.split("__APP_NAME__").join("test-app").split("__PRECACHE__").join("[]"),
+    SERVICE_WORKER_SOURCE.split("__APP_NAME__").join("test-app").split("__PRECACHE__").join("[]")
+      .split("__PRIVATE_CACHES__").join(JSON.stringify(privateCaches)),
     "buildid",
   )
 }
@@ -99,7 +100,7 @@ function makeCacheStorage() {
 }
 
 /** Load the worker source with doubles in scope and expose its fetch handler. */
-function loadWorker(respond: (request: Request) => Response) {
+function loadWorker(respond: (request: Request) => Response, privateCaches: { name: string; match: string }[] = []) {
   const listeners = new Map<string, (event: unknown) => void>()
   const worker = {
     addEventListener(type: string, handler: (event: unknown) => void) {
@@ -117,15 +118,30 @@ function loadWorker(respond: (request: Request) => Response) {
     return respond(request)
   }
 
-  new Function("self", "caches", "fetch", renderWorker())(worker, caches, fetch_)
+  new Function("self", "caches", "fetch", renderWorker(privateCaches))(worker, caches, fetch_)
 
   /** Dispatch a fetch; resolves to null when the worker leaves the request to the browser. */
   async function dispatchFetch(url: string, init?: RequestInit): Promise<Response | null> {
     const handler = listeners.get("fetch")
     if (!handler) throw new Error("worker registered no fetch handler")
     let responded: Promise<Response> | undefined
-    handler({ request: new Request(url, init), respondWith: (p: Promise<Response>) => void (responded = p) })
-    return responded ? await responded : null
+    const pending: Promise<unknown>[] = []
+    handler({
+      request: new Request(url, init),
+      respondWith: (p: Promise<Response>) => void (responded = p),
+      waitUntil: (p: Promise<unknown>) => void pending.push(p),
+    })
+    const response = responded ? await responded : null
+    await Promise.all(pending)
+    return response
+  }
+
+  async function activate(): Promise<void> {
+    const handler = listeners.get("activate")
+    if (!handler) throw new Error("worker registered no activate handler")
+    const pending: Promise<unknown>[] = []
+    handler({ waitUntil: (p: Promise<unknown>) => void pending.push(p) })
+    await Promise.all(pending)
   }
 
   async function handleFetch(url: string): Promise<Response> {
@@ -140,7 +156,7 @@ function loadWorker(respond: (request: Request) => Response) {
     handler({ data, ports })
   }
 
-  return { handleFetch, dispatchFetch, postMessage, caches, stores, fetched }
+  return { handleFetch, dispatchFetch, postMessage, activate, caches, stores, fetched }
 }
 
 const html = () => new Response("<!doctype html>", { headers: { "content-type": "text/html" } })
@@ -235,6 +251,44 @@ describe("generated worker: patient data never reaches Cache Storage", () => {
   it("does not cache a partial (Range) response", async () => {
     const worker = loadWorker(() => new Response("part"))
     expect(await worker.dispatchFetch("https://app.test/video.mp4", { headers: { Range: "bytes=0-99" } })).toBeNull()
+  })
+})
+
+describe("generated worker: opt-in private caches", () => {
+  const FRAMES = [{ name: "test-frames", match: "/dicomweb/.+/frames/" }]
+  const FRAME = "https://api.proxy-smart.com/dicomweb/studies/1/series/2/instances/3/frames/1"
+
+  it("keeps a matching frame and serves it again without the network", async () => {
+    const worker = loadWorker(() => new Response("frame"), FRAMES)
+    const auth = { headers: { Authorization: "Bearer x" } }
+    expect(await (await worker.handleFetch(FRAME)).text()).toBe("frame")
+    expect(worker.stores.get("test-frames")?.has(FRAME)).toBe(true)
+    const again = await worker.dispatchFetch(FRAME, auth)
+    expect(await again?.text()).toBe("frame")
+    expect(worker.fetched).toEqual([FRAME])
+  })
+
+  it("still leaves every other cross-origin request to the browser", async () => {
+    const worker = loadWorker(() => new Response("record"), FRAMES)
+    expect(await worker.dispatchFetch("https://api.proxy-smart.com/dicomweb/studies/1/series/2/metadata")).toBeNull()
+    expect(await worker.dispatchFetch("https://api.proxy-smart.com/fhir/Patient/1")).toBeNull()
+  })
+
+  it("does not keep a failed or partial response", async () => {
+    const failed = loadWorker(() => new Response("no", { status: 503 }), FRAMES)
+    await failed.handleFetch(FRAME)
+    expect(failed.stores.get("test-frames")?.has(FRAME) ?? false).toBe(false)
+    const partial = loadWorker(() => new Response("part"), FRAMES)
+    expect(await partial.dispatchFetch(FRAME, { headers: { Range: "bytes=0-9" } })).toBeNull()
+  })
+
+  it("survives a worker update, which purges the previous build's cache", async () => {
+    const worker = loadWorker(() => new Response("frame"), FRAMES)
+    await worker.handleFetch(FRAME)
+    await (await worker.caches.open("test-app-oldbuild")).put("https://app.test/old.js", new Response(""))
+    await worker.activate()
+    expect(worker.stores.has("test-frames")).toBe(true)
+    expect(worker.stores.has("test-app-oldbuild")).toBe(false)
   })
 })
 

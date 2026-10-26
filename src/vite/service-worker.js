@@ -47,6 +47,8 @@ export const BUILD_ID_PLACEHOLDER = "__BUILD_ID__"
 /** Token replaced at build time with the JSON precache array. */
 const PRECACHE_PLACEHOLDER = "__PRECACHE__"
 
+const PRIVATE_CACHES_PLACEHOLDER = "__PRIVATE_CACHES__"
+
 /**
  * The service-worker source, with placeholders the plugin fills in. Stored as a
  * string (not a real module) because it runs in the SW global scope and is written
@@ -74,6 +76,9 @@ const CACHE_NAME = "${APP_NAME_PLACEHOLDER}-${BUILD_ID_PLACEHOLDER}";
 
 const PRECACHE_ASSETS = ${PRECACHE_PLACEHOLDER};
 
+const PRIVATE_CACHES = ${PRIVATE_CACHES_PLACEHOLDER}.map((entry) => ({ name: entry.name, match: new RegExp(entry.match) }));
+const PRIVATE_CACHE_NAMES = PRIVATE_CACHES.map((entry) => entry.name);
+
 // Streamed downloads: a page hands a ReadableStream over a MessagePort and navigates a hidden
 // frame to the URL returned in READY; the response streams from the page, so the download shows
 // in the browser's list with live progress instead of appearing as a finished Blob.
@@ -95,7 +100,9 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+        keys
+          .filter((key) => key !== CACHE_NAME && !PRIVATE_CACHE_NAMES.includes(key))
+          .map((key) => caches.delete(key))
       )
     )
   );
@@ -111,6 +118,12 @@ self.addEventListener("fetch", (event) => {
     return;
   }
   if (request.method !== "GET") return;
+
+  const privateCache = request.headers.has("range") ? undefined : PRIVATE_CACHES.find((entry) => entry.match.test(request.url));
+  if (privateCache) {
+    event.respondWith(privateCacheFirst(event, privateCache.name, request));
+    return;
+  }
 
   // Only this app's own, unauthenticated, whole-resource requests are cached. A cross-origin
   // GET (DICOMweb frames, FHIR reads on the API host) carries patient data and is often
@@ -191,6 +204,18 @@ async function evictEverywhere(request) {
   }
 }
 
+async function privateCacheFirst(event, name, request) {
+  const cache = await caches.open(name);
+  const cached = await cache.match(request);
+  if (cached) return cached;
+  const response = await fetch(request);
+  if (response.status === 200) {
+    const stored = cache.put(request, response.clone()).catch(() => undefined);
+    if (event.waitUntil) event.waitUntil(stored);
+  }
+  return response;
+}
+
 async function cacheFirst(request) {
   const cached = await caches.match(request);
   // Validate on READ, not only on write. The write guard below stops NEW poisoning,
@@ -263,7 +288,7 @@ const DEFAULT_PRECACHE = [
  * @returns {import("vite").Plugin}
  */
 export function serviceWorkerPlugin(options) {
-  const { cacheName, precache = DEFAULT_PRECACHE, fileName = "sw.js" } = options
+  const { cacheName, precache = DEFAULT_PRECACHE, fileName = "sw.js", privateCaches = [] } = options
   let isSsr = false
   let outDir = "dist"
 
@@ -291,7 +316,9 @@ export function serviceWorkerPlugin(options) {
         SERVICE_WORKER_SOURCE.split(APP_NAME_PLACEHOLDER)
           .join(cacheName)
           .split(PRECACHE_PLACEHOLDER)
-          .join(JSON.stringify(precache)),
+          .join(JSON.stringify(precache))
+          .split(PRIVATE_CACHES_PLACEHOLDER)
+          .join(JSON.stringify(privateCaches)),
         buildId,
       )
 
