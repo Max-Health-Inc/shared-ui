@@ -76,8 +76,16 @@ const CACHE_NAME = "${APP_NAME_PLACEHOLDER}-${BUILD_ID_PLACEHOLDER}";
 
 const PRECACHE_ASSETS = ${PRECACHE_PLACEHOLDER};
 
-const PRIVATE_CACHES = ${PRIVATE_CACHES_PLACEHOLDER}.map((entry) => ({ name: entry.name, match: new RegExp(entry.match) }));
+const PRIVATE_CACHES = ${PRIVATE_CACHES_PLACEHOLDER}.map((entry) => ({
+  name: entry.name,
+  match: new RegExp(entry.match),
+  maxBytes: entry.maxBytes > 0 ? entry.maxBytes : 0,
+}));
 const PRIVATE_CACHE_NAMES = PRIVATE_CACHES.map((entry) => entry.name);
+const STORED_BYTES_HEADER = "x-private-cache-bytes";
+const TRIM_TO = 0.9;
+const privateTotals = new Map();
+const trims = new Map();
 
 // Streamed downloads: a page hands a ReadableStream over a MessagePort and navigates a hidden
 // frame to the URL returned in READY; the response streams from the page, so the download shows
@@ -121,7 +129,7 @@ self.addEventListener("fetch", (event) => {
 
   const privateCache = request.headers.has("range") ? undefined : PRIVATE_CACHES.find((entry) => entry.match.test(request.url));
   if (privateCache) {
-    event.respondWith(privateCacheFirst(event, privateCache.name, request));
+    event.respondWith(privateCacheFirst(event, privateCache, request));
     return;
   }
 
@@ -204,16 +212,59 @@ async function evictEverywhere(request) {
   }
 }
 
-async function privateCacheFirst(event, name, request) {
-  const cache = await caches.open(name);
+async function privateCacheFirst(event, privateCache, request) {
+  const cache = await caches.open(privateCache.name);
   const cached = await cache.match(request);
   if (cached) return cached;
   const response = await fetch(request);
   if (response.status === 200) {
-    const stored = cache.put(request, response.clone()).catch(() => undefined);
+    const stored = storePrivate(cache, privateCache, request, response.clone()).catch(() => undefined);
     if (event.waitUntil) event.waitUntil(stored);
   }
   return response;
+}
+
+async function storePrivate(cache, privateCache, request, response) {
+  const body = await response.arrayBuffer();
+  const headers = new Headers(response.headers);
+  headers.set(STORED_BYTES_HEADER, String(body.byteLength));
+  await cache.put(request, new Response(body, { status: response.status, statusText: response.statusText, headers }));
+  if (!privateCache.maxBytes) return;
+  const total = (privateTotals.get(privateCache.name) ?? 0) + body.byteLength;
+  privateTotals.set(privateCache.name, total);
+  if (total > privateCache.maxBytes) await trimPrivate(privateCache);
+}
+
+function storedBytes(response) {
+  const size = Number(response.headers.get(STORED_BYTES_HEADER));
+  return Number.isFinite(size) && size > 0 ? size : 0;
+}
+
+function trimPrivate(privateCache) {
+  const running = trims.get(privateCache.name);
+  if (running) return running;
+  const trim = (async () => {
+    const cache = await caches.open(privateCache.name);
+    const keys = await cache.keys();
+    const sizes = [];
+    let total = 0;
+    for (const key of keys) {
+      const entry = await cache.match(key);
+      const size = entry ? storedBytes(entry) : 0;
+      sizes.push(size);
+      total += size;
+    }
+    if (total > privateCache.maxBytes) {
+      const target = privateCache.maxBytes * TRIM_TO;
+      for (let index = 0; index < keys.length && total > target; index++) {
+        await cache.delete(keys[index]);
+        total -= sizes[index];
+      }
+    }
+    privateTotals.set(privateCache.name, total);
+  })().finally(() => trims.delete(privateCache.name));
+  trims.set(privateCache.name, trim);
+  return trim;
 }
 
 async function cacheFirst(request) {

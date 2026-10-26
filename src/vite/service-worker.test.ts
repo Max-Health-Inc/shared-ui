@@ -39,7 +39,7 @@ test("the SW source carries the cache-poison guard on BOTH read and write", () =
  */
 
 /** Render the worker the way the plugin does, without its file IO. */
-function renderWorker(privateCaches: { name: string; match: string }[] = []): string {
+function renderWorker(privateCaches: { name: string; match: string; maxBytes?: number }[] = []): string {
   return stampServiceWorker(
     SERVICE_WORKER_SOURCE.split("__APP_NAME__").join("test-app").split("__PRECACHE__").join("[]")
       .split("__PRIVATE_CACHES__").join(JSON.stringify(privateCaches)),
@@ -79,6 +79,9 @@ function makeCacheStorage() {
         async delete(request: Request | string) {
           return store.delete(urlOf(request))
         },
+        async keys() {
+          return [...store.keys()]
+        },
       }
     },
     async keys() {
@@ -100,7 +103,7 @@ function makeCacheStorage() {
 }
 
 /** Load the worker source with doubles in scope and expose its fetch handler. */
-function loadWorker(respond: (request: Request) => Response, privateCaches: { name: string; match: string }[] = []) {
+function loadWorker(respond: (request: Request) => Response, privateCaches: { name: string; match: string; maxBytes?: number }[] = []) {
   const listeners = new Map<string, (event: unknown) => void>()
   const worker = {
     addEventListener(type: string, handler: (event: unknown) => void) {
@@ -280,6 +283,33 @@ describe("generated worker: opt-in private caches", () => {
     expect(failed.stores.get("test-frames")?.has(FRAME) ?? false).toBe(false)
     const partial = loadWorker(() => new Response("part"), FRAMES)
     expect(await partial.dispatchFetch(FRAME, { headers: { Range: "bytes=0-9" } })).toBeNull()
+  })
+
+  it("evicts the oldest frames once the cache outgrows its cap", async () => {
+    const capped = [{ ...FRAMES[0], maxBytes: 100 }]
+    const worker = loadWorker(() => new Response("x".repeat(30)), capped)
+    const frame = (n: number) => `https://api.proxy-smart.com/dicomweb/studies/1/series/2/instances/${n}/frames/1`
+    for (const n of [1, 2, 3, 4, 5]) await worker.handleFetch(frame(n))
+    const kept = [...(worker.stores.get("test-frames")?.keys() ?? [])]
+    expect(kept).not.toContain(frame(1))
+    expect(kept).toContain(frame(5))
+    expect(kept.length * 30).toBeLessThanOrEqual(100)
+  })
+
+  it("keeps everything when no cap is set", async () => {
+    const worker = loadWorker(() => new Response("x".repeat(30)), FRAMES)
+    for (const n of [1, 2, 3, 4, 5]) await worker.handleFetch(`https://api.proxy-smart.com/dicomweb/studies/1/series/2/instances/${n}/frames/1`)
+    expect(worker.stores.get("test-frames")?.size).toBe(5)
+  })
+
+  it("does not evict fresh frames after the page cleared the cache behind its back", async () => {
+    const capped = [{ ...FRAMES[0], maxBytes: 100 }]
+    const worker = loadWorker(() => new Response("x".repeat(30)), capped)
+    const frame = (n: number) => `https://api.proxy-smart.com/dicomweb/studies/1/series/2/instances/${n}/frames/1`
+    for (const n of [1, 2, 3]) await worker.handleFetch(frame(n))
+    await worker.caches.delete("test-frames")
+    for (const n of [4, 5]) await worker.handleFetch(frame(n))
+    expect([...(worker.stores.get("test-frames")?.keys() ?? [])]).toEqual([frame(4), frame(5)])
   })
 
   it("survives a worker update, which purges the previous build's cache", async () => {

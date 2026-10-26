@@ -34,6 +34,7 @@ export interface ServiceWorkerPluginOptions {
 export interface PrivateCache {
   name: string
   match: string
+  maxBytes?: number
 }
 
 /**
