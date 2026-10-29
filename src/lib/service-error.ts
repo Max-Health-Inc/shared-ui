@@ -1,3 +1,5 @@
+import { browserConnectivity } from "./connectivity"
+
 export type ServiceErrorVariant = "unavailable" | "offline" | "unauthorized" | "forbidden" | "notFound" | "generic"
 
 export function errorStatus(err: unknown): number | undefined {
@@ -6,11 +8,7 @@ export function errorStatus(err: unknown): number | undefined {
   return typeof status === "number" ? status : undefined
 }
 
-function browserOnline(): boolean {
-  return typeof navigator === "undefined" || navigator.onLine
-}
-
-export function serviceErrorVariant(err: unknown, online: boolean = browserOnline()): ServiceErrorVariant {
+export function serviceErrorVariant(err: unknown, online: boolean = browserConnectivity.isOnline()): ServiceErrorVariant {
   if (!online) return "offline"
   const status = errorStatus(err)
   if (status === undefined) return err instanceof TypeError ? "unavailable" : "generic"

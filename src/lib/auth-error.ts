@@ -19,6 +19,8 @@ export function reportAuthError(message: string) {
 
 // ─── Shared auth-fetch wrapper ───────────────────────────────────────────────
 
+const SESSION_EXPIRED = "Your session has expired. Please sign in again."
+
 type AuthenticatedFetchFn = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
 
 interface SmartAuthWithFetch {
@@ -27,7 +29,8 @@ interface SmartAuthWithFetch {
 
 /**
  * Wraps the SMART authenticated fetch to detect permanent auth failures
- * and route them through the auth-error bus.
+ * and route them through the auth-error bus: no token at all, or a 401 that
+ * survived the fetch's own refresh-and-retry.
  *
  * Usage:
  * ```ts
@@ -38,13 +41,16 @@ interface SmartAuthWithFetch {
 export function createAuthFetch(smartAuth: SmartAuthWithFetch): AuthenticatedFetchFn {
   const baseFetch = smartAuth.createAuthenticatedFetch()
   return async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+    let response: Response
     try {
-      return await baseFetch(input, init)
+      response = await baseFetch(input, init)
     } catch (err) {
       if (err instanceof Error && /no valid smart token/i.test(err.message)) {
-        reportAuthError("Your session has expired. Please sign in again.")
+        reportAuthError(SESSION_EXPIRED)
       }
       throw err
     }
+    if (response.status === 401) reportAuthError(SESSION_EXPIRED)
+    return response
   }
 }

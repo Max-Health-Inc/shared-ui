@@ -151,3 +151,24 @@ describe("createAuthFetch", () => {
     expect(capturedInit?.body).toBe('{"data":1}')
   })
 })
+
+describe("createAuthFetch after the refresh", () => {
+  it("reports a 401 the authenticated fetch could not recover from, and still returns it", async () => {
+    let reportedError: string | null = null
+    onAuthError((msg) => { reportedError = msg })
+    const unauthorized = new Response(null, { status: 401 })
+    const authFetch = createAuthFetch({ createAuthenticatedFetch: () => async () => unauthorized })
+
+    expect(await authFetch("/fhir/Patient")).toBe(unauthorized)
+    expect(reportedError).toBe("Your session has expired. Please sign in again.")
+  })
+
+  it("leaves a 403 to the caller", async () => {
+    let reportedError: string | null = null
+    onAuthError((msg) => { reportedError = msg })
+    const authFetch = createAuthFetch({ createAuthenticatedFetch: () => async () => new Response(null, { status: 403 }) })
+
+    expect((await authFetch("/fhir/Patient")).status).toBe(403)
+    expect(reportedError).toBeNull()
+  })
+})

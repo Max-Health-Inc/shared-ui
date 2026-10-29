@@ -103,6 +103,7 @@ export { UI_TEXT, UI_TEXT_LANGUAGES } from "./lib/ui-text-catalog"
 export { onAuthError, reportAuthError, createAuthFetch } from "./lib/auth-error"
 export { safeFetch, safeFetchResult, type SafeFetchOptions, type ApiError } from "./lib/safe-fetch"
 export { errorStatus, serviceErrorVariant } from "./lib/service-error"
+export { browserConnectivity, connectivityOf, type Connectivity } from "./lib/connectivity"
 
 // Hooks
 export { useBranding, setBrandingSource, resolveBrandBundleUrl, parseBrandBundle, type BrandInfo } from "./hooks/use-branding"
