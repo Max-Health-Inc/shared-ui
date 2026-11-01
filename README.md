@@ -81,6 +81,17 @@ export default createAppI18n(translations) // shared chrome now follows the app'
 
 Wiring i18n by hand instead? Call `setUiLanguage(lng)` whenever the language changes.
 
+An app whose server also renders text (error pages, API messages) can have the choice
+mirrored into a cookie the server reads. It is opt-in, so other apps set no cookie:
+
+```tsx
+createAppI18n(translations, { cookie: {} }) // `locale=de; Path=/; SameSite=Lax`, one year
+createAppI18n(translations, { cookie: { name: "lang" } })
+```
+
+The cookie holds the primary subtag (`fr-CA` is stored as `fr`), is `Secure` on https, and is
+also read during detection, after localStorage.
+
 To reword any of it, pass the app's `t` — it wins for every key the app actually
 translates, and the catalogue covers the rest:
 

@@ -6,10 +6,28 @@ import { setUiLanguage } from "./ui-text"
 export interface CreateAppI18nOptions {
   /** Language returned when a key has no translation for the active language. Defaults to `'en'`. */
   fallbackLng?: string
-  /** Enable browser language detection (localStorage → navigator → htmlTag). Defaults to `true`; pass `false` to disable. */
+  /** Enable browser language detection (localStorage → cookie, when `cookie` is set → navigator → htmlTag). Defaults to `true`; pass `false` to disable. */
   detect?: boolean
   /** Enable verbose i18next logging. Defaults to `false`. */
   debug?: boolean
+  /**
+   * Mirror the active language (primary subtag) into a cookie, so server-rendered output follows a switch.
+   * Off unless set; `name` defaults to `"locale"`.
+   */
+  cookie?: { name?: string }
+}
+
+const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365
+
+function primarySubtag(lng: string): string {
+  return lng.split(/[-_]/)[0]?.toLowerCase() ?? ""
+}
+
+function writeLocaleCookie(name: string, lng: string): void {
+  const language = primarySubtag(lng)
+  if (typeof document === "undefined" || language === "" || language === "cimode") return
+  const secure = document.location.protocol === "https:" ? "; Secure" : ""
+  document.cookie = `${name}=${language}; Path=/; Max-Age=${String(ONE_YEAR_SECONDS)}; SameSite=Lax${secure}`
 }
 
 /**
@@ -48,6 +66,7 @@ export function createAppI18n(
   opts?: CreateAppI18nOptions,
 ): I18nInstance {
   const languages = storedLanguages(translations)
+  const cookieName = opts?.cookie === undefined ? undefined : (opts.cookie.name ?? "locale")
 
   const resources: Record<string, { translation: Record<string, string> }> = {}
   for (const lng of languages) {
@@ -86,21 +105,22 @@ export function createAppI18n(
     interpolation: {
       escapeValue: false,
     },
-    detection: {
-      order: ["localStorage", "navigator", "htmlTag"],
-      caches: ["localStorage"],
-    },
+    detection:
+      cookieName === undefined
+        ? { order: ["localStorage", "navigator", "htmlTag"], caches: ["localStorage"] }
+        : { order: ["localStorage", "cookie", "navigator", "htmlTag"], caches: ["localStorage"], lookupCookie: cookieName },
     debug: opts?.debug ?? false,
   })
 
   // ui-text.ts cannot subscribe to the optional i18next peer, so the shared chrome follows this.
-  setUiLanguage(instance.resolvedLanguage ?? instance.language)
-  instance.on("languageChanged", () => {
-    setUiLanguage(instance.resolvedLanguage ?? instance.language)
-  })
-  instance.on("initialized", () => {
-    setUiLanguage(instance.resolvedLanguage ?? instance.language)
-  })
+  const follow = () => {
+    const language = instance.resolvedLanguage ?? instance.language
+    setUiLanguage(language)
+    if (cookieName !== undefined && language) writeLocaleCookie(cookieName, language)
+  }
+  follow()
+  instance.on("languageChanged", follow)
+  instance.on("initialized", follow)
 
   return instance
 }
