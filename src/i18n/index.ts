@@ -8,8 +8,10 @@
 export {
   createAppI18n,
   getSupportedLanguages,
+  isTranslationMetaKey,
   plural,
   LOCALE_NAMES,
+  TRANSLATION_META_KEYS,
   type CreateAppI18nOptions,
 } from "../lib/i18n"
 
