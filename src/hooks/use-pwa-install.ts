@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 
-/**
- * The `beforeinstallprompt` event — not in lib.dom.d.ts yet.
- * @see https://developer.mozilla.org/en-US/docs/Web/API/BeforeInstallPromptEvent
- */
+/** Not in lib.dom.d.ts yet: https://developer.mozilla.org/en-US/docs/Web/API/BeforeInstallPromptEvent */
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>
+}
+
+function isBeforeInstallPrompt(e: Event): e is BeforeInstallPromptEvent {
+  return "prompt" in e && typeof e.prompt === "function" && "userChoice" in e
 }
 
 declare global {
@@ -25,34 +26,12 @@ export interface UsePwaInstallReturn {
   promptInstall: () => Promise<boolean>
 }
 
-/**
- * Inline script to add to `<head>` so the `beforeinstallprompt` event is captured
- * before React hydrates. Without this, the event may fire before the hook mounts.
- *
- * Usage: `<script dangerouslySetInnerHTML={{ __html: PWA_INSTALL_CAPTURE_SCRIPT }} />`
- */
+/** `<head>` script that captures `beforeinstallprompt` if it fires before the hook mounts. */
 export const PWA_INSTALL_CAPTURE_SCRIPT = `window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__deferredInstallPrompt=e;});`
 
-/**
- * React hook that captures the browser's `beforeinstallprompt` event and
- * exposes a controlled API for triggering the native PWA install dialog.
- *
- * If the event fired before React mounted (common with SW-cached pages),
- * it reads from `window.__deferredInstallPrompt` which can be set via
- * {@link PWA_INSTALL_CAPTURE_SCRIPT} in `<head>`.
- *
- * Usage:
- * ```tsx
- * const { isInstallable, isInstalled, promptInstall } = usePwaInstall()
- * if (isInstallable && !isInstalled) {
- *   return <button onClick={promptInstall}>Install</button>
- * }
- * ```
- */
+/** Native PWA install prompt, including an event captured early by {@link PWA_INSTALL_CAPTURE_SCRIPT}. */
 export function usePwaInstall(): UsePwaInstallReturn {
-  // Seed directly from an early-captured event (see PWA_INSTALL_CAPTURE_SCRIPT) so the
-  // initial render already reflects installability — no setState in the mount effect,
-  // which would cascade a render (react-hooks/set-state-in-effect).
+  // Seeded here, not in the mount effect, so the first render is already right.
   const [isInstallable, setIsInstallable] = useState(
     () => typeof window !== "undefined" && window.__deferredInstallPrompt != null,
   )
@@ -61,20 +40,18 @@ export function usePwaInstall(): UsePwaInstallReturn {
   const isInstalled =
     typeof window !== "undefined" &&
     (window.matchMedia("(display-mode: standalone)").matches ||
-      (navigator as unknown as { standalone?: boolean }).standalone === true)
+      ("standalone" in navigator && navigator.standalone === true))
 
   useEffect(() => {
-    // Adopt an early-captured event (from the inline head script). State was already
-    // seeded from it by the lazy initializer above, so here we only move it into the
-    // ref — assigning a ref in an effect does not trigger a render.
     if (window.__deferredInstallPrompt) {
       deferredPrompt.current = window.__deferredInstallPrompt
       window.__deferredInstallPrompt = null
     }
 
     const handler = (e: Event) => {
+      if (!isBeforeInstallPrompt(e)) return
       e.preventDefault()
-      deferredPrompt.current = e as BeforeInstallPromptEvent
+      deferredPrompt.current = e
       setIsInstallable(true)
     }
     window.addEventListener("beforeinstallprompt", handler)

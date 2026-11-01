@@ -52,6 +52,11 @@ describe("getSupportedLanguages", () => {
   it("is English-only when a file declares no languages", () => {
     expect(getSupportedLanguages({})).toEqual(["en"])
   })
+
+  it("ignores a malformed _languages instead of spreading its characters", () => {
+    expect(getSupportedLanguages({ _languages: "de" })).toEqual(["en"])
+    expect(getSupportedLanguages({ _languages: ["de", 7, ""] })).toEqual(["en", "de"])
+  })
 })
 
 describe("LOCALE_NAMES", () => {

@@ -3,30 +3,6 @@ import { initReactI18next } from "react-i18next"
 import LanguageDetector from "i18next-browser-languagedetector"
 import { setUiLanguage } from "./ui-text"
 
-/**
- * Optional DRY i18n mechanism for Max Health apps.
- *
- * This module is the MECHANISM only — it ships ZERO app translation strings.
- * Each app keeps its own `translations.json` and passes it to {@link createAppI18n}.
- *
- * ## translations.json format
- * ```json
- * {
- *   "_languages": ["de", "es"],
- *   "Save changes": ["Änderungen speichern", "Guardar cambios"],
- *   "Cancel": ["Abbrechen", "Cancelar"]
- * }
- * ```
- * - The English source string IS the i18next key.
- * - The value is a positional array of translations, indexed by `_languages`.
- * - English is never stored: when a key has no translation for the active
- *   language, i18next returns the key itself, so `fallbackLng: 'en'` yields
- *   the original English source string.
- *
- * Because the keys are full English sentences (which may contain `.` and `:`),
- * `keySeparator` and `nsSeparator` are disabled so keys resolve literally.
- */
-
 export interface CreateAppI18nOptions {
   /** Language returned when a key has no translation for the active language. Defaults to `'en'`. */
   fallbackLng?: string
@@ -37,48 +13,14 @@ export interface CreateAppI18nOptions {
 }
 
 /**
- * Pick the singular or plural form by `count`.
- *
- * ## Why this exists
- * i18next's own plural support (`key_one` / `key_other`) CANNOT work in this format.
- * The English source string IS the key and English is never stored, so there is no `en`
- * bundle holding a `_one` variant to resolve against — i18next falls through to the bare
- * key and interpolates it. The result is that
- *
- * ```ts
- * t("{{count}} tags", { count: 1 })   // → "1 tags"   ✗
- * ```
- *
- * renders the plural form at one, silently, in every language. That has bitten three
- * separate Max Health apps, so reach for this instead:
- *
- * ```ts
- * plural(n, t("1 tag"), t("{{count}} tags", { count: n }))   // → "1 tag" / "3 tags" ✓
- * ```
- *
- * ## Why it takes rendered strings, not keys
- * Both arms stay literal `t("…")` calls at the call site, which is exactly what
- * `extract-and-sync.py` scans for (its regex requires a string literal as the FIRST
- * argument of the translator call). A signature like `plural(t, n, "1 tag", "{{count}} tags")`
- * would hide both keys from extraction and they would be pruned from `translations.json` on
- * the next sync. Evaluating both arms is a pair of map lookups, so the cost is nothing.
- *
- * Each form is translated independently, which is also what languages with different
- * plural rules need — a translator sees two complete sentences rather than a fragment.
- *
- * @param count The quantity deciding the form. Only exactly `1` is singular, so `0` and
- *   `-1` take the plural, matching English ("0 tags").
- * @param one Rendered singular form.
- * @param other Rendered plural form.
+ * Singular when `count` is exactly 1, otherwise plural. i18next `_one`/`_other` cannot resolve with
+ * English-as-key, and both arms stay literal `t("…")` calls so extract-and-sync keeps their keys.
  */
 export function plural<T>(count: number, one: T, other: T): T {
   return count === 1 ? one : other
 }
 
-/**
- * Language endonyms used by the language switcher. These are language-independent
- * constants (a language's name in its own tongue), NOT app translation data.
- */
+/** Each language's name in its own tongue, for the language switcher. */
 export const LOCALE_NAMES: Record<string, string> = {
   en: "English",
   de: "Deutsch",
@@ -87,31 +29,25 @@ export const LOCALE_NAMES: Record<string, string> = {
   it: "Italiano",
 }
 
-/**
- * Derive the full supported-language list from a `translations.json`.
- * Always includes `'en'` (the implicit fallback) followed by `_languages`.
- */
+function storedLanguages(translations: Record<string, unknown>): string[] {
+  const languages = translations._languages
+  return Array.isArray(languages) ? languages.filter((l): l is string => typeof l === "string" && l !== "") : []
+}
+
+/** `'en'` (the implicit fallback) followed by the file's `_languages`. */
 export function getSupportedLanguages(translations: Record<string, unknown>): string[] {
-  const languages = (translations._languages as string[] | undefined) ?? []
-  return ["en", ...languages]
+  return ["en", ...storedLanguages(translations)]
 }
 
 /**
- * Build a fresh i18next instance from a `translations.json`.
- *
- * A new instance is created via `i18next.createInstance()` so the shared default
- * singleton is never mutated — multiple apps (or tests) can each hold their own.
- *
- * @param translations Parsed `translations.json` (see module docs for the format).
- * @param opts Optional behavior overrides.
- * @returns The initialized i18next instance.
+ * A fresh i18next instance (never the default singleton) from an English-key `translations.json`:
+ * `{ "_languages": ["de"], "Save": ["Speichern"] }`. Keys are full sentences, so key and ns separators are off.
  */
 export function createAppI18n(
   translations: Record<string, unknown>,
   opts?: CreateAppI18nOptions,
 ): I18nInstance {
-  const { _languages, ...entries } = translations
-  const languages = (_languages as string[] | undefined) ?? []
+  const languages = storedLanguages(translations)
 
   const resources: Record<string, { translation: Record<string, string> }> = {}
   for (const lng of languages) {
@@ -119,8 +55,8 @@ export function createAppI18n(
   }
 
   const langIndex = Object.fromEntries(languages.map((lng, i) => [lng, i]))
-  for (const [key, values] of Object.entries(entries)) {
-    if (!Array.isArray(values)) continue
+  for (const [key, values] of Object.entries(translations)) {
+    if (key === "_languages" || !Array.isArray(values)) continue
     for (const lng of languages) {
       const index = langIndex[lng]
       const bundle = resources[lng]
@@ -138,15 +74,11 @@ export function createAppI18n(
     instance.use(LanguageDetector)
   }
 
-  // The init() promise is intentionally not awaited here: react-i18next renders
-  // the keys (English fallback) until resources are ready, then re-renders.
+  // Not awaited: react-i18next renders the English keys until resources are ready.
   void instance.init({
     resources,
     supportedLngs: ["en", ...languages],
-    // Map a detected regional locale to its base (e.g. `en-US` → `en`, `de-DE` →
-    // `de`) so it counts as supported: this both loads the right resources and
-    // lets i18next set `resolvedLanguage` (otherwise it stays undefined for any
-    // region-tagged navigator language, blanking the language switcher).
+    // `de-DE` counts as `de`; otherwise resolvedLanguage stays undefined and blanks the switcher.
     nonExplicitSupportedLngs: true,
     fallbackLng: opts?.fallbackLng ?? "en",
     keySeparator: false,
@@ -161,12 +93,7 @@ export function createAppI18n(
     debug: opts?.debug ?? false,
   })
 
-  // This package's own components (header, auth states, dialogs) resolve their
-  // text against `ui-text.ts`, which cannot subscribe to i18next because
-  // react-i18next is only an optional peer here. Publishing the active language
-  // to it is what makes the shared chrome follow a language switch, without the
-  // app having to pass a `t` into every shared component or carry this package's
-  // keys in its own translations.json.
+  // ui-text.ts cannot subscribe to the optional i18next peer, so the shared chrome follows this.
   setUiLanguage(instance.resolvedLanguage ?? instance.language)
   instance.on("languageChanged", () => {
     setUiLanguage(instance.resolvedLanguage ?? instance.language)
