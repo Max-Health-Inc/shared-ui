@@ -7,7 +7,7 @@
  * are values the caller already rendered, so the `t("…")` literals stay at the call site.
  */
 import { describe, it, expect } from "bun:test"
-import { plural, getSupportedLanguages, LOCALE_NAMES } from "./i18n"
+import { plural, getSupportedLanguages, LOCALE_NAMES, createAppI18n, isTranslationMetaKey } from "./i18n"
 
 describe("plural", () => {
   it("takes the singular only at exactly one", () => {
@@ -56,6 +56,23 @@ describe("getSupportedLanguages", () => {
   it("ignores a malformed _languages instead of spreading its characters", () => {
     expect(getSupportedLanguages({ _languages: "de" })).toEqual(["en"])
     expect(getSupportedLanguages({ _languages: ["de", 7, ""] })).toEqual(["en", "de"])
+  })
+})
+
+describe("translation meta keys", () => {
+  it("recognises _languages and _keep, and nothing else", () => {
+    expect(isTranslationMetaKey("_languages")).toBe(true)
+    expect(isTranslationMetaKey("_keep")).toBe(true)
+    expect(isTranslationMetaKey("Save")).toBe(false)
+    expect(isTranslationMetaKey("_other")).toBe(false)
+  })
+
+  it("never loads _keep as a translation row", () => {
+    const instance = createAppI18n(
+      { _languages: ["de"], _keep: ["Brand*"], Save: ["Speichern"] },
+      { detect: false },
+    )
+    expect(instance.getResourceBundle("de", "translation")).toEqual({ Save: "Speichern" })
   })
 })
 

@@ -47,6 +47,12 @@ export const LOCALE_NAMES: Record<string, string> = {
   it: "Italiano",
 }
 
+export const TRANSLATION_META_KEYS: readonly string[] = ["_languages", "_keep"]
+
+export function isTranslationMetaKey(key: string): boolean {
+  return TRANSLATION_META_KEYS.includes(key)
+}
+
 function storedLanguages(translations: Record<string, unknown>): string[] {
   const languages = translations._languages
   return Array.isArray(languages) ? languages.filter((l): l is string => typeof l === "string" && l !== "") : []
@@ -75,7 +81,7 @@ export function createAppI18n(
 
   const langIndex = Object.fromEntries(languages.map((lng, i) => [lng, i]))
   for (const [key, values] of Object.entries(translations)) {
-    if (key === "_languages" || !Array.isArray(values)) continue
+    if (isTranslationMetaKey(key) || !Array.isArray(values)) continue
     for (const lng of languages) {
       const index = langIndex[lng]
       const bundle = resources[lng]
