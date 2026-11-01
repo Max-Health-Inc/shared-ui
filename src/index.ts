@@ -113,6 +113,8 @@ export { ModalStackProvider, useModalLayer, useLayerZIndex, LayerContext, type M
 export {
   useSmartAuth,
   isSilentSignInRefusal,
+  deepLinkOf,
+  restorableDeepLink,
   type AuthorizeOptions,
   type SmartAppState,
   type SmartAuthLike,
