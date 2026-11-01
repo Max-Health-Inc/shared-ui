@@ -4,30 +4,8 @@ import { useSyncExternalStore } from "react"
 import { UI_TEXT, UI_TEXT_LANGUAGES } from "./ui-text-catalog"
 
 /**
- * This package's own user-facing strings.
- *
- * Components here used to hardcode English — "Sign Out", "Session Expired",
- * "Confirm Action" — with no way for a consuming app to translate them: the
- * strings live in this package's source, so an app's `translations.json` has no
- * key to hold them and its extractor never sees them. A localized app was left
- * with an English header, which is where this was noticed.
- *
- * A `t` prop per string is the wrong shape for shared chrome. It pushes the same
- * translation of "Sign Out" into every app that mounts a header, and the org's
- * `extract-and-sync` prunes any key it cannot find a `t("…")` call for — so those
- * keys would be deleted from each app on the next sync. Text that belongs to a
- * component is translated once, here, beside it: {@link UI_TEXT}.
- *
- * Reactivity without a dependency: react-i18next is an OPTIONAL peer of this
- * package (only `LanguageSwitcher`, exported from the `/i18n` subpath, imports
- * it), so this module cannot subscribe to i18next itself. Instead the active
- * language is a tiny external store; `createAppI18n` sets it and follows
- * `languageChanged`, and components read it through `useSyncExternalStore` so a
- * language switch re-renders them. An app that does not use i18n at all never
- * sets a language and every string resolves to its English source.
- *
- * The `t` prop stays supported and WINS where the app actually has a translation
- * for the key, so an app can still reword any of this.
+ * This package's own strings, translated once in {@link UI_TEXT}. The active language is a small external
+ * store set by `createAppI18n`, since react-i18next is only an optional peer; an app `t` still wins when it has a translation.
  */
 export type TFn = (key: string, vars?: Record<string, string | number>) => string
 
@@ -48,17 +26,10 @@ let language: string | undefined
 let column = -1
 const listeners = new Set<() => void>()
 
-/**
- * Set the language this package's own strings resolve in (a BCP-47 tag; the base
- * subtag is what matters, so `de-AT` reads the `de` column). Called by
- * `createAppI18n`; apps wiring i18n by hand can call it themselves. Pass
- * `undefined` for English.
- */
+/** Language for this package's strings; `de-AT` reads the `de` column, `undefined` means English. */
 export function setUiLanguage(next: string | undefined): void {
   if (next === language) return
   language = next
-  // Resolved here rather than per lookup: every shared component resolves its strings
-  // on every render, and the language changes once.
   const base = next?.split("-")[0]
   column = base === undefined ? -1 : UI_TEXT_LANGUAGES.indexOf(base)
   for (const listener of listeners) listener()
@@ -85,20 +56,10 @@ function fromCatalog(key: string): string | undefined {
   return UI_TEXT[key]?.[column]
 }
 
-/**
- * Resolve one of this package's strings outside React — for class components
- * (`ErrorBoundary`) and non-render code. Prefer {@link useUiText} in components,
- * which also re-renders on a language change.
- */
+/** Resolve a string outside React (class components, non-render code); prefer {@link useUiText} in components. */
 export const uiText: TFn = (key, vars) => interpolate(fromCatalog(key) ?? key, vars)
 
-/**
- * Resolve this package's own strings, re-rendering when the language changes.
- *
- * @param override The app's own `t`. Used when it actually has a translation for
- *   the key — in the org's format an untranslated key comes back as the key
- *   itself, which is the signal to fall through to this package's catalogue.
- */
+/** Resolve this package's strings and re-render on a language change; `override` wins when it returns more than the key. */
 export function useUiText(override?: TFn): TFn {
   useSyncExternalStore(subscribe, snapshot, snapshot)
 

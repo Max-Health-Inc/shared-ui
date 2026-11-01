@@ -55,16 +55,11 @@ export async function safeFetch<T>(url: string, init?: SafeFetchOptions): Promis
   }
 
   if (!res.ok) {
-    let body: Record<string, unknown> | null = null
-    try {
-      body = await res.json() as Record<string, unknown>
-    } catch {
-      // Response may not be JSON
-    }
+    const parsed: unknown = await res.json().catch(() => null)
+    const body = isJsonObject(parsed) ? parsed : null
 
     const message = extractErrorMessage(body, res)
 
-    // Detect auth errors and route through the bus
     if (!suppressAuthError && isAuthError(res.status, body)) {
       reportAuthError(message)
     }
@@ -100,6 +95,10 @@ export async function safeFetchResult(
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function isJsonObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+}
 
 function extractErrorMessage(body: Record<string, unknown> | null, res: Response): string {
   if (!body) return `Unexpected error (HTTP ${String(res.status)})`

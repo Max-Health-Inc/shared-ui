@@ -173,6 +173,13 @@ describe("the env the app passes in", () => {
     expect(appBaseUrl()).toBe(`${origin}/apps/consent/`)
   })
 
+  it("keeps the trailing slash for a hand-set base, so the callback stays under it", () => {
+    setAppBasePath("/apps/consent")
+    expect(appBaseUrl()).toBe(`${origin}/apps/consent/`)
+    const cfg = createSmartAppConfig({ clientId: "x", scopes: "openid", env: { BASE_URL: "/viewer" } })
+    expect(cfg.redirectUri).toBe(`${origin}/viewer/callback`)
+  })
+
   it("treats an absent or empty BASE_URL as the origin root", () => {
     createSmartAppConfig({ clientId: "x", scopes: "openid", env: { BASE_URL: "" } })
     expect(appBaseUrl()).toBe(`${origin}/`)
