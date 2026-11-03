@@ -31,17 +31,17 @@ class ApiErrorImpl extends Error implements ApiError {
  * Use this for apps that authenticate via session cookies (AIHR, admin-ui)
  * rather than SMART bearer tokens (use `createAuthFetch` for those).
  *
+ * `parse` turns the JSON body into the caller's type, so the response is checked rather than
+ * asserted; a 204 hands it `undefined`.
+ *
  * @example
  * ```ts
- * import { safeFetch } from "@max-health-inc/shared-ui"
- *
- * const session = await safeFetch<SessionInfo>("/api/auth/session")
- * const patients = await safeFetch<Patient[]>("/api/patients")
+ * const session = await safeFetch("/api/auth/session", parseSessionInfo)
  * ```
  *
  * @throws {ApiError} on non-2xx responses (after reporting to auth-error bus if applicable)
  */
-export async function safeFetch<T>(url: string, init?: SafeFetchOptions): Promise<T> {
+export async function safeFetch<T>(url: string, parse: (body: unknown) => T, init?: SafeFetchOptions): Promise<T> {
   const { suppressAuthError, ...fetchInit } = init ?? {}
 
   let res: Response
@@ -67,12 +67,9 @@ export async function safeFetch<T>(url: string, init?: SafeFetchOptions): Promis
     throw new ApiErrorImpl(res.status, message, body)
   }
 
-  // Handle 204 No Content
-  if (res.status === 204) {
-    return undefined as T
-  }
-
-  return res.json() as Promise<T>
+  if (res.status === 204) return parse(undefined)
+  const body: unknown = await res.json()
+  return parse(body)
 }
 
 /**
@@ -84,7 +81,7 @@ export async function safeFetchResult(
   init?: SafeFetchOptions,
 ): Promise<{ data: unknown; error: null } | { data: null; error: ApiError }> {
   try {
-    const data: unknown = await safeFetch<unknown>(url, init)
+    const data = await safeFetch(url, (body) => body, init)
     return { data, error: null }
   } catch (err) {
     if (err instanceof ApiErrorImpl) {
