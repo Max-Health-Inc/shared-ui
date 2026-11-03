@@ -29,6 +29,7 @@ export { AppHeader, type AppHeaderProps } from "./components/app-header"
 export { UserProfileFormFields, type UserProfileFormFieldsProps, type UserProfileData } from "./components/user-profile-fields"
 export { SmartAppShell, usePatientId, type SmartAppShellProps } from "./components/smart-app-shell"
 export { SignInLanding, type SignInLandingProps } from "./components/sign-in-landing"
+export { PasscodePrompt, type PasscodePromptProps } from "./components/passcode-prompt"
 export { PwaInstallButton, type PwaInstallButtonProps } from "./components/pwa-install-button"
 export { ServiceWorkerUpdatePrompt, type ServiceWorkerUpdatePromptProps } from "./components/service-worker-update-banner"
 
@@ -59,7 +60,7 @@ export { createSmartAppConfig, createSmartAuth, buildFhirBaseUrl, buildAppStoreU
 export { CHART_COLORS } from "./lib/chart-colors"
 
 // FHIR helpers
-export { formatHumanName, formatHumanNames, humanNameText, type FhirHumanName } from "./lib/fhir-helpers"
+export { conceptLabel, conceptName, formatHumanName, formatHumanNames, humanNameText, type FhirHumanName } from "./lib/fhir-helpers"
 
 export {
   formatDate,
@@ -134,6 +135,8 @@ export {
 export {
   useScene,
   SCENES,
+  isScene,
+  readStoredScene,
   type Scene,
   type UseSceneOptions,
 } from "./hooks/use-scene"

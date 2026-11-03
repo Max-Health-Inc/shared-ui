@@ -1,6 +1,6 @@
 "use client"
 
-import { useScene, SCENES, type Scene } from "../hooks/use-scene"
+import { useScene, isScene, SCENES, type Scene } from "../hooks/use-scene"
 import { useUiText, type TFn } from "../lib/ui-text"
 import { cn } from "../lib/utils"
 import { Label } from "./label"
@@ -80,10 +80,7 @@ function ScenePicker({
       <Select
         value={scene}
         onValueChange={(value) => {
-          // Narrowed against SCENES rather than asserted, so an unknown value from
-          // the select is ignored instead of stored as a scene that does not exist.
-          const picked = SCENES.find((option) => option.id === value)
-          if (picked) setScene(picked.id)
+          if (isScene(value)) setScene(value)
         }}
       >
         <SelectTrigger className="w-full" aria-label={labelText}>

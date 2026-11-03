@@ -33,3 +33,33 @@ export function formatHumanNames(names: readonly FhirHumanName[] | undefined): s
 export function formatHumanName(names?: readonly FhirHumanName[]): string {
   return formatHumanNames(names) ?? "Unknown"
 }
+
+function displayText(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined
+  const trimmed = value.trim()
+  return trimmed === "" ? undefined : trimmed
+}
+
+function firstCoding(concept: object): object | undefined {
+  if (!("coding" in concept) || !Array.isArray(concept.coding)) return undefined
+  const first: unknown = concept.coding[0]
+  return typeof first === "object" && first !== null ? first : undefined
+}
+
+/** A CodeableConcept's name: the `text` a person gave it, else its first coding's display. */
+export function conceptName(concept: unknown): string | undefined {
+  if (typeof concept !== "object" || concept === null) return undefined
+  const text = "text" in concept ? displayText(concept.text) : undefined
+  if (text) return text
+  const coding = firstCoding(concept)
+  return coding && "display" in coding ? displayText(coding.display) : undefined
+}
+
+/** {@link conceptName}, else the bare code of its first coding. */
+export function conceptLabel(concept: unknown): string | undefined {
+  const name = conceptName(concept)
+  if (name) return name
+  if (typeof concept !== "object" || concept === null) return undefined
+  const coding = firstCoding(concept)
+  return coding && "code" in coding ? displayText(coding.code) : undefined
+}

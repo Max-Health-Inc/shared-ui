@@ -10,6 +10,19 @@ export const SCENES: { id: Scene; name: string; description: string }[] = [
 
 const DEFAULT_SCENE: Scene = "perspective-grid";
 
+export function isScene(value: string): value is Scene {
+  return SCENES.some((entry) => entry.id === value);
+}
+
+export function readStoredScene(storageKey: string, fallback: Scene): Scene {
+  try {
+    const stored = localStorage.getItem(storageKey);
+    return stored !== null && isScene(stored) ? stored : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 function applyScene(scene: Scene) {
   document.body.setAttribute("data-scene", scene);
 }
@@ -31,21 +44,14 @@ export function useScene({
   storageKey = "scene",
   defaultScene = DEFAULT_SCENE,
 }: UseSceneOptions = {}) {
-  const [scene, setSceneState] = useState<Scene>(() => {
-    try {
-      const stored = localStorage.getItem(storageKey);
-      return (stored as Scene | null) ?? defaultScene;
-    } catch {
-      return defaultScene;
-    }
-  });
+  const [scene, setSceneState] = useState<Scene>(() => readStoredScene(storageKey, defaultScene));
 
   const setScene = useCallback(
     (next: Scene) => {
       try {
         localStorage.setItem(storageKey, next);
       } catch {
-        // localStorage unavailable (e.g. private browsing with storage blocked)
+        // storage blocked; the choice lasts for this page only
       }
       setSceneState(next);
       applyScene(next);
@@ -53,7 +59,6 @@ export function useScene({
     [storageKey],
   );
 
-  // Apply persisted/default scene on first mount
   useEffect(() => {
     applyScene(scene);
   }, [scene]);

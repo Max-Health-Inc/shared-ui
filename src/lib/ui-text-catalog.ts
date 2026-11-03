@@ -175,6 +175,11 @@ export const UI_TEXT: Record<string, readonly string[]> = {
     "Preferenze per questa app, salvate su questo dispositivo.",
   ],
 
+  // ── Shared links ──────────────────────────────────────────────────────────
+  "Passcode Required": ["Zugangscode erforderlich", "Code d'accès requis", "Código de acceso obligatorio", "Codice di accesso richiesto"],
+  "Enter passcode": ["Zugangscode eingeben", "Saisir le code d'accès", "Introducir el código de acceso", "Inserisci il codice di accesso"],
+  Unlock: ["Entsperren", "Déverrouiller", "Desbloquear", "Sblocca"],
+
   // ── Settings & billing ───────────────────────────────────────────────────
   "All settings": ["Alle Einstellungen", "Tous les paramètres", "Todos los ajustes", "Tutte le impostazioni"],
   Free: ["Kostenlos", "Gratuit", "Gratis", "Gratis"],
