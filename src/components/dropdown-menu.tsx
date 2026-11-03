@@ -7,10 +7,12 @@ import { cn } from "../lib/utils"
 import { useLayerZIndex } from "../hooks/use-modal-stack"
 import { CheckIcon, ChevronRightIcon } from "lucide-react"
 
+/** Non-modal by default: a modal menu that opens a dialog can leave body pointer-events stuck at none (radix-ui/primitives#3317). */
 function DropdownMenu({
+  modal = false,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Root>) {
-  return <DropdownMenuPrimitive.Root data-slot="dropdown-menu" {...props} />
+  return <DropdownMenuPrimitive.Root data-slot="dropdown-menu" modal={modal} {...props} />
 }
 
 function DropdownMenuPortal({
