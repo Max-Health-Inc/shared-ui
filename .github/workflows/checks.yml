@@ -1,58 +1,17 @@
 name: Checks
 
-# The quality gate, defined ONCE and used twice:
-#   - on every pull request, which previously had no checks at all (publish.yml only
-#     triggers on push to main, so a PR could be merged entirely unverified)
-#   - by publish.yml via `workflow_call`, so a release runs exactly the same suite
-#     instead of a second copy of these steps that can drift from this one
-#
-# CI workflows are a known duplication hotspot across the org, so this is deliberately
-# a reusable workflow rather than a file to copy.
+# One quality gate for pull requests and for publish.yml, which calls this via workflow_call.
 on:
   pull_request:
   workflow_call:
 
-permissions:
-  contents: read
-  packages: read
-
 jobs:
   check:
-    name: lint + typecheck + test + build
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Install dependencies
-        # The committed .npmrc points @max-health-inc and @max-network at GH Packages and
-        # reads its token from ${GITHUB_TOKEN}, so the install needs the org's cross-org read
-        # token. The run's own GITHUB_TOKEN would cover @max-health-inc/config (public, same
-        # org) but NOT @max-network, which is a different org.
-        #
-        # This step failed 401 on every run until 2026-08-05 for a dull reason worth writing
-        # down: the secret was named PACKAGES_TOKEN here, so GH_PACKAGES_TOKEN did not exist
-        # and the expression expanded to an EMPTY string, leaving `_authToken=` in .npmrc.
-        # The registry answers 401 to that exactly as it would to a bad token. Note the env
-        # block still logs `GITHUB_TOKEN: ***` when the secret is missing, so a masked value
-        # in the log is NOT evidence that a secret is set.
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
-        run: bun install
-
-      - name: Lint
-        run: bun run lint
-
-      - name: Typecheck
-        run: bun run typecheck
-
-      - name: Test
-        run: bun test
-
-      - name: Build
-        run: bun run build
+    uses: Max-Health-Inc/.github/.github/workflows/check.yml@main
+    with:
+      package-manager: bun
+      lint: bun run lint
+      typecheck: bun run typecheck
+      test: bun test
+      build: bun run build
+    secrets: inherit
