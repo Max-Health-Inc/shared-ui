@@ -105,6 +105,7 @@ export const UI_TEXT: Record<string, readonly string[]> = {
   ],
   "Reload Page": ["Seite neu laden", "Recharger la page", "Recargar la página", "Ricarica la pagina"],
   "Try Again": ["Erneut versuchen", "Réessayer", "Inténtelo de nuevo", "Riprova"],
+  Continue: ["Weiter", "Continuer", "Continuar", "Continua"],
   "Technical details": ["Technische Details", "Détails techniques", "Detalles técnicos", "Dettagli tecnici"],
 
   // ── Service states ────────────────────────────────────────────────────────

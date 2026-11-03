@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { authorizationErrorOf, deepLinkOf, displayNameFromIdToken, restorableDeepLink } from "./use-smart-auth"
+import { authorizationRefusalOf, deepLinkOf, displayNameFromIdToken, restorableDeepLink, trustedRefusalUri } from "./use-smart-auth"
 
 /** Build an id_token whose payload is base64url, UNPADDED — the shape a real IdP emits. */
 function idTokenFor(payload: Record<string, unknown>): string {
@@ -69,18 +69,41 @@ describe("restorableDeepLink", () => {
   })
 })
 
-describe("authorizationErrorOf", () => {
-  test("reads the server's description of a refused authorization", () => {
-    expect(authorizationErrorOf("?error=invalid_scope&error_description=Invalid+scopes%3A+launch&state=x"))
-      .toBe("Invalid scopes: launch")
+describe("authorizationRefusalOf", () => {
+  test("reads the code, the server's description and its page", () => {
+    expect(authorizationRefusalOf("?error=access_denied&error_description=Not+linked&error_uri=https%3A%2F%2Fa.example%2Fsetup&state=x"))
+      .toEqual({ error: "access_denied", description: "Not linked", uri: "https://a.example/setup" })
   })
 
-  test("falls back to the error code when there is no description", () => {
-    expect(authorizationErrorOf("?error=access_denied&state=x")).toBe("access_denied")
+  test("keeps the bare code when the server said nothing more", () => {
+    expect(authorizationRefusalOf("?error=access_denied&state=x")).toEqual({ error: "access_denied" })
   })
 
   test("is null on a successful callback or an ordinary page", () => {
-    expect(authorizationErrorOf("?code=abc&state=x")).toBeNull()
-    expect(authorizationErrorOf("")).toBeNull()
+    expect(authorizationRefusalOf("?code=abc&state=x")).toBeNull()
+    expect(authorizationRefusalOf("")).toBeNull()
+  })
+})
+
+describe("trustedRefusalUri", () => {
+  const origin = "https://account.example"
+  const refusalTo = (uri: string) => ({ error: "access_denied", uri })
+
+  test("follows a page on a trusted origin", () => {
+    expect(trustedRefusalUri(refusalTo(`${origin}/setup?x=1`), [origin])).toBe(`${origin}/setup?x=1`)
+  })
+
+  test.each([
+    ["another origin", "https://elsewhere.example/setup"],
+    ["plain http on the trusted host", `http://${new URL(origin).host}/setup`],
+    ["a script URL", "javascript:alert(1)"],
+    ["no URL at all", "not a url"],
+  ])("refuses %s", (_label, uri) => {
+    expect(trustedRefusalUri(refusalTo(uri), [origin])).toBeUndefined()
+  })
+
+  test("has nothing to follow without a refusal or a page", () => {
+    expect(trustedRefusalUri(null, [origin])).toBeUndefined()
+    expect(trustedRefusalUri({ error: "access_denied" }, [origin])).toBeUndefined()
   })
 })
