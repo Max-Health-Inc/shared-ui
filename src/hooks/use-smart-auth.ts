@@ -58,14 +58,29 @@ export function deepLinkOf(
   return `${location.pathname}${query}${location.hash}`
 }
 
-/** What the authorization server said when it redirected back with an error (RFC 6749 §4.1.2.1), else null. */
-export function authorizationErrorOf(search: string): string | null {
+/** An authorization server's refusal, as it redirected back (RFC 6749 §4.1.2.1). */
+export interface AuthorizationRefusal {
+  error: string
+  description?: string
+  /** A page about the error. Anyone can put one in a link, so only follow it on a trusted origin. */
+  uri?: string
+}
+
+/** The refusal on a redirect back from the authorization server, else null. */
+export function authorizationRefusalOf(search: string): AuthorizationRefusal | null {
   const params = new URLSearchParams(search)
   const error = params.get("error")
   if (!error) return null
   const description = params.get("error_description")?.trim()
-  if (description) return description
-  return error
+  const uri = params.get("error_uri")?.trim()
+  return { error, ...(description && { description }), ...(uri && { uri }) }
+}
+
+/** The refusal's `uri` when it is https on one of `origins`, else undefined. */
+export function trustedRefusalUri(refusal: AuthorizationRefusal | null, origins: readonly string[]): string | undefined {
+  if (!refusal?.uri || !URL.canParse(refusal.uri)) return undefined
+  const url = new URL(refusal.uri)
+  return url.protocol === "https:" && origins.includes(url.origin) ? url.href : undefined
 }
 
 /** True when the IdP answered a `prompt=none` request by saying it needs the user (OIDC Core §3.1.2.6). */
@@ -140,6 +155,7 @@ export function useSmartAuth({
     return "loading"
   })
   const [error, setError] = useState<string | null>(null)
+  const [refusal, setRefusal] = useState<AuthorizationRefusal | null>(null)
   const [resumable, setResumable] = useState(false)
   const callbackHandled = useRef(false)
   const [resolvedName, setResolvedName] = useState<string | undefined>(undefined)
@@ -178,13 +194,14 @@ export function useSmartAuth({
 
     // A refused authorization comes back with ?error= instead of a code: say why, and leave
     // the user on the page they started from rather than on the redirect URI.
-    const refused = authorizationErrorOf(window.location.search)
+    const refused = authorizationRefusalOf(window.location.search)
     if (refused) {
       const saved = sessionStorage.getItem(DEEPLINK_KEY)
       sessionStorage.removeItem(DEEPLINK_KEY)
       window.history.replaceState({}, "", restorableDeepLink(saved, window.location.pathname))
       void Promise.resolve().then(() => {
-        setError(refused)
+        setError(refused.description ?? refused.error)
+        setRefusal(refused)
         setState("error")
       })
       return
@@ -343,6 +360,8 @@ export function useSmartAuth({
   return {
     state,
     error,
+    /** Set when the error is the authorization server refusing, so a view can act on its code. */
+    refusal,
     resumable,
     handleLogin,
     handleReauthenticate,

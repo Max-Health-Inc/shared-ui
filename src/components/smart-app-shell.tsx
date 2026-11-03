@@ -1,13 +1,14 @@
 import { createContext, useContext, type ComponentType, type ReactNode } from "react"
-import { LogIn, LogOut, AlertTriangle, WifiOff, ShieldAlert, RefreshCw, type LucideIcon } from "lucide-react"
+import { ArrowRight, LogIn, LogOut, AlertTriangle, RefreshCw, type LucideIcon } from "lucide-react"
 import { AppHeader, type AppHeaderProps } from "./app-header"
 import { Button } from "./button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "./dialog"
 import { Spinner } from "./spinner"
 import { ServiceUnavailable } from "./service-unavailable"
 import { SignInLanding } from "./sign-in-landing"
-import { useSmartAuth, type SmartAuthLike, type UseSmartAuthOptions } from "../hooks/use-smart-auth"
+import { trustedRefusalUri, useSmartAuth, type AuthorizationRefusal, type SmartAuthLike, type UseSmartAuthOptions } from "../hooks/use-smart-auth"
 import { useUiText, type TFn } from "../lib/ui-text"
+import { classifyAuthError } from "../lib/auth-error-info"
 
 /** Context providing the current patient ID (reactive — updates on Switch Patient). */
 const PatientContext = createContext<string | undefined>(undefined)
@@ -78,7 +79,7 @@ export function SmartAppShell({
   t: appT,
 }: SmartAppShellProps) {
   const t = useUiText(appT)
-  const { state, error, resumable, handleLogin, handleReauthenticate, handleLogout, patientId, userName, canSwitchPatient } = useSmartAuth({
+  const { state, error, refusal, resumable, handleLogin, handleReauthenticate, handleLogout, patientId, userName, canSwitchPatient } = useSmartAuth({
     smartAuth,
     ...hookOptions,
   })
@@ -127,7 +128,7 @@ export function SmartAppShell({
           renderError ? (
             renderError(error, handleLogin)
           ) : (
-            <AuthErrorBoundary error={error} onRetry={handleLogin} onSignOut={handleLogout} t={t} />
+            <AuthErrorBoundary error={error} refusal={refusal} trustedOrigins={originsOf(accountUrl)} onRetry={handleLogin} onSignOut={handleLogout} t={t} />
           )
         ) : state === "unauthenticated" ? (
           renderUnauthenticated ? (
@@ -175,85 +176,57 @@ function SessionExpiredDialog({ open, error, onSignIn, onSignOut, t }: { open: b
   )
 }
 
+/** The origin of the account site, which is where a refusal may send someone to fix it. */
+function originsOf(url: string | undefined): string[] {
+  return url && URL.canParse(url) ? [new URL(url).origin] : []
+}
+
 // ── Auth Error Boundary ─────────────────────────────────────────────────────
 
-interface AuthErrorInfo {
-  icon: LucideIcon
-  /** Source strings, resolved by the view — this helper runs outside React. */
-  title: string
-  message: string
-  isNetwork: boolean
+interface AuthErrorBoundaryProps {
+  error: string | null
+  refusal: AuthorizationRefusal | null
+  /** Origins whose pages a refusal may send the user to, e.g. the member account site. */
+  trustedOrigins: readonly string[]
+  onRetry: () => void
+  onSignOut: () => void
+  t: TFn
 }
 
-function classifyAuthError(error: string | null): AuthErrorInfo {
-  const msg = (error ?? "").toLowerCase()
-
-  if (msg.includes("failed to fetch") || msg.includes("networkerror") || msg.includes("network")) {
-    return {
-      icon: WifiOff,
-      title: "Connection Problem",
-      message: "Unable to reach the authentication server. Please check your internet connection and try again.",
-      isNetwork: true,
-    }
-  }
-
-  if (msg.includes("timeout") || msg.includes("timed out")) {
-    return {
-      icon: WifiOff,
-      title: "Request Timed Out",
-      message: "The authentication server took too long to respond. This is usually temporary — please try again.",
-      isNetwork: true,
-    }
-  }
-
-  if (msg.includes("invalid_client") || msg.includes("unauthorized_client")) {
-    return {
-      icon: ShieldAlert,
-      title: "Configuration Error",
-      message: "This application is not properly registered with the identity provider. Please contact your administrator.",
-      isNetwork: false,
-    }
-  }
-
-  if (msg.includes("access_denied") || msg.includes("consent")) {
-    return {
-      icon: ShieldAlert,
-      title: "Access Denied",
-      message: "You do not have permission to access this application, or the required consent was not granted.",
-      isNetwork: false,
-    }
-  }
-
-  return {
-    icon: AlertTriangle,
-    title: "Something Went Wrong",
-    message: "We couldn\u2019t complete the sign-in process. This may be a temporary issue.",
-    isNetwork: false,
-  }
-}
-
-function AuthErrorBoundary({ error, onRetry, onSignOut, t }: { error: string | null; onRetry: () => void; onSignOut: () => void; t: TFn }) {
-  const info = classifyAuthError(error)
+function AuthErrorBoundary({ error, refusal, trustedOrigins, onRetry, onSignOut, t }: AuthErrorBoundaryProps) {
+  const info = classifyAuthError(error, refusal)
+  const nextStep = trustedRefusalUri(refusal, trustedOrigins)
 
   return (
     <ServiceUnavailable
       layout="inline"
       icon={info.icon}
       title={t(info.title)}
-      description={t(info.message)}
-      details={error ?? undefined}
+      description={refusal?.description ?? t(info.message)}
+      details={refusal?.error ?? error ?? undefined}
       t={t}
       action={
         <div className="flex flex-col items-center gap-3">
           <div className="flex gap-3">
-            <Button variant="outline" onClick={() => { window.location.reload() }}>
-              <RefreshCw className="size-4" />
-              {t("Reload Page")}
-            </Button>
-            <Button onClick={onRetry}>
+            {/* A refusal is not a loading glitch, so reloading cannot help it. */}
+            {!refusal && (
+              <Button variant="outline" onClick={() => { window.location.reload() }}>
+                <RefreshCw className="size-4" />
+                {t("Reload Page")}
+              </Button>
+            )}
+            <Button variant={nextStep ? "outline" : "default"} onClick={onRetry}>
               <LogIn className="size-4" />
               {t("Try Again")}
             </Button>
+            {nextStep && (
+              <Button asChild>
+                <a href={nextStep}>
+                  <ArrowRight className="size-4" />
+                  {t("Continue")}
+                </a>
+              </Button>
+            )}
           </div>
           {/* Retry repeats the flow as the same user; only signing out changes the outcome. */}
           <Button variant="ghost" size="sm" onClick={onSignOut}>
