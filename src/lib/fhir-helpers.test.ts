@@ -70,6 +70,10 @@ describe("conceptName", () => {
     expect(conceptName({ ...coded, text: "  " })).toBe("Hypertensive disorder")
   })
 
+  it("takes the first coding that has a display, as Blue Button v3 puts it on the second", () => {
+    expect(conceptName({ coding: [{ system: "https://bluebutton.cms.gov/resources/codesystem/eob-type", code: "CARRIER" }, { code: "professional", display: "Professional" }] })).toBe("Professional")
+  })
+
   it("is undefined for a concept with no name, or for no concept", () => {
     expect(conceptName({ coding: [{ code: "38341003" }] })).toBeUndefined()
     expect(conceptName({ coding: "not a list", text: 7 })).toBeUndefined()

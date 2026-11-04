@@ -40,26 +40,23 @@ function displayText(value: unknown): string | undefined {
   return trimmed === "" ? undefined : trimmed
 }
 
-function firstCoding(concept: object): object | undefined {
-  if (!("coding" in concept) || !Array.isArray(concept.coding)) return undefined
-  const first: unknown = concept.coding[0]
-  return typeof first === "object" && first !== null ? first : undefined
+function firstAmongCodings(concept: unknown, read: (coding: object) => unknown): string | undefined {
+  if (typeof concept !== "object" || concept === null || !("coding" in concept) || !Array.isArray(concept.coding)) return undefined
+  const codings: readonly unknown[] = concept.coding
+  for (const coding of codings) {
+    const value = typeof coding === "object" && coding !== null ? displayText(read(coding)) : undefined
+    if (value) return value
+  }
+  return undefined
 }
 
-/** A CodeableConcept's name: the `text` a person gave it, else its first coding's display. */
+/** A CodeableConcept's name: the `text` a person gave it, else the first display among its codings. */
 export function conceptName(concept: unknown): string | undefined {
-  if (typeof concept !== "object" || concept === null) return undefined
-  const text = "text" in concept ? displayText(concept.text) : undefined
-  if (text) return text
-  const coding = firstCoding(concept)
-  return coding && "display" in coding ? displayText(coding.display) : undefined
+  const text = typeof concept === "object" && concept !== null && "text" in concept ? displayText(concept.text) : undefined
+  return text ?? firstAmongCodings(concept, (coding) => ("display" in coding ? coding.display : undefined))
 }
 
-/** {@link conceptName}, else the bare code of its first coding. */
+/** {@link conceptName}, else the first bare code among its codings. */
 export function conceptLabel(concept: unknown): string | undefined {
-  const name = conceptName(concept)
-  if (name) return name
-  if (typeof concept !== "object" || concept === null) return undefined
-  const coding = firstCoding(concept)
-  return coding && "code" in coding ? displayText(coding.code) : undefined
+  return conceptName(concept) ?? firstAmongCodings(concept, (coding) => ("code" in coding ? coding.code : undefined))
 }
