@@ -6,7 +6,7 @@ import { silentSignIn as createSilentSignIn } from "../lib/silent-sign-in"
 const DEEPLINK_KEY = "__smart_deeplink__"
 const silentAttempt = createSilentSignIn("__smart_silent_attempted__")
 const SILENT_REFUSALS = new Set(["login_required", "interaction_required", "consent_required", "account_selection_required"])
-const isBrowser = typeof window !== "undefined"
+const isBrowser = (): boolean => typeof window !== "undefined"
 
 export type SmartAppState =
   | "loading"
@@ -146,7 +146,7 @@ export function useSmartAuth({
 }: UseSmartAuthOptions) {
   const [state, setState] = useState<SmartAppState>(() => {
     if (skip) return "unauthenticated"
-    if (!isBrowser) return "loading"
+    if (!isBrowser()) return "loading"
     const params = new URLSearchParams(window.location.search)
     // If there's a callback or EHR launch pending, start in loading state
     if (params.has("code") || (ehrLaunch && params.has("launch") && params.has("iss"))) return "loading"
@@ -164,7 +164,7 @@ export function useSmartAuth({
 
   useEffect(() => {
     if (skip) return
-    if (!isBrowser) return
+    if (!isBrowser()) return
     if (smartAuth.relayCallbackToOpener?.()) return
 
     // Only a mounted app reports an auth error, so its page is worth keeping.
@@ -282,7 +282,7 @@ export function useSmartAuth({
   }, [ehrLaunch, onAuthenticated, silentSignIn, skip, smartAuth])
 
   const handleLogin = useCallback(() => {
-    if (isBrowser) sessionStorage.setItem(DEEPLINK_KEY, deepLinkOf(window.location))
+    if (isBrowser()) sessionStorage.setItem(DEEPLINK_KEY, deepLinkOf(window.location))
     const auth = startAuth ?? (() => smartAuth.authorize())
     void auth().catch((err: unknown) => {
       setError(

@@ -15,6 +15,7 @@
  */
 import { afterEach, beforeEach, describe, expect, it } from "bun:test"
 import { Window } from "happy-dom"
+import { installDomGlobals } from "../testing/dom-globals"
 import { createElement } from "react"
 import { act } from "react"
 import { createRoot, type Root } from "react-dom/client"
@@ -70,6 +71,7 @@ class FakeServiceWorkerContainer extends FakeEmitter {
 }
 
 let window: Window
+let restoreDom: () => void
 let container: FakeServiceWorkerContainer
 let reloadCalls: number
 let root: Root
@@ -78,10 +80,7 @@ let host: HTMLElement
 /** Install a fresh global DOM + navigator.serviceWorker mock before each test. */
 beforeEach(() => {
   window = new Window({ url: "https://app.test/" })
-  const g = globalThis as unknown as Record<string, unknown>
-  g.window = window
-  g.document = window.document
-  g.navigator = window.navigator
+  restoreDom = installDomGlobals(window)
 
   container = new FakeServiceWorkerContainer()
   Object.defineProperty(window.navigator, "serviceWorker", {
@@ -104,6 +103,7 @@ beforeEach(() => {
 
 afterEach(() => {
   act(() => root.unmount())
+  restoreDom()
 })
 
 /** Render the hook and expose its latest return value via a captured ref. */

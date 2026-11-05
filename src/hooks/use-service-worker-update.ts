@@ -6,10 +6,10 @@ const reloadedPages = new WeakSet<object>()
 /** How long to wait for the new worker to report back before reloading anyway. */
 const DEFAULT_RELOAD_TIMEOUT_MS = 4000
 
-function reloadOnce(): void {
-  if (reloadedPages.has(window)) return
-  reloadedPages.add(window)
-  window.location.reload()
+function reloadOnce(page: Window): void {
+  if (reloadedPages.has(page)) return
+  reloadedPages.add(page)
+  page.location.reload()
 }
 
 export interface UseServiceWorkerUpdateOptions {
@@ -157,23 +157,27 @@ export function useServiceWorkerUpdate(
     // Ask the registration at click time: on a page left open, the worker seen earlier may
     // have gone redundant (a newer deploy) or already activated (accepted in another tab).
     const waiting = registrationRef.current?.waiting ?? (tracked?.state === "installed" ? tracked : null)
+    const page = window
+    const reloadPage = () => {
+      reloadOnce(page)
+    }
 
     if (!waiting) {
       // Nothing was ever flagged: a no-op that latches no spinner. Flagged but no longer
       // waiting: the update is already active, so loading the page picks it up.
       if (!tracked) return
       setReloading(true)
-      reloadOnce()
+      reloadPage()
       return
     }
 
     setReloading(true)
-    navigator.serviceWorker.addEventListener("controllerchange", reloadOnce, { once: true })
+    navigator.serviceWorker.addEventListener("controllerchange", reloadPage, { once: true })
     waiting.addEventListener("statechange", () => {
-      if (waiting.state === "activated") reloadOnce()
+      if (waiting.state === "activated") reloadPage()
     })
     waiting.postMessage({ type: "SKIP_WAITING" })
-    globalThis.setTimeout(reloadOnce, reloadTimeoutMs)
+    globalThis.setTimeout(reloadPage, reloadTimeoutMs)
   }, [reloadTimeoutMs])
 
   const dismiss = useCallback(() => {

@@ -18,7 +18,8 @@
     "dist",
     "src",
     "scripts/encode-background-video.sh",
-    "!src/**/*.test.ts"
+    "!src/**/*.test.ts",
+    "!src/testing"
   ],
   "main": "./dist/index.js",
   "module": "./src/index.ts",

@@ -1,11 +1,19 @@
-import { afterEach, beforeEach, describe, expect, it } from "bun:test"
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { Window } from "happy-dom"
+import { installDomGlobals } from "../testing/dom-globals"
 import { act, createElement } from "react"
 import { createRoot, type Root } from "react-dom/client"
 
 const win = new Window({ url: "https://app.example.com/?StudyInstanceUID=1.2.3" })
-Object.assign(globalThis, { window: win, document: win.document, sessionStorage: win.sessionStorage })
+let restoreDom = installDomGlobals(win)
 Reflect.set(globalThis, "IS_REACT_ACT_ENVIRONMENT", true)
+beforeAll(() => {
+  restoreDom()
+  restoreDom = installDomGlobals(win)
+})
+afterAll(() => {
+  restoreDom()
+})
 
 const { isSilentSignInRefusal, useSmartAuth } = await import("./use-smart-auth")
 const { reportAuthError } = await import("../lib/auth-error")
