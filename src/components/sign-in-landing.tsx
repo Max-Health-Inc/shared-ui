@@ -3,6 +3,7 @@ import { LogIn, type LucideIcon } from "lucide-react"
 import { Button } from "./button"
 import { useBranding } from "../hooks/use-branding"
 import { useUiText, type TFn } from "../lib/ui-text"
+import { cn } from "../lib/utils"
 
 export interface SignInLandingProps {
   title: string
@@ -19,6 +20,8 @@ export interface SignInLandingProps {
   actions?: ReactNode
   /** Below the sign-in button, e.g. an FAQ or identity provider shortcuts. */
   children?: ReactNode
+  /** Behind the whole page, e.g. a `BackgroundVideo`; the landing content is lifted above it. */
+  background?: ReactNode
   t?: TFn
 }
 
@@ -33,6 +36,7 @@ export function SignInLanding({
   notice,
   actions,
   children,
+  background,
   t: appT,
 }: SignInLandingProps) {
   const t = useUiText(appT)
@@ -45,30 +49,33 @@ export function SignInLanding({
   )
 
   return (
-    <div data-slot="sign-in-landing" className="flex flex-col items-center py-16 gap-8 px-4">
-      {notice}
-      <div className="w-full text-center space-y-2">
-        {brand?.logoUrl ? (
-          <img src={brand.logoUrl} alt={brand.name} className="h-16 mx-auto" />
-        ) : (
-          <Icon className="size-16 mx-auto text-muted-foreground/30" />
-        )}
-        <h2 className="text-xl font-semibold break-words sm:text-2xl">{title}</h2>
-        <div className="mx-auto w-full max-w-md text-muted-foreground">{description}</div>
+    <>
+      {background}
+      <div data-slot="sign-in-landing" className={cn("flex flex-col items-center py-16 gap-8 px-4", background !== undefined && "relative z-10")}>
+        {notice}
+        <div className="w-full text-center space-y-2">
+          {brand?.logoUrl ? (
+            <img src={brand.logoUrl} alt={brand.name} className="h-16 mx-auto" />
+          ) : (
+            <Icon className="size-16 mx-auto text-muted-foreground/30" />
+          )}
+          <h2 className="text-xl font-semibold break-words sm:text-2xl">{title}</h2>
+          <div className="mx-auto w-full max-w-md text-muted-foreground">{description}</div>
+        </div>
+        <div className="flex flex-col sm:flex-row items-center gap-3">
+          {loginHref ? (
+            <Button size="lg" asChild disabled={loginDisabled}>
+              <a href={loginHref}>{label}</a>
+            </Button>
+          ) : (
+            <Button size="lg" onClick={onLogin} disabled={loginDisabled}>
+              {label}
+            </Button>
+          )}
+          {actions}
+        </div>
+        {children}
       </div>
-      <div className="flex flex-col sm:flex-row items-center gap-3">
-        {loginHref ? (
-          <Button size="lg" asChild disabled={loginDisabled}>
-            <a href={loginHref}>{label}</a>
-          </Button>
-        ) : (
-          <Button size="lg" onClick={onLogin} disabled={loginDisabled}>
-            {label}
-          </Button>
-        )}
-        {actions}
-      </div>
-      {children}
-    </div>
+    </>
   )
 }

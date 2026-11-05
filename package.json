@@ -1,6 +1,6 @@
 {
   "name": "@max-health-inc/shared-ui",
-  "version": "0.54.1",
+  "version": "0.55.0",
   "type": "module",
   "license": "MIT",
   "description": "Shared React UI components, hooks, and utilities for SMART on FHIR healthcare apps",
@@ -11,9 +11,13 @@
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
   },
+  "bin": {
+    "encode-background-video": "scripts/encode-background-video.sh"
+  },
   "files": [
     "dist",
     "src",
+    "scripts/encode-background-video.sh",
     "!src/**/*.test.ts"
   ],
   "main": "./dist/index.js",
@@ -53,12 +57,12 @@
     "prepublishOnly": "bun run build"
   },
   "peerDependencies": {
+    "i18next": "^26.0.0",
+    "i18next-browser-languagedetector": "^8.0.0",
+    "lucide-react": "^1.46.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
-    "i18next": "^26.0.0",
-    "react-i18next": "^17.0.0",
-    "i18next-browser-languagedetector": "^8.0.0",
-    "lucide-react": "^1.46.0"
+    "react-i18next": "^17.0.0"
   },
   "peerDependenciesMeta": {
     "i18next": {
