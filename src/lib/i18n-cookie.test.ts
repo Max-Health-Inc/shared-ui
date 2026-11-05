@@ -1,10 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it } from "bun:test"
 import type { i18n as I18nInstance } from "i18next"
 import { createAppI18n } from "./i18n"
+import { setUiLanguage } from "./ui-text"
 
 const translations = { _languages: ["de", "fr"], Save: ["Speichern", "Enregistrer"] }
 
 let writes: string[] = []
+const original = Object.getOwnPropertyDescriptor(globalThis, "document")
 
 function fakeDocument(protocol: string) {
   writes = []
@@ -32,7 +34,9 @@ function ready(instance: I18nInstance): Promise<void> {
 describe("createAppI18n cookie", () => {
   beforeEach(() => fakeDocument("https:"))
   afterEach(() => {
-    Reflect.deleteProperty(globalThis, "document")
+    if (original) Object.defineProperty(globalThis, "document", original)
+    else Reflect.deleteProperty(globalThis, "document")
+    setUiLanguage(undefined)
   })
 
   it("writes the chosen language to a locale cookie", async () => {

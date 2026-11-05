@@ -6,8 +6,13 @@
  * selection rule and the property that makes it safe for translation extraction: both arms
  * are values the caller already rendered, so the `t("…")` literals stay at the call site.
  */
-import { describe, it, expect } from "bun:test"
+import { afterEach, describe, it, expect } from "bun:test"
 import { plural, getSupportedLanguages, LOCALE_NAMES, createAppI18n, isTranslationMetaKey } from "./i18n"
+import { setUiLanguage } from "./ui-text"
+
+afterEach(() => {
+  setUiLanguage(undefined)
+})
 
 describe("plural", () => {
   it("takes the singular only at exactly one", () => {
