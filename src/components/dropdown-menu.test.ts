@@ -1,28 +1,25 @@
-import { afterAll, afterEach, beforeEach, describe, expect, it } from "bun:test"
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { Window } from "happy-dom"
+import { installDomGlobals } from "../testing/dom-globals"
 import { act, createElement, useState } from "react"
 import type { Root } from "react-dom/client"
 
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
-const DOM_GLOBALS = [
-  "window", "document", "navigator", "HTMLElement", "Element", "Node", "Event", "CustomEvent",
-  "KeyboardEvent", "MouseEvent", "PointerEvent", "FocusEvent", "MutationObserver", "ResizeObserver",
-  "NodeFilter", "getComputedStyle", "requestAnimationFrame", "cancelAnimationFrame", "DOMRect",
-] as const
-
 // Radix picks its layout-effect hook at import time, so the DOM must exist before the components load.
 const window = new Window({ url: "https://app.test/" })
-const g = globalThis as unknown as Record<string, unknown>
-const w = window as unknown as Record<string, unknown>
-const saved = Object.fromEntries(DOM_GLOBALS.map((key) => [key, g[key]]))
-for (const key of DOM_GLOBALS) g[key] = key === "window" ? window : w[key]
+let restoreDom = installDomGlobals(window)
 
 const { createRoot } = await import("react-dom/client")
 const { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } = await import("./dropdown-menu")
 const { Dialog, DialogContent, DialogDescription, DialogTitle } = await import("./dialog")
 
 let root: Root
+
+beforeAll(() => {
+  restoreDom()
+  restoreDom = installDomGlobals(window)
+})
 
 beforeEach(() => {
   const host = window.document.createElement("div")
@@ -37,7 +34,7 @@ afterEach(async () => {
 })
 
 afterAll(async () => {
-  for (const key of DOM_GLOBALS) g[key] = saved[key]
+  restoreDom()
   await window.happyDOM.close()
 })
 

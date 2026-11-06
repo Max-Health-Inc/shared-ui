@@ -22,5 +22,5 @@
      * 0.10.0 went out broken. Without the alias, such an import fails here too. */
   },
   "include": ["src"],
-  "exclude": ["node_modules", "dist", "src/**/*.test.ts"]
+  "exclude": ["node_modules", "dist", "src/**/*.test.ts", "src/testing"]
 }
