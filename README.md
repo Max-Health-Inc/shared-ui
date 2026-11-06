@@ -34,8 +34,7 @@ import "@max-health-inc/shared-ui/theme.css"
 ### Components
 - Button, Card, Badge, Input, Label, Select, Tabs, Dialog, Table, ScrollArea, Progress, Tooltip, DropdownMenu, Separator
 - AppHeader, PatientBanner, ErrorBoundary, Spinner, Toaster
-- SignInLanding — the signed-out screen with "SMART Login"; `SmartAppShell` renders it, and apps that need more on that screen (an FAQ, sign-up, identity provider shortcuts) pass it as `notice`, `actions` or children; `background` puts something like a `BackgroundVideo` behind the page
-- BackgroundVideo — a muted looping clip behind a page under a theme-aware scrim, poster only under reduced motion; encode the clip with `bunx encode-background-video <input> <name>-v1` (ffmpeg) and bump the `-vN` suffix for every new clip
+- SignInLanding — the signed-out screen with "SMART Login"; `SmartAppShell` renders it, and apps that need more on that screen (an FAQ, sign-up, identity provider shortcuts) pass it as `notice`, `actions` or children; `background` renders behind the page (fixed at `z-0`) and lifts the landing content to `relative z-10`
 - FilterToolbar, PageHeader, StatCard, ResponsiveTabsList
 - Faq — the org-wide question/answer disclosure list (one answer open at a time)
 - LegalDocument — a Privacy Policy or Terms page: effective date, jump-to contents, numbered sections; the app supplies the copy
