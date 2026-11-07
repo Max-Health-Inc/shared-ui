@@ -24,6 +24,9 @@ export const UI_TEXT: Record<string, readonly string[]> = {
   "Copied": ["Kopiert", "Copié", "Copiado", "Copiato"],
   "App Store": ["App Store", "App Store", "App Store", "App Store"],
   Install: ["Installieren", "Installer", "Instalar", "Installa"],
+  "Move panel": ["Fenster verschieben", "Déplacer le panneau", "Mover el panel", "Sposta il pannello"],
+  "Minimise panel": ["Fenster einklappen", "Réduire le panneau", "Minimizar el panel", "Riduci il pannello"],
+  "Expand panel": ["Fenster aufklappen", "Développer le panneau", "Expandir el panel", "Espandi il pannello"],
   "Install App": ["App installieren", "Installer l'application", "Instalar la app", "Installa l'app"],
 
   // ── Authentication states ─────────────────────────────────────────────────

@@ -35,6 +35,7 @@ import "@max-health-inc/shared-ui/theme.css"
 - Button, Card, Badge, Input, Label, Select, Tabs, Dialog, Table, ScrollArea, Progress, Tooltip, DropdownMenu, Separator
 - AppHeader, PatientBanner, ErrorBoundary, Spinner, Toaster
 - SignInLanding — the signed-out screen with "SMART Login"; `SmartAppShell` renders it, and apps that need more on that screen (an FAQ, sign-up, identity provider shortcuts) pass it as `notice`, `actions` or children; `background` renders behind the page (fixed at `z-0`) and lifts the landing content to `relative z-10`
+- FloatingPanel — a non-modal panel that floats over a view: drag its header or use the arrow keys on its grip to move it, fold it to its header, and pass `storageKey` to keep its place across visits; it never leaves the window
 - FilterToolbar, PageHeader, StatCard, ResponsiveTabsList
 - Faq — the org-wide question/answer disclosure list (one answer open at a time)
 - LegalDocument — a Privacy Policy or Terms page: effective date, jump-to contents, numbered sections; the app supplies the copy
