@@ -113,6 +113,7 @@ import { formatHumanNames, humanNameText } from "@max-health-inc/shared-ui/fhir"
 
 formatHumanNames(patient.name) // official name, else the first; undefined when empty
 humanNameText(practitioner.name?.[0]) // text, else prefix + given + family + suffix
+medicalRecordNumber(patient.identifier) // the current identifier typed MR; undefined when none is
 ```
 
 `formatHumanName(names)` (root export) is the UI label: the same name, or "Unknown".

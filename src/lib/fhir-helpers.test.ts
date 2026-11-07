@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test"
-import { conceptLabel, conceptName, formatHumanName, formatHumanNames, humanNameText } from "./fhir-helpers"
+import { conceptLabel, conceptName, formatHumanName, formatHumanNames, humanNameText, medicalRecordNumber } from "./fhir-helpers"
 
 describe("humanNameText", () => {
   it("is undefined for no name or a name with nothing usable", () => {
@@ -94,5 +94,35 @@ describe("conceptLabel", () => {
   it("is undefined when there is nothing to show", () => {
     expect(conceptLabel({ coding: [] })).toBeUndefined()
     expect(conceptLabel(null)).toBeUndefined()
+  })
+})
+
+describe("medicalRecordNumber", () => {
+  const typed = (code: string, value: string, use?: string) => ({
+    use,
+    type: { coding: [{ system: "http://terminology.hl7.org/CodeSystem/v2-0203", code }] },
+    value,
+  })
+
+  it("reads the identifier typed MR, wherever it sits in the list", () => {
+    const identifiers = [
+      { system: "https://github.com/synthetichealth/synthea", value: "8c5f1e7a-uuid" },
+      typed("SS", "999-12-3456"),
+      typed("MR", "MRN-4711"),
+    ]
+    expect(medicalRecordNumber(identifiers)).toBe("MRN-4711")
+  })
+
+  it("never shows another identifier as the MRN", () => {
+    expect(medicalRecordNumber([typed("SS", "999-12-3456"), { system: "urn:party-id", value: "42" }])).toBeUndefined()
+    expect(medicalRecordNumber(undefined)).toBeUndefined()
+  })
+
+  it("skips a retired MRN for the current one", () => {
+    expect(medicalRecordNumber([typed("MR", "OLD-1", "old"), typed("MR", "NEW-2")])).toBe("NEW-2")
+  })
+
+  it("ignores an MR code from another code system", () => {
+    expect(medicalRecordNumber([{ type: { coding: [{ system: "urn:local", code: "MR" }] }, value: "x" }])).toBeUndefined()
   })
 })

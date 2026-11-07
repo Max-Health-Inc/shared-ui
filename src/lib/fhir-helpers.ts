@@ -60,3 +60,22 @@ export function conceptName(concept: unknown): string | undefined {
 export function conceptLabel(concept: unknown): string | undefined {
   return conceptName(concept) ?? firstAmongCodings(concept, (coding) => ("code" in coding ? coding.code : undefined))
 }
+
+export interface FhirIdentifier {
+  use?: string
+  type?: { coding?: { system?: string; code?: string }[]; text?: string }
+  system?: string
+  value?: string
+}
+
+const IDENTIFIER_TYPE_SYSTEM = "http://terminology.hl7.org/CodeSystem/v2-0203"
+
+function isMedicalRecordNumber(identifier: FhirIdentifier): boolean {
+  return identifier.use !== "old"
+    && (identifier.type?.coding?.some((coding) => coding.system === IDENTIFIER_TYPE_SYSTEM && coding.code === "MR") ?? false)
+}
+
+/** The current identifier typed MR (v2-0203). Undefined when there is none, so no other identifier is shown as an MRN. */
+export function medicalRecordNumber(identifiers: readonly FhirIdentifier[] | undefined): string | undefined {
+  return displayText(identifiers?.find(isMedicalRecordNumber)?.value)
+}
