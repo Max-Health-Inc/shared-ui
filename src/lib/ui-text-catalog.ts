@@ -203,6 +203,12 @@ export const UI_TEXT: Record<string, readonly string[]> = {
     "Qualcosa è andato storto. Riprova.",
   ],
 
+  // ── Light / dark ──────────────────────────────────────────────────────────
+  "Toggle theme": ["Farbschema wechseln", "Changer de thème", "Cambiar tema", "Cambia tema"],
+  Light: ["Hell", "Clair", "Claro", "Chiaro"],
+  Dark: ["Dunkel", "Sombre", "Oscuro", "Scuro"],
+  System: ["System", "Système", "Sistema", "Sistema"],
+
   // ── Background scenes ────────────────────────────────────────────────────
   "Background Theme": ["Hintergrund", "Thème d'arrière-plan", "Tema de fondo", "Tema di sfondo"],
   "Choose the 3D background effect for the application.": [
