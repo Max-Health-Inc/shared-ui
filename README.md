@@ -95,8 +95,19 @@ const theme: ThemeScriptOptions = { defaultTheme: { daytime: { from: 8, to: 20 }
 | `disableTransitionOnChange` | provider | `false` | Suppress CSS transitions while switching |
 | `nonce` | both | | CSP nonce for the script, and for the provider's transition-suppressing `<style>` |
 
-`themeScript(options)` returns the same script as a string, for a `<head>` that is not
-rendered by React. A Content-Security-Policy without `'unsafe-inline'` must allow it: pass the
+A Vite SPA, whose `<head>` lives in `index.html`, gets the script from the build instead:
+
+```ts
+import { themeScriptPlugin } from "@max-health-inc/shared-ui/vite"
+
+export default defineConfig({ plugins: [react(), themeScriptPlugin(theme)] })
+```
+
+Keep `theme` in one module that both `vite.config.ts` and the `<ThemeProvider>` import, so
+the script and the provider read the same key and default.
+
+`themeScript(options)` returns the same script as a string, for any other `<head>` that is
+not rendered by React. A Content-Security-Policy without `'unsafe-inline'` must allow it: pass the
 page's nonce, or stamp the nonce onto every inline script where the HTML is served. The
 script resolves the theme with the same functions the provider uses (`chooseTheme`,
 `resolveTheme`), serialized, so the two cannot drift.
