@@ -65,6 +65,45 @@ full token surface (`success`/`warning`/`info`, the `main-*` scale, the shadow, 
 and spacing steps, and the whole radius ladder through `4xl`) and follows brandc when
 it changes.
 
+### Light / dark
+
+`ThemeProvider` holds the choice (`light`, `dark` or `system`), stores it in localStorage,
+follows the OS while it is `system` and follows other tabs. It sets the `.light`/`.dark`
+class, `data-theme` and `color-scheme` on `<html>`. `useTheme()` reads and changes it, and
+`<ModeToggle />` is the header control (`variant="toggle"` for a one-click light/dark button).
+
+A prerendered or server-rendered page also needs `ThemeScript` in `<head>`, with the same
+options as the provider. It applies the stored or default theme before first paint, so the
+page does not flash the wrong theme while React loads:
+
+```tsx
+import { ThemeProvider, ThemeScript, type ThemeScriptOptions } from "@max-health-inc/shared-ui"
+
+const theme: ThemeScriptOptions = { defaultTheme: { daytime: { from: 8, to: 20 } }, storageKey: "theme" }
+
+<html suppressHydrationWarning>
+  <head><ThemeScript {...theme} nonce={nonce} /></head>
+  <body><ThemeProvider {...theme} disableTransitionOnChange>{children}</ThemeProvider></body>
+</html>
+```
+
+| Option | Where | Default | |
+| --- | --- | --- | --- |
+| `defaultTheme` | both | `"system"` | A `Theme`, or `{ daytime: { from, to } }`: light from `from` up to `to` (local hours), dark otherwise |
+| `storageKey` | both | `"theme"` | localStorage key |
+| `enableColorScheme` | both | `true` | Also set `color-scheme`, so native controls and scrollbars follow |
+| `disableTransitionOnChange` | provider | `false` | Suppress CSS transitions while switching |
+| `nonce` | both | | CSP nonce for the script, and for the provider's transition-suppressing `<style>` |
+
+`themeScript(options)` returns the same script as a string, for a `<head>` that is not
+rendered by React. A Content-Security-Policy without `'unsafe-inline'` must allow it: pass the
+page's nonce, or stamp the nonce onto every inline script where the HTML is served. The
+script resolves the theme with the same functions the provider uses (`chooseTheme`,
+`resolveTheme`), serialized, so the two cannot drift.
+
+The app's CSS must declare `@custom-variant dark (&:where(.dark, .dark *));`, otherwise its
+`dark:` utilities keep tracking the OS instead of the chosen theme.
+
 ### Text in this package
 
 The components here render some text of their own — "Sign Out", "Session Expired",

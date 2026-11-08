@@ -1,10 +1,9 @@
 "use client"
 
 import { Monitor, Moon, Sun } from "lucide-react"
-import { useTheme, THEMES, type Theme } from "../hooks/use-theme"
-// The generic "optional translate function" contract, taken from its single definition
-// rather than declaring a second identical type (same as ScenePicker).
-import { identityT, type TFn } from "../lib/ui-text"
+import { useTheme } from "../hooks/use-theme"
+import { THEMES, type Theme } from "../lib/theme"
+import { useUiText, type TFn } from "../lib/ui-text"
 import { Button } from "./button"
 import {
   DropdownMenu,
@@ -20,9 +19,14 @@ const THEME_ICONS: Record<Theme, typeof Sun> = {
 }
 
 export interface ModeToggleProps {
-  /** The app's translate function. Omit it and the English source strings are used verbatim. */
+  /** The app's translate function. Omit it and this package's catalogue (English as the floor) is used. */
   t?: TFn
   className?: string
+  /**
+   * `menu` offers light, dark and system; `toggle` is one button that flips between light
+   * and dark, storing the explicit choice. @default "menu"
+   */
+  variant?: "menu" | "toggle"
 }
 
 /**
@@ -32,10 +36,27 @@ export interface ModeToggleProps {
  * {@link ThemeProvider} above it; without one the hook throws rather than silently
  * rendering a control that does nothing.
  */
-function ModeToggle({ t = identityT, className }: ModeToggleProps) {
+function ModeToggle({ t: appT, className, variant = "menu" }: ModeToggleProps) {
+  const t = useUiText(appT)
   const { theme, resolvedTheme, setTheme } = useTheme()
   // The trigger shows the ACTIVE scheme, so `system` reads as whatever it resolved to.
   const TriggerIcon = resolvedTheme === "dark" ? Moon : Sun
+
+  if (variant === "toggle") {
+    return (
+      <Button
+        variant="ghost"
+        size="sm"
+        className={className}
+        aria-label={t("Toggle theme")}
+        onClick={() => {
+          setTheme(resolvedTheme === "dark" ? "light" : "dark")
+        }}
+      >
+        <TriggerIcon className="size-4" />
+      </Button>
+    )
+  }
 
   return (
     <DropdownMenu>

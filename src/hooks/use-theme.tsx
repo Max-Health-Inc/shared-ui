@@ -1,68 +1,99 @@
 "use client"
 
 import * as React from "react"
+import {
+  DEFAULT_THEME,
+  DEFAULT_THEME_STORAGE_KEY,
+  PREFERS_DARK_QUERY,
+  THEMES,
+  applyResolvedTheme,
+  chooseTheme,
+  resolveTheme,
+  themeScript,
+  type ResolvedTheme,
+  type Theme,
+  type ThemeScriptOptions,
+} from "../lib/theme"
 
-/** A theme the user can choose. `system` follows the OS preference. */
-export type Theme = "light" | "dark" | "system"
+const THEME_IDS: readonly Theme[] = THEMES.map((entry) => entry.id)
 
-/** The concrete scheme a {@link Theme} resolves to. */
-export type ResolvedTheme = "light" | "dark"
+/** Choices made while localStorage is blocked, so they still last for the page. */
+const memoryChoice = new Map<string, Theme>()
+const choiceListeners = new Set<() => void>()
 
-/** The selectable themes, in display order — the list a picker renders. */
-export const THEMES: { id: Theme; name: string; description: string }[] = [
-  { id: "light", name: "Light", description: "Always light" },
-  { id: "dark", name: "Dark", description: "Always dark" },
-  { id: "system", name: "System", description: "Follow the operating system" },
-]
-
-const DEFAULT_THEME: Theme = "system"
-
-/** Narrow an arbitrary string to a known {@link Theme}. */
-export function isTheme(value: string): value is Theme {
-  return THEMES.some((entry) => entry.id === value)
-}
-
-/**
- * Resolve a chosen theme to the scheme to apply. Pure, so the contract below is
- * testable without a DOM.
- */
-export function resolveTheme(theme: Theme, prefersDark: boolean): ResolvedTheme {
-  return theme === "system" ? (prefersDark ? "dark" : "light") : theme
-}
-
-/**
- * Apply a scheme to `<html>`. brandc keys its tokens off BOTH `.light`/`.dark` and
- * `[data-theme]`, and writing only `.dark` leaves light mode following the OS rather than
- * the user's choice, so both are always set explicitly.
- */
-function applyTheme(resolved: ResolvedTheme) {
-  const root = document.documentElement
-  root.classList.remove("light", "dark")
-  root.classList.add(resolved)
-  root.setAttribute("data-theme", resolved)
-}
-
-function readStoredTheme(storageKey: string, fallback: Theme): Theme {
+function readStoredChoice(storageKey: string): Theme | null {
+  let stored: string | null
   try {
-    const stored = localStorage.getItem(storageKey)
-    return stored && isTheme(stored) ? stored : fallback
+    stored = localStorage.getItem(storageKey)
   } catch {
-    return fallback
+    stored = null
+  }
+  return THEME_IDS.find((id) => id === stored) ?? memoryChoice.get(storageKey) ?? null
+}
+
+function writeStoredChoice(storageKey: string, theme: Theme) {
+  try {
+    localStorage.setItem(storageKey, theme)
+    memoryChoice.delete(storageKey)
+  } catch {
+    memoryChoice.set(storageKey, theme)
+  }
+  for (const listener of choiceListeners) listener()
+}
+
+/** Follows choices from this page and, through the storage event, from other tabs. */
+function subscribeChoice(onChange: () => void): () => void {
+  choiceListeners.add(onChange)
+  window.addEventListener("storage", onChange)
+  return () => {
+    choiceListeners.delete(onChange)
+    window.removeEventListener("storage", onChange)
   }
 }
 
-function writeStoredTheme(storageKey: string, theme: Theme) {
-  try {
-    localStorage.setItem(storageKey, theme)
-  } catch {
-    // localStorage unavailable (e.g. private browsing with storage blocked)
+function subscribePrefersDark(onChange: () => void): () => void {
+  if (typeof window.matchMedia !== "function") return () => undefined
+  const query = window.matchMedia(PREFERS_DARK_QUERY)
+  query.addEventListener("change", onChange)
+  return () => {
+    query.removeEventListener("change", onChange)
   }
 }
 
 /** Whether the OS currently prefers dark, false where `matchMedia` is unavailable. */
 function prefersDark(): boolean {
   if (typeof window === "undefined" || typeof window.matchMedia !== "function") return false
-  return window.matchMedia("(prefers-color-scheme: dark)").matches
+  return window.matchMedia(PREFERS_DARK_QUERY).matches
+}
+
+let pageHour: number | undefined
+/** The local hour when the page loaded, so a daytime default does not flip mid-visit. */
+function hourAtLoad(): number {
+  pageHour ??= new Date().getHours()
+  return pageHour
+}
+
+function noSubscription(): () => void {
+  return () => undefined
+}
+
+const serverChoice = () => null
+const serverPrefersDark = () => false
+const serverHour = () => undefined
+
+const NO_TRANSITIONS = "*,*::before,*::after{transition:none!important}"
+
+/** Suppress CSS transitions for one frame, so a switch does not animate every colour. */
+function withoutTransitions(nonce: string | undefined, change: () => void) {
+  const style = document.createElement("style")
+  if (nonce) style.nonce = nonce
+  style.appendChild(document.createTextNode(NO_TRANSITIONS))
+  document.head.appendChild(style)
+  change()
+  void document.body.getBoundingClientRect()
+  window.setTimeout(() => {
+    style.remove()
+  }, 1)
 }
 
 export interface ThemeProviderState {
@@ -78,17 +109,19 @@ type InternalThemeContext = ThemeProviderState & { __provider?: true }
 
 const ThemeContext = React.createContext<InternalThemeContext | undefined>(undefined)
 
-export interface ThemeProviderProps {
+export interface ThemeProviderProps extends ThemeScriptOptions {
   children: React.ReactNode
-  /** Theme to use when nothing is stored yet. @default "system" */
-  defaultTheme?: Theme
-  /** localStorage key used to persist the choice. @default "theme" */
-  storageKey?: string
+  /** Suppress CSS transitions while the theme switches. @default false */
+  disableTransitionOnChange?: boolean
+  /** CSP nonce for the style element that `disableTransitionOnChange` inserts. */
+  nonce?: string
 }
 
 /**
- * Manages the active light/dark theme, persisting the choice and following the OS while
- * the choice is `system`. Pair with `@max-health-inc/shared-ui/theme.css`.
+ * Manages the active light/dark theme, persisting the choice, following the OS while the
+ * choice is `system` and other tabs when they change it. Pair with
+ * `@max-health-inc/shared-ui/theme.css`, and render {@link ThemeScript} with the same
+ * options in `<head>` so a prerendered or server-rendered page paints the right theme first.
  *
  * An app that adds this must also declare `@custom-variant dark (&:where(.dark, .dark *))`
  * in its CSS, otherwise its `dark:` utilities keep tracking the OS and diverge from the
@@ -97,42 +130,38 @@ export interface ThemeProviderProps {
 export function ThemeProvider({
   children,
   defaultTheme = DEFAULT_THEME,
-  storageKey = "theme",
+  storageKey = DEFAULT_THEME_STORAGE_KEY,
+  enableColorScheme = true,
+  disableTransitionOnChange = false,
+  nonce,
 }: Readonly<ThemeProviderProps>) {
-  const [theme, setThemeState] = React.useState<Theme>(() => readStoredTheme(storageKey, defaultTheme))
-  const [resolvedTheme, setResolvedTheme] = React.useState<ResolvedTheme>(() =>
-    resolveTheme(readStoredTheme(storageKey, defaultTheme), prefersDark()),
-  )
+  const stored = React.useSyncExternalStore(subscribeChoice, () => readStoredChoice(storageKey), serverChoice)
+  const isDark = React.useSyncExternalStore(subscribePrefersDark, prefersDark, serverPrefersDark)
+  const hour = React.useSyncExternalStore(noSubscription, hourAtLoad, serverHour)
 
-  // Apply on mount and on change, and track the OS while the choice is `system`.
-  React.useEffect(() => {
-    const apply = (isDark: boolean) => {
-      const next = resolveTheme(theme, isDark)
-      applyTheme(next)
-      setResolvedTheme(next)
-    }
+  const theme = chooseTheme(stored, defaultTheme, hour, THEME_IDS)
+  const resolvedTheme = resolveTheme(theme, isDark)
+  const hydrated = hour !== undefined
+  const applied = React.useRef<ResolvedTheme | undefined>(undefined)
 
-    if (theme !== "system" || typeof window === "undefined" || typeof window.matchMedia !== "function") {
-      apply(false) // ignored for an explicit theme; false is the no-matchMedia fallback
-      return
+  // Until hydration ends the values are the server's guess; the pre-paint script owns <html>.
+  React.useLayoutEffect(() => {
+    if (!hydrated) return
+    const root = document.documentElement
+    const apply = () => {
+      applyResolvedTheme(root, resolvedTheme, enableColorScheme)
     }
-
-    const query = window.matchMedia("(prefers-color-scheme: dark)")
-    apply(query.matches)
-
-    const listener = (event: MediaQueryListEvent) => {
-      apply(event.matches)
+    if (disableTransitionOnChange && applied.current !== undefined && applied.current !== resolvedTheme) {
+      withoutTransitions(nonce, apply)
+    } else {
+      apply()
     }
-    query.addEventListener("change", listener)
-    return () => {
-      query.removeEventListener("change", listener)
-    }
-  }, [theme])
+    applied.current = resolvedTheme
+  }, [hydrated, resolvedTheme, enableColorScheme, disableTransitionOnChange, nonce])
 
   const setTheme = React.useCallback(
     (next: Theme) => {
-      writeStoredTheme(storageKey, next)
-      setThemeState(next)
+      writeStoredChoice(storageKey, next)
     },
     [storageKey],
   )
@@ -143,6 +172,26 @@ export function ThemeProvider({
   )
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
+}
+
+export interface ThemeScriptProps extends ThemeScriptOptions {
+  /** The page's CSP nonce, for apps whose policy has no `'unsafe-inline'` script source. */
+  nonce?: string
+}
+
+/**
+ * Applies the stored or default theme before first paint. Render it in `<head>` with the
+ * same options as the {@link ThemeProvider}, and put `suppressHydrationWarning` on `<html>`,
+ * whose class, `data-theme` and `color-scheme` it sets.
+ */
+export function ThemeScript({ nonce, defaultTheme, storageKey, enableColorScheme }: Readonly<ThemeScriptProps>) {
+  return (
+    <script
+      nonce={nonce}
+      suppressHydrationWarning
+      dangerouslySetInnerHTML={{ __html: themeScript({ defaultTheme, storageKey, enableColorScheme }) }}
+    />
+  )
 }
 
 /** Consume the theme. Throws outside a {@link ThemeProvider}, so a missing provider fails loudly. */

@@ -145,16 +145,25 @@ export {
 export { ScenePicker, type ScenePickerProps } from "./components/scene-picker"
 export {
   ThemeProvider,
+  ThemeScript,
   useTheme,
   ThemeContext,
+  type ThemeProviderProps,
+  type ThemeProviderState,
+  type ThemeScriptProps,
+} from "./hooks/use-theme"
+export {
   resolveTheme,
+  chooseTheme,
+  themeScript,
   isTheme,
   THEMES,
   type Theme,
   type ResolvedTheme,
-  type ThemeProviderProps,
-  type ThemeProviderState,
-} from "./hooks/use-theme"
+  type ThemeDefault,
+  type DaytimeTheme,
+  type ThemeScriptOptions,
+} from "./lib/theme"
 export { ModeToggle, type ModeToggleProps } from "./components/mode-toggle"
 export { SettingsDialog, type SettingsDialogProps } from "./components/settings-dialog"
 export { SettingsLayout, type SettingsLayoutProps, type SettingsSection } from "./components/settings-layout"
