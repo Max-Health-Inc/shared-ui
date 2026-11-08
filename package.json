@@ -1,6 +1,6 @@
 {
   "name": "@max-health-inc/shared-ui",
-  "version": "0.59.0",
+  "version": "0.60.0",
   "type": "module",
   "license": "MIT",
   "description": "Shared React UI components, hooks, and utilities for SMART on FHIR healthcare apps",
@@ -28,8 +28,8 @@
     "./theme.css": "./dist/theme.css",
     "./scenes.css": "./dist/scenes.css",
     "./vite": {
-      "types": "./dist/vite/service-worker.d.ts",
-      "import": "./dist/vite/service-worker.js"
+      "types": "./dist/vite/index.d.ts",
+      "import": "./dist/vite/index.js"
     },
     "./i18n": {
       "types": "./dist/i18n/index.d.ts",
