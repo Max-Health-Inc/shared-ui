@@ -196,6 +196,42 @@ export const UI_TEXT: Record<string, readonly string[]> = {
   Monthly: ["Monatlich", "Mensuel", "Mensual", "Mensile"],
   Yearly: ["Jährlich", "Annuel", "Anual", "Annuale"],
   "Billing period": ["Abrechnungszeitraum", "Période de facturation", "Periodo de facturación", "Periodo di fatturazione"],
+  "{{plan}} renews automatically every month at {{price}} until you cancel.": [
+    "{{plan}} verlängert sich automatisch jeden Monat zu {{price}}, bis Sie kündigen.",
+    "{{plan}} se renouvelle automatiquement chaque mois à {{price}} jusqu'à ce que vous résiliiez.",
+    "{{plan}} se renueva automáticamente cada mes por {{price}} hasta que cancele.",
+    "{{plan}} si rinnova automaticamente ogni mese a {{price}} finché non disdici.",
+  ],
+  "{{plan}} renews automatically every month at {{price}} per seat until you cancel.": [
+    "{{plan}} verlängert sich automatisch jeden Monat zu {{price}} pro Platz, bis Sie kündigen.",
+    "{{plan}} se renouvelle automatiquement chaque mois à {{price}} par siège jusqu'à ce que vous résiliiez.",
+    "{{plan}} se renueva automáticamente cada mes por {{price}} por puesto hasta que cancele.",
+    "{{plan}} si rinnova automaticamente ogni mese a {{price}} per postazione finché non disdici.",
+  ],
+  "{{plan}} renews automatically every year at {{price}} until you cancel.": [
+    "{{plan}} verlängert sich automatisch jedes Jahr zu {{price}}, bis Sie kündigen.",
+    "{{plan}} se renouvelle automatiquement chaque année à {{price}} jusqu'à ce que vous résiliiez.",
+    "{{plan}} se renueva automáticamente cada año por {{price}} hasta que cancele.",
+    "{{plan}} si rinnova automaticamente ogni anno a {{price}} finché non disdici.",
+  ],
+  "{{plan}} renews automatically every year at {{price}} per seat until you cancel.": [
+    "{{plan}} verlängert sich automatisch jedes Jahr zu {{price}} pro Platz, bis Sie kündigen.",
+    "{{plan}} se renouvelle automatiquement chaque année à {{price}} par siège jusqu'à ce que vous résiliiez.",
+    "{{plan}} se renueva automáticamente cada año por {{price}} por puesto hasta que cancele.",
+    "{{plan}} si rinnova automaticamente ogni anno a {{price}} per postazione finché non disdici.",
+  ],
+  "You can cancel online at any time from your account.": [
+    "Sie können jederzeit online in Ihrem Konto kündigen.",
+    "Vous pouvez résilier en ligne à tout moment depuis votre compte.",
+    "Puede cancelar en línea en cualquier momento desde su cuenta.",
+    "Puoi disdire online in qualsiasi momento dal tuo account.",
+  ],
+  "I agree to these automatic renewal terms.": [
+    "Ich stimme diesen Bedingungen der automatischen Verlängerung zu.",
+    "J'accepte ces conditions de renouvellement automatique.",
+    "Acepto estas condiciones de renovación automática.",
+    "Accetto queste condizioni di rinnovo automatico.",
+  ],
   "Something went wrong. Please try again.": [
     "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
     "Une erreur s'est produite. Veuillez réessayer.",

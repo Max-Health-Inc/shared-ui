@@ -172,7 +172,9 @@ export { CodeBlock, type CodeBlockProps } from "./components/code-block"
 export { CopyButton, type CopyButtonProps } from "./components/copy-button"
 export { HeaderLabel } from "./components/header-label"
 export { useHeaderCompact } from "./lib/header-compact"
-export { formatPlanPrice } from "./components/billing/price"
+export { formatPlanPrice, planCharge } from "./components/billing/price"
+export { renewalTerms, renews, type RenewalOptions } from "./components/billing/renewal-terms"
+export { RenewalConsent, type RenewalConsentProps } from "./components/billing/renewal-consent"
 export {
   PlanCard,
   type PlanCardProps,

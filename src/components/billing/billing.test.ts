@@ -4,6 +4,8 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { PlanCard, type PricingPlan } from "./plan-card"
 import { formatPlanPrice } from "./price"
 import { PricingGrid } from "./pricing-grid"
+import { renewalTerms } from "./renewal-terms"
+import { identityT } from "../../lib/ui-text"
 import { readBillingReturn, withoutBillingReturn, requestRedirect, type FetchLike } from "./use-billing-redirect"
 import { UI_TEXT } from "../../lib/ui-text-catalog"
 
@@ -72,6 +74,50 @@ describe("PlanCard", () => {
     const html = card({ plan: PRO, action: createElement("button", null, "Upgrade") })
     expect(html).toContain("100 GB")
     expect(html).toContain("Upgrade")
+  })
+})
+
+describe("automatic renewal terms", () => {
+  const buy = createElement("button", null, "Upgrade")
+
+  it("state the price, the interval, that it renews until cancelled, and how to cancel", () => {
+    expect(renewalTerms(LITE, "month", identityT, "en-US")).toBe(
+      "Lite renews automatically every month at $9 until you cancel. You can cancel online at any time from your account.",
+    )
+    expect(renewalTerms(PRO, "year", identityT, "en-US", { cancelHow: "Cancel in Settings." })).toBe(
+      "Pro renews automatically every year at $490 until you cancel. Cancel in Settings.",
+    )
+    expect(renewalTerms(TEAM, "month", identityT, "en-US")).toContain("at $49 per seat")
+  })
+
+  it("sit next to a paid plan's purchase control, which waits for the agreement", () => {
+    const html = card({ plan: LITE, locale: "en-US", action: buy })
+    expect(html).toContain("renews automatically every month at $9 until you cancel")
+    expect(html).toContain("I agree to these automatic renewal terms.")
+    expect(html).toMatch(/<fieldset[^>]*disabled=""[^>]*>.*Upgrade/s)
+  })
+
+  it("are left off a free plan, a contact plan, the current plan, and when a product opts out", () => {
+    for (const html of [
+      card({ plan: FREE, action: buy }),
+      card({ plan: ENTERPRISE, action: buy }),
+      card({ plan: LITE, current: true, action: buy }),
+      card({ plan: LITE, renewal: false, action: buy }),
+    ]) {
+      expect(html).not.toContain("renews automatically")
+      expect(html).not.toContain("<fieldset")
+    }
+  })
+
+  it("follow the period the grid shows", () => {
+    const html = renderToStaticMarkup(createElement(PricingGrid, {
+      plans: [PRO],
+      interval: "year",
+      locale: "en-US",
+      renewal: { cancelHow: "Cancel in Settings." },
+      renderAction: () => buy,
+    }))
+    expect(html).toContain("every year at $490 until you cancel. Cancel in Settings.")
   })
 })
 
