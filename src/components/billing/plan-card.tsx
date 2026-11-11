@@ -6,7 +6,9 @@ import { useUiText, type TFn } from "../../lib/ui-text"
 import { cn } from "../../lib/utils"
 import { Badge } from "../badge"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "../card"
-import { formatPlanPrice } from "./price"
+import { formatPlanPrice, planCharge } from "./price"
+import { RenewalConsent } from "./renewal-consent"
+import { renews, type RenewalOptions } from "./renewal-terms"
 
 export type BillingInterval = "month" | "year"
 
@@ -29,6 +31,8 @@ export interface PlanCardProps {
   current?: boolean
   action?: React.ReactNode
   locale?: string
+  /** The automatic renewal terms and the agreement to them, shown with the action of a paid plan; false to leave them out. */
+  renewal?: RenewalOptions | false
   t?: TFn
   className?: string
 }
@@ -38,14 +42,9 @@ const PERIOD: Record<BillingInterval, { single: string; seat: string }> = {
   year: { single: "/ year", seat: "per seat / year" },
 }
 
-function priceFor(plan: PricingPlan, interval: BillingInterval): { cents: number; period: BillingInterval } {
-  if (interval === "year" && plan.annualCents != null) return { cents: plan.annualCents, period: "year" }
-  return { cents: plan.monthlyCents, period: "month" }
-}
-
-export function PlanCard({ plan, interval = "month", current = false, action, locale, t: appT, className }: PlanCardProps) {
+export function PlanCard({ plan, interval = "month", current = false, action, locale, renewal = {}, t: appT, className }: PlanCardProps) {
   const t = useUiText(appT)
-  const { cents, period } = priceFor(plan, interval)
+  const { cents, period } = planCharge(plan, interval)
   const badge = current ? t("Current plan") : plan.mostPopular ? t("Most popular") : null
 
   return (
@@ -84,7 +83,15 @@ export function PlanCard({ plan, interval = "month", current = false, action, lo
           ))}
         </ul>
       </CardContent>
-      {action && <CardFooter>{action}</CardFooter>}
+      {action && (
+        <CardFooter>
+          {renewal !== false && !current && renews(plan) ? (
+            <RenewalConsent plan={plan} interval={interval} locale={locale} options={renewal} t={appT}>
+              {action}
+            </RenewalConsent>
+          ) : action}
+        </CardFooter>
+      )}
     </Card>
   )
 }

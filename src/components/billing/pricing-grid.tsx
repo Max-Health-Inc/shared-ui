@@ -4,6 +4,7 @@ import * as React from "react"
 import { useUiText, type TFn } from "../../lib/ui-text"
 import { cn } from "../../lib/utils"
 import { PlanCard, type BillingInterval, type PricingPlan } from "./plan-card"
+import type { RenewalOptions } from "./renewal-terms"
 
 export interface PricingGridProps {
   plans: readonly PricingPlan[]
@@ -12,6 +13,8 @@ export interface PricingGridProps {
   interval?: BillingInterval
   onIntervalChange?: (interval: BillingInterval) => void
   locale?: string
+  /** Passed to every plan card; see {@link PlanCard}. */
+  renewal?: RenewalOptions | false
   t?: TFn
   className?: string
 }
@@ -30,6 +33,7 @@ export function PricingGrid({
   interval = "month",
   onIntervalChange,
   locale,
+  renewal,
   t: appT,
   className,
 }: PricingGridProps) {
@@ -68,6 +72,7 @@ export function PricingGrid({
               current={current}
               action={renderAction?.(plan, { current, interval })}
               locale={locale}
+              renewal={renewal}
               t={appT}
             />
           )
