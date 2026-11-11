@@ -70,12 +70,26 @@ export interface FhirIdentifier {
 
 const IDENTIFIER_TYPE_SYSTEM = "http://terminology.hl7.org/CodeSystem/v2-0203"
 
-function isMedicalRecordNumber(identifier: FhirIdentifier): boolean {
-  return identifier.use !== "old"
-    && (identifier.type?.coding?.some((coding) => coding.system === IDENTIFIER_TYPE_SYSTEM && coding.code === "MR") ?? false)
-}
+const isCurrent = (identifier: FhirIdentifier): boolean => identifier.use !== "old"
+
+const typedAs = (code: string) => (identifier: FhirIdentifier): boolean =>
+  isCurrent(identifier)
+    && (identifier.type?.coding?.some((coding) => coding.system === IDENTIFIER_TYPE_SYSTEM && coding.code === code) ?? false)
 
 /** The current identifier typed MR (v2-0203). Undefined when there is none, so no other identifier is shown as an MRN. */
 export function medicalRecordNumber(identifiers: readonly FhirIdentifier[] | undefined): string | undefined {
-  return displayText(identifiers?.find(isMedicalRecordNumber)?.value)
+  return displayText(identifiers?.find(typedAs("MR"))?.value)
+}
+
+export interface FhirCoverageIds {
+  identifier?: readonly FhirIdentifier[]
+  subscriberId?: string
+}
+
+/** A Coverage's member id: the current identifier typed MB (v2-0203), else subscriberId, else the first current identifier. */
+export function memberId(coverage: FhirCoverageIds): string | undefined {
+  const identifiers = coverage.identifier ?? []
+  return displayText(identifiers.find(typedAs("MB"))?.value)
+    ?? displayText(coverage.subscriberId)
+    ?? displayText(identifiers.find(isCurrent)?.value)
 }

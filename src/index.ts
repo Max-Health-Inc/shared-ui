@@ -62,7 +62,7 @@ export { createSmartAppConfig, createSmartAuth, buildFhirBaseUrl, buildAppStoreU
 export { CHART_COLORS } from "./lib/chart-colors"
 
 // FHIR helpers
-export { conceptLabel, conceptName, formatHumanName, formatHumanNames, humanNameText, medicalRecordNumber, type FhirHumanName, type FhirIdentifier } from "./lib/fhir-helpers"
+export { conceptLabel, conceptName, formatHumanName, formatHumanNames, humanNameText, medicalRecordNumber, memberId, type FhirCoverageIds, type FhirHumanName, type FhirIdentifier } from "./lib/fhir-helpers"
 
 export {
   formatDate,
