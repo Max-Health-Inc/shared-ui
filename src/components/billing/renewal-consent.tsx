@@ -19,7 +19,8 @@ export interface RenewalConsentProps {
 
 /**
  * The renewal terms next to the control that buys the plan, and the member's express agreement to
- * them before it works. The control sits in a fieldset, so whatever button a product renders is held.
+ * them before it works. The control sits in a fieldset that is disabled and swallows clicks until then,
+ * so a product's button or link is held either way.
  */
 export function RenewalConsent({ plan, interval = "month", locale, options, children, t: appT, className }: RenewalConsentProps) {
   const t = useUiText(appT)
@@ -33,7 +34,16 @@ export function RenewalConsent({ plan, interval = "month", locale, options, chil
         <input id={id} type="checkbox" className="mt-0.5 size-4 shrink-0" checked={agreed} onChange={(event) => { setAgreed(event.target.checked) }} />
         <span>{t("I agree to these automatic renewal terms.")}</span>
       </label>
-      <fieldset disabled={!agreed} className="m-0 w-full min-w-0 border-0 p-0">
+      <fieldset
+        disabled={!agreed}
+        aria-disabled={!agreed}
+        onClickCapture={(event) => {
+          if (agreed) return
+          event.preventDefault()
+          event.stopPropagation()
+        }}
+        className="m-0 w-full min-w-0 border-0 p-0"
+      >
         {children}
       </fieldset>
     </div>
