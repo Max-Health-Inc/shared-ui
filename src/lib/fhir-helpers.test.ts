@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test"
-import { conceptLabel, conceptName, formatHumanName, formatHumanNames, humanNameText, medicalRecordNumber } from "./fhir-helpers"
+import { conceptLabel, conceptName, formatHumanName, formatHumanNames, humanNameText, medicalRecordNumber, memberId } from "./fhir-helpers"
 
 describe("humanNameText", () => {
   it("is undefined for no name or a name with nothing usable", () => {
@@ -124,5 +124,61 @@ describe("medicalRecordNumber", () => {
 
   it("ignores an MR code from another code system", () => {
     expect(medicalRecordNumber([{ type: { coding: [{ system: "urn:local", code: "MR" }] }, value: "x" }])).toBeUndefined()
+  })
+})
+
+describe("memberId", () => {
+  const v20203 = "http://terminology.hl7.org/CodeSystem/v2-0203"
+
+  it("reads the MB-typed identifier of a CARIN Blue Button Coverage, not the first one", () => {
+    const coverage = {
+      resourceType: "Coverage",
+      status: "active",
+      identifier: [
+        { system: "https://bluebutton.cms.gov/resources/identifier/coverage-id", value: "part-a-99999999999" },
+        {
+          type: { coding: [{ system: v20203, code: "MB", display: "Member Number" }] },
+          system: "https://bluebutton.cms.gov/resources/variables/bene_id",
+          value: "1S00E00AA00",
+        },
+      ],
+      subscriberId: "SUB-1",
+    }
+    expect(memberId(coverage)).toBe("1S00E00AA00")
+  })
+
+  it("falls back to subscriberId when no identifier is typed MB", () => {
+    const coverage = {
+      resourceType: "Coverage",
+      identifier: [{ system: "urn:oid:2.16.840.1.113883.3.1234", value: "POLICY-42" }],
+      subscriberId: "W123456789",
+    }
+    expect(memberId(coverage)).toBe("W123456789")
+  })
+
+  it("falls back to the first current identifier when there is neither", () => {
+    const coverage = {
+      identifier: [
+        { use: "old", value: "RETIRED-1" },
+        { system: "urn:payer:member", value: "M-77" },
+      ],
+    }
+    expect(memberId(coverage)).toBe("M-77")
+  })
+
+  it("skips a retired MB identifier and ignores blank values", () => {
+    const coverage = {
+      identifier: [
+        { use: "old", type: { coding: [{ system: v20203, code: "MB" }] }, value: "OLD-MB" },
+        { type: { coding: [{ system: v20203, code: "MB" }] }, value: "  " },
+      ],
+      subscriberId: "SUB-9",
+    }
+    expect(memberId(coverage)).toBe("SUB-9")
+  })
+
+  it("is undefined for a Coverage that carries no id at all", () => {
+    expect(memberId({})).toBeUndefined()
+    expect(memberId({ identifier: [], subscriberId: "" })).toBeUndefined()
   })
 })
