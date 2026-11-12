@@ -42,6 +42,7 @@ export { FloatingPanel, type FloatingPanelProps } from "./components/floating-pa
 export { clampToBounds, nudge, readPanelState, writePanelState, type PanelPosition, type PanelState } from "./lib/panel-position"
 export { Faq, type FaqProps, type QandA } from "./components/faq"
 export { EmptyState, type EmptyStateProps } from "./components/empty-state"
+export { SuiteLinks, type SuiteLinksProps, type SuiteSite } from "./components/suite-links"
 export { LegalDocument, type LegalDocumentProps, type LegalSection } from "./components/legal-document"
 export { MessageBanner, messageBannerVariants, type MessageBannerProps } from "./components/message-banner"
 export { CloseButton, type CloseButtonProps } from "./components/close-button"
