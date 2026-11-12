@@ -51,6 +51,7 @@ export const UI_TEXT: Record<string, readonly string[]> = {
     "Inicio de sesión SMART",
     "Accesso SMART",
   ],
+  "Signing in…": ["Anmeldung läuft…", "Connexion en cours…", "Iniciando sesión…", "Accesso in corso…"],
   "Connection Problem": [
     "Verbindungsproblem",
     "Problème de connexion",

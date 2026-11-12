@@ -29,6 +29,7 @@ export { AppHeader, type AppHeaderProps } from "./components/app-header"
 export { UserProfileFormFields, type UserProfileFormFieldsProps, type UserProfileData } from "./components/user-profile-fields"
 export { SmartAppShell, usePatientId, type SmartAppShellProps } from "./components/smart-app-shell"
 export { SignInLanding, type SignInLandingProps } from "./components/sign-in-landing"
+export { PendingButton, type PendingButtonProps } from "./components/pending-button"
 export { PasscodePrompt, type PasscodePromptProps } from "./components/passcode-prompt"
 export { PwaInstallButton, type PwaInstallButtonProps } from "./components/pwa-install-button"
 export { ServiceWorkerUpdatePrompt, type ServiceWorkerUpdatePromptProps } from "./components/service-worker-update-banner"
@@ -135,6 +136,7 @@ export {
   type SmartAuthLike,
   type UseSmartAuthOptions,
 } from "./hooks/use-smart-auth"
+export { usePendingAction, type PendingAction, type UsePendingActionReturn } from "./hooks/use-pending-action"
 export {
   useScene,
   SCENES,

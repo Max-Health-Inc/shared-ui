@@ -3,6 +3,7 @@ import { ArrowRight, LogIn, LogOut, AlertTriangle, RefreshCw, type LucideIcon } 
 import { AppHeader, type AppHeaderProps } from "./app-header"
 import { Button } from "./button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "./dialog"
+import { PendingButton } from "./pending-button"
 import { Spinner } from "./spinner"
 import { ServiceUnavailable } from "./service-unavailable"
 import { SignInLanding } from "./sign-in-landing"
@@ -48,7 +49,7 @@ export interface SmartAppShellProps {
   /** Override the error state renderer. */
   renderError?: (error: string | null, retry: () => void) => ReactNode
   /** Override the unauthenticated state renderer. */
-  renderUnauthenticated?: (login: () => void) => ReactNode
+  renderUnauthenticated?: (login: () => void, pending: boolean) => ReactNode
   /** Override the session-expired state renderer. */
   renderSessionExpired?: (error: string | null, login: () => void) => ReactNode
   /** Offer a "Switch Patient" button in the header when authenticated. Triggers a new authorize flow (no re-login needed thanks to IdP session). Only shown when the session can actually pick a patient — a practitioner (`fhirUser` is a Practitioner) holding the `launch/patient` scope (standalone launch). Patient logins and EHR launches never see it. Default: false */
@@ -80,11 +81,12 @@ export function SmartAppShell({
   t: appT,
 }: SmartAppShellProps) {
   const t = useUiText(appT)
-  const { state, error, refusal, resumable, handleLogin, handleReauthenticate, handleLogout, patientId, userName, canSwitchPatient } = useSmartAuth({
+  const { state, error, refusal, resumable, redirecting, handleLogin, handleReauthenticate, handleLogout, patientId, userName, canSwitchPatient } = useSmartAuth({
     smartAuth,
     ...hookOptions,
   })
-  const signInAgain = resumable ? handleReauthenticate : handleLogin
+  const login = () => { void handleLogin() }
+  const signInAgain = resumable ? handleReauthenticate : login
   const keepApp = state === "session-expired" && resumable && !renderSessionExpired
 
   const content = (
@@ -92,7 +94,7 @@ export function SmartAppShell({
     {/* min-h-dvh: 100vh ignores retracting browser UI. data-slot is what scenes.css keys on. */}
     <div data-slot="app-shell" className="flex flex-col h-full min-h-dvh bg-background">
       {/* Any new state defaults to offering Sign Out. */}
-      <AppHeader {...header} t={header.t ?? appT} authenticated={state !== "unauthenticated"} onSignOut={handleLogout} onSwitchPatient={switchPatient && canSwitchPatient ? handleLogin : undefined} userName={userName} accountUrl={accountUrl} />
+      <AppHeader {...header} t={header.t ?? appT} authenticated={state !== "unauthenticated"} onSignOut={handleLogout} onSwitchPatient={switchPatient && canSwitchPatient ? login : undefined} userName={userName} accountUrl={accountUrl} />
 
       <main className={`${maxWidth} mx-auto px-safe-4 pt-6 pb-safe-6 flex-1 overflow-y-auto w-full`}>
         {state === "loading" || state === "callback" ? (
@@ -119,23 +121,23 @@ export function SmartAppShell({
                 </p>
               </div>
               {/* The header already offers Sign Out here. */}
-              <Button size="lg" onClick={handleLogin}>
+              <PendingButton size="lg" onClick={login} pending={redirecting} pendingLabel={t("Signing in…")}>
                 <LogIn className="size-4" />
                 {t("Sign In Again")}
-              </Button>
+              </PendingButton>
             </div>
           )
         ) : state === "error" ? (
           renderError ? (
-            renderError(error, handleLogin)
+            renderError(error, login)
           ) : (
-            <AuthErrorBoundary error={error} refusal={refusal} trustedOrigins={originsOf(accountUrl)} onRetry={handleLogin} onSignOut={handleLogout} t={t} />
+            <AuthErrorBoundary error={error} refusal={refusal} trustedOrigins={originsOf(accountUrl)} onRetry={login} retrying={redirecting} onSignOut={handleLogout} t={t} />
           )
         ) : state === "unauthenticated" ? (
           renderUnauthenticated ? (
-            renderUnauthenticated(handleLogin)
+            renderUnauthenticated(login, redirecting)
           ) : (
-            <SignInLanding title={title} description={description} icon={icon} onLogin={handleLogin} t={t} />
+            <SignInLanding title={title} description={description} icon={icon} onLogin={login} loginPending={redirecting} t={t} />
           )
         ) : (
           children
@@ -190,11 +192,12 @@ interface AuthErrorBoundaryProps {
   /** Origins whose pages a refusal may send the user to, e.g. the member account site. */
   trustedOrigins: readonly string[]
   onRetry: () => void
+  retrying: boolean
   onSignOut: () => void
   t: TFn
 }
 
-function AuthErrorBoundary({ error, refusal, trustedOrigins, onRetry, onSignOut, t }: AuthErrorBoundaryProps) {
+function AuthErrorBoundary({ error, refusal, trustedOrigins, onRetry, retrying, onSignOut, t }: AuthErrorBoundaryProps) {
   const info = classifyAuthError(error, refusal)
   const nextStep = trustedRefusalUri(refusal, trustedOrigins)
 
@@ -216,10 +219,10 @@ function AuthErrorBoundary({ error, refusal, trustedOrigins, onRetry, onSignOut,
                 {t("Reload Page")}
               </Button>
             )}
-            <Button variant={nextStep ? "outline" : "default"} onClick={onRetry}>
+            <PendingButton variant={nextStep ? "outline" : "default"} onClick={onRetry} pending={retrying} pendingLabel={t("Signing in…")}>
               <LogIn className="size-4" />
               {t("Try Again")}
-            </Button>
+            </PendingButton>
             {nextStep && (
               <Button asChild>
                 <a href={nextStep}>

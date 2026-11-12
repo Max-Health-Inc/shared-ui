@@ -218,3 +218,38 @@ describe("signing in again after the session ends mid-use", () => {
     expect(latest?.state).toBe("loading")
   })
 })
+
+describe("redirecting", () => {
+  let auth: FakeAuth
+
+  beforeEach(() => {
+    win.sessionStorage.clear()
+    goTo("https://app.example.com/")
+    auth = { authorizeCalls: [], token: false, expired: false, refreshes: false }
+    latest = null
+  })
+
+  afterEach(async () => {
+    await act(async () => { root.unmount() })
+  })
+
+  it("holds from the sign-in click while the redirect is under way", async () => {
+    await render({ smartAuth: fakeSmartAuth(auth) })
+    expect(latest?.redirecting).toBe(false)
+
+    await act(async () => { await latest?.handleLogin() })
+
+    expect(latest?.redirecting).toBe(true)
+    expect(auth.authorizeCalls).toHaveLength(1)
+  })
+
+  it("lets the user retry when the redirect cannot start", async () => {
+    await render({ smartAuth: fakeSmartAuth(auth), startAuth: () => Promise.reject(new Error("discovery failed")) })
+
+    await act(async () => { await latest?.handleLogin() })
+
+    expect(latest?.redirecting).toBe(false)
+    expect(latest?.state).toBe("error")
+    expect(latest?.error).toBe("discovery failed")
+  })
+})

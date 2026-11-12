@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { onAuthError } from "../lib/auth-error"
 import { isPractitionerReference } from "../lib/fhir-helpers"
 import { silentSignIn as createSilentSignIn } from "../lib/silent-sign-in"
+import { usePendingAction } from "./use-pending-action"
 
 const DEEPLINK_KEY = "__smart_deeplink__"
 const silentAttempt = createSilentSignIn("__smart_silent_attempted__")
@@ -160,6 +161,7 @@ export function useSmartAuth({
   const [resumable, setResumable] = useState(false)
   const callbackHandled = useRef(false)
   const [resolvedName, setResolvedName] = useState<string | undefined>(undefined)
+  const { pending: redirecting, run: runRedirect } = usePendingAction()
   const startAuthRef = useRef(startAuth)
   useEffect(() => { startAuthRef.current = startAuth }, [startAuth])
 
@@ -282,20 +284,20 @@ export function useSmartAuth({
     }
   }, [ehrLaunch, onAuthenticated, silentSignIn, skip, smartAuth])
 
-  const handleLogin = useCallback(() => {
+  const handleLogin = useCallback((): Promise<void> => {
     if (isBrowser()) sessionStorage.setItem(DEEPLINK_KEY, deepLinkOf(window.location))
     const auth = startAuth ?? (() => smartAuth.authorize())
-    void auth().catch((err: unknown) => {
+    return runRedirect(auth).catch((err: unknown) => {
       setError(
         err instanceof Error ? err.message : "Failed to start SMART launch",
       )
       setState("error")
     })
-  }, [startAuth, smartAuth])
+  }, [runRedirect, startAuth, smartAuth])
 
   const handleReauthenticate = useCallback(() => {
     if (!smartAuth.authorizeInPopup) {
-      handleLogin()
+      void handleLogin()
       return
     }
     smartAuth.authorizeInPopup().then(
@@ -308,7 +310,7 @@ export function useSmartAuth({
       },
       (err: unknown) => {
         if (err instanceof Error && err.name === POPUP_CLOSED) return
-        handleLogin()
+        void handleLogin()
       },
     )
   }, [handleLogin, onAuthenticated, smartAuth])
@@ -359,6 +361,8 @@ export function useSmartAuth({
     /** Set when the error is the authorization server refusing, so a view can act on its code. */
     refusal,
     resumable,
+    /** True from a sign-in click until the redirect fails or the page is restored from the back/forward cache. */
+    redirecting,
     handleLogin,
     handleReauthenticate,
     handleLogout,
