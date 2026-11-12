@@ -60,9 +60,10 @@ export { cn } from "./lib/utils"
 export { streamDownload, pumpToPort, prefersBlobDownload, type StreamDownloadOptions, type StreamDownloadMode, type DownloadPort } from "./lib/stream-download"
 export { createSmartAppConfig, createSmartAuth, buildFhirBaseUrl, buildAppStoreUrl, appBaseUrl, setAppBasePath, type SmartAppConfig, type SmartAppEnv } from "./lib/smart-app-config"
 export { CHART_COLORS } from "./lib/chart-colors"
+export { mountApp, type MountAppOptions } from "./lib/mount-app"
 
 // FHIR helpers
-export { conceptLabel, conceptName, formatHumanName, formatHumanNames, humanNameText, medicalRecordNumber, memberId, type FhirCoverageIds, type FhirHumanName, type FhirIdentifier } from "./lib/fhir-helpers"
+export { conceptLabel, conceptName, formatHumanName, formatHumanNames, humanNameText, isPractitionerReference, medicalRecordNumber, memberId, parseFhirReference, referenceId, type FhirCoverageIds, type FhirHumanName, type FhirIdentifier, type FhirReference } from "./lib/fhir-helpers"
 
 export {
   formatDate,

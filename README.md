@@ -50,6 +50,8 @@ import "@max-health-inc/shared-ui/theme.css"
 ### Utilities
 - `cn()` — Tailwind class merging
 - `createSmartAppConfig()` / `createSmartAuth()` / `buildFhirBaseUrl()` — SMART app bootstrap
+- `mountApp(app, { rootId?, tooltipDelay? })` — renders `main.tsx`'s app into `#root` inside StrictMode, an
+  ErrorBoundary and a TooltipProvider; app-specific providers and the Toaster go in `app`
 - `formatHumanName()` — FHIR HumanName formatter
 - `createAuthFetch()` / `onAuthError()` / `reportAuthError()` — Auth fetch wrapper
 
@@ -165,6 +167,9 @@ import { formatHumanNames, humanNameText } from "@max-health-inc/shared-ui/fhir"
 formatHumanNames(patient.name) // official name, else the first; undefined when empty
 humanNameText(practitioner.name?.[0]) // text, else prefix + given + family + suffix
 medicalRecordNumber(patient.identifier) // the current identifier typed MR; undefined when none is
+parseFhirReference(token.fhirUser) // { resourceType, id } of a relative or absolute literal reference, else null
+referenceId(link.target?.reference, "Patient") // the id when it names a Patient, else null
+isPractitionerReference(token.fhirUser) // a Practitioner or PractitionerRole signed in
 ```
 
 `formatHumanName(names)` (root export) is the UI label: the same name, or "Unknown".
