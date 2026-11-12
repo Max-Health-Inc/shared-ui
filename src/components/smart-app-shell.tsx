@@ -9,6 +9,7 @@ import { SignInLanding } from "./sign-in-landing"
 import { trustedRefusalUri, useSmartAuth, type AuthorizationRefusal, type SmartAuthLike, type UseSmartAuthOptions } from "../hooks/use-smart-auth"
 import { useUiText, type TFn } from "../lib/ui-text"
 import { classifyAuthError } from "../lib/auth-error-info"
+import { configuredAccountUrl } from "../lib/smart-app-config"
 
 /** Context providing the current patient ID (reactive — updates on Switch Patient). */
 const PatientContext = createContext<string | undefined>(undefined)
@@ -28,7 +29,7 @@ export interface SmartAppShellProps {
   hookOptions?: Omit<UseSmartAuthOptions, "smartAuth">
   /** Props forwarded to AppHeader. `userName` and `accountUrl` are injected by the shell. */
   header: Omit<AppHeaderProps, "authenticated" | "onSignOut" | "onSwitchPatient" | "userName" | "accountUrl">
-  /** Member account/management URL. When set, the signed-in identity in the header links here. */
+  /** Member account/management URL; defaults to the configured VITE_ACCOUNT_URL. When set, the signed-in identity in the header links here. */
   accountUrl?: string
   /** App title shown on the unauthenticated landing screen. */
   title: string
@@ -75,7 +76,7 @@ export function SmartAppShell({
   renderUnauthenticated,
   renderSessionExpired,
   switchPatient = false,
-  accountUrl,
+  accountUrl = configuredAccountUrl(),
   t: appT,
 }: SmartAppShellProps) {
   const t = useUiText(appT)
