@@ -20,6 +20,8 @@ export interface SmartAppEnv {
   readonly VITE_CLIENT_ID?: string
   readonly VITE_REDIRECT_URI?: string
   readonly VITE_SCOPES?: string
+  /** Where a signed-in user manages their account; the header's identity links here. */
+  readonly VITE_ACCOUNT_URL?: string
 }
 
 /** Module-level so shared components without the app's env (AppHeader's home link) can read it. */
@@ -39,6 +41,19 @@ export function setAppBasePath(base: string | undefined): void {
   else basePath = base.endsWith("/") ? base : `${base}/`
 }
 
+let accountUrl: string | undefined
+
+/** The account page the app was configured with, for the shell's header; undefined when none. */
+export function configuredAccountUrl(): string | undefined {
+  return accountUrl
+}
+
+/** Record the account page. Exported for apps that build their config by hand. */
+export function setAccountUrl(url: string | undefined): void {
+  const trimmed = url?.trim()
+  accountUrl = trimmed === "" ? undefined : trimmed
+}
+
 export interface SmartAppConfig {
   proxyBase: string
   proxyPrefix: string
@@ -47,6 +62,7 @@ export interface SmartAppConfig {
   clientId: string
   redirectUri: string
   scopes: string
+  accountUrl?: string
 }
 
 interface SmartAppDefaults {
@@ -59,7 +75,9 @@ interface SmartAppDefaults {
 export function createSmartAppConfig(defaults: SmartAppDefaults): SmartAppConfig {
   const { env } = defaults
   setAppBasePath(env.BASE_URL)
+  setAccountUrl(env.VITE_ACCOUNT_URL)
   return {
+    accountUrl: configuredAccountUrl(),
     proxyBase: env.VITE_PROXY_BASE ?? browserOrigin(),
     proxyPrefix: env.VITE_PROXY_PREFIX ?? "proxy-smart-backend",
     fhirServerId: env.VITE_FHIR_SERVER_ID ?? "hapi-fhir-server",

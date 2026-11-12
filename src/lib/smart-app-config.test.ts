@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "bun:test"
-import { appBaseUrl, buildAppStoreUrl, buildFhirBaseUrl, createSmartAppConfig, createSmartAuth, setAppBasePath } from "./smart-app-config"
+import { appBaseUrl, buildAppStoreUrl, buildFhirBaseUrl, configuredAccountUrl, createSmartAppConfig, createSmartAuth, setAccountUrl, setAppBasePath } from "./smart-app-config"
 import type { SmartAppConfig } from "./smart-app-config"
 
 function makeConfig(overrides: Partial<SmartAppConfig> = {}): SmartAppConfig {
@@ -220,5 +220,20 @@ describe("createSmartAuth", () => {
         storagePrefix: "test_",
       }),
     ).not.toThrow()
+  })
+})
+
+describe("account URL", () => {
+  afterEach(() => setAccountUrl(undefined))
+
+  it("comes from VITE_ACCOUNT_URL, so the shell header links the signed-in user to it", () => {
+    const config = createSmartAppConfig({ clientId: "app", scopes: "openid", env: { VITE_ACCOUNT_URL: "https://example.com/account" } })
+    expect(config.accountUrl).toBe("https://example.com/account")
+    expect(configuredAccountUrl()).toBe("https://example.com/account")
+  })
+
+  it("is unset when the env leaves it out or blank", () => {
+    expect(createSmartAppConfig({ clientId: "app", scopes: "openid", env: { VITE_ACCOUNT_URL: " " } }).accountUrl).toBeUndefined()
+    expect(createSmartAppConfig({ clientId: "app", scopes: "openid", env: {} }).accountUrl).toBeUndefined()
   })
 })
