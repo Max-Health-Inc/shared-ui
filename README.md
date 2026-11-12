@@ -34,7 +34,8 @@ import "@max-health-inc/shared-ui/theme.css"
 ### Components
 - Button, Card, Badge, Input, Label, Select, Tabs, Dialog, Table, ScrollArea, Progress, Tooltip, DropdownMenu, Separator
 - AppHeader, PatientBanner, ErrorBoundary, Spinner, Toaster
-- SignInLanding — the signed-out screen with "SMART Login"; `SmartAppShell` renders it, and apps that need more on that screen (an FAQ, sign-up, identity provider shortcuts) pass it as `notice`, `actions` or children; `background` renders behind the page (fixed at `z-0`) and lifts the landing content to `relative z-10`
+- SignInLanding — the signed-out screen with "SMART Login"; `SmartAppShell` renders it, and apps that need more on that screen (an FAQ, sign-up, identity provider shortcuts) pass it as `notice`, `actions` or children; `background` renders behind the page (fixed at `z-0`) and lifts the landing content to `relative z-10`. Once clicked the button shows "Signing in…" with a spinner until `onLogin` rejects or the page comes back from the back/forward cache; `loginHref` links get the same treatment
+- PendingButton — a button or link (`href`) that swaps its label for a spinner and `pendingLabel` while `pending`, disabled and `aria-busy`, at the same width
 - FloatingPanel — a non-modal panel that floats over a view: drag its header or use the arrow keys on its grip to move it, fold it to its header, and pass `storageKey` to keep its place across visits; it never leaves the window
 - FilterToolbar, PageHeader, StatCard, ResponsiveTabsList
 - Faq — the org-wide question/answer disclosure list (one answer open at a time)
@@ -44,6 +45,8 @@ import "@max-health-inc/shared-ui/theme.css"
 - `useSmartAuth` — SMART on FHIR auth state management. When a session ends mid-use, `SmartAppShell` keeps the app
   on screen under a sign-in dialog and signs in again in a popup (`authorizeInPopup` from `@babelfhir-ts/smart-auth`
   0.8+), falling back to the redirect when the popup is blocked
+  - `redirecting` is true from a sign-in click until the redirect fails or the page is restored from the back/forward cache
+- `usePendingAction` — pending state for an action that leaves the page; `SignInLanding`, `SmartAppShell` and `useSmartAuth` share it
 - `useBranding` — Dynamic brand theming from backend
 - `useModalLayer` / `ModalStackProvider` — Z-index stacking for modals
 

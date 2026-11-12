@@ -1,7 +1,8 @@
 import type { ComponentType, ReactNode } from "react"
 import { LogIn, type LucideIcon } from "lucide-react"
-import { Button } from "./button"
+import { PendingButton } from "./pending-button"
 import { useBranding } from "../hooks/use-branding"
+import { usePendingAction, type PendingAction } from "../hooks/use-pending-action"
 import { useUiText, type TFn } from "../lib/ui-text"
 import { cn } from "../lib/utils"
 
@@ -10,10 +11,12 @@ export interface SignInLandingProps {
   description: ReactNode
   /** Shown when no branding logo is set. */
   icon: LucideIcon | ComponentType<{ className?: string }>
-  /** Starts sign-in; or pass `loginHref` for a server-side sign-in route. */
-  onLogin?: () => void
+  /** Starts sign-in; or pass `loginHref` for a server-side sign-in route. A rejection makes the button usable again. */
+  onLogin?: PendingAction
   loginHref?: string
   loginDisabled?: boolean
+  /** Who owns the pending state, e.g. `useSmartAuth`'s `redirecting`; omitted, the landing tracks its own click. */
+  loginPending?: boolean
   /** Above the heading, e.g. an error or where the visitor came from. */
   notice?: ReactNode
   /** Beside the sign-in button, e.g. "Create an account". */
@@ -33,6 +36,7 @@ export function SignInLanding({
   onLogin,
   loginHref,
   loginDisabled = false,
+  loginPending,
   notice,
   actions,
   children,
@@ -41,12 +45,12 @@ export function SignInLanding({
 }: SignInLandingProps) {
   const t = useUiText(appT)
   const brand = useBranding()
-  const label = (
-    <>
-      <LogIn className="size-4" />
-      {t("SMART Login")}
-    </>
-  )
+  const own = usePendingAction()
+  const pending = loginPending ?? own.pending
+  const start = () => {
+    const started = loginPending === undefined ? own.run(onLogin) : Promise.resolve(onLogin?.())
+    started.catch(reportError)
+  }
 
   return (
     <>
@@ -63,15 +67,10 @@ export function SignInLanding({
           <div className="mx-auto w-full max-w-md text-muted-foreground">{description}</div>
         </div>
         <div className="flex flex-col sm:flex-row items-center gap-3">
-          {loginHref ? (
-            <Button size="lg" asChild disabled={loginDisabled}>
-              <a href={loginHref}>{label}</a>
-            </Button>
-          ) : (
-            <Button size="lg" onClick={onLogin} disabled={loginDisabled}>
-              {label}
-            </Button>
-          )}
+          <PendingButton size="lg" href={loginHref} onClick={start} disabled={loginDisabled} pending={pending} pendingLabel={t("Signing in…")}>
+            <LogIn className="size-4" />
+            {t("SMART Login")}
+          </PendingButton>
           {actions}
         </div>
         {children}
