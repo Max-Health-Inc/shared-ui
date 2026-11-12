@@ -6,36 +6,16 @@ on:
   workflow_call:
 
 permissions:
+  actions: read
   contents: read
   packages: read
 
 jobs:
   check:
-    name: lint + typecheck + test + build
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: max-network/.github/.github/actions/setup-bun@main
-        with:
-          bun-version: latest
-
-      - name: Install dependencies
-        # GH_PACKAGES_TOKEN reads @max-network too, which the run token cannot.
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
-        run: bun install
-
-      - name: Lint
-        run: bun run lint
-
-      - name: Typecheck
-        run: bun run typecheck
-
-      - name: Test
-        run: bun test
-
-      - name: Build
-        run: bun run build
+    uses: max-network/.github/.github/workflows/check.yml@main
+    with:
+      runtime: bun
+      install: bun install
+      steps: "lint typecheck test build"
+    secrets:
+      GH_PACKAGES_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
