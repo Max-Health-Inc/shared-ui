@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test"
-import { conceptLabel, conceptName, formatHumanName, formatHumanNames, humanNameText, isPractitionerReference, medicalRecordNumber, memberId, parseFhirReference, referenceId } from "./fhir-helpers"
+import { conceptLabel, conceptName, formatHumanName, formatHumanNames, humanNameText, isPractitionerReference, medicalRecordNumber, memberId, parseFhirReference, referenceId, relativeReference } from "./fhir-helpers"
 
 describe("humanNameText", () => {
   it("is undefined for no name or a name with nothing usable", () => {
@@ -197,6 +197,21 @@ describe("parseFhirReference", () => {
   it("is null for anything that is not a literal reference", () => {
     for (const value of [undefined, "", "123", "#contained", "patient/1", "Patient/", "Patient/a b", `Patient/${"x".repeat(65)}`, "urn:uuid:1234"]) {
       expect(parseFhirReference(value)).toBeNull()
+    }
+  })
+})
+
+describe("relativeReference", () => {
+  it("rewrites relative, absolute and versioned references as Type/id", () => {
+    expect(relativeReference("Patient/123")).toBe("Patient/123")
+    expect(relativeReference("https://fhir.example.org/r4/Coverage/c-1")).toBe("Coverage/c-1")
+    expect(relativeReference("Observation/o1/_history/3")).toBe("Observation/o1")
+    expect(relativeReference(" https://fhir.example.org/Person/p9/_history/2/ ")).toBe("Person/p9")
+  })
+
+  it("is null for anything that is not a literal reference", () => {
+    for (const value of [undefined, "", "#contained", "urn:uuid:1234", "patient/1", "Patient/a b"]) {
+      expect(relativeReference(value)).toBeNull()
     }
   })
 })
