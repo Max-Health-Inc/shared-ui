@@ -1,3 +1,30 @@
+export interface FhirReference {
+  resourceType: string
+  id: string
+}
+
+const LITERAL_REFERENCE = /^(?:https?:\/\/\S+\/)?([A-Z][A-Za-z]+)\/([A-Za-z0-9.-]{1,64})(?:\/_history\/[A-Za-z0-9.-]{1,64})?$/
+
+/** Type and id of a literal reference such as `Patient/123` or a SMART `fhirUser` URL; null for anything else. */
+export function parseFhirReference(reference: string | undefined): FhirReference | null {
+  const match = LITERAL_REFERENCE.exec(reference?.trim().replace(/\/+$/, "") ?? "")
+  const resourceType = match?.[1]
+  const id = match?.[2]
+  return resourceType && id ? { resourceType, id } : null
+}
+
+/** The id of a reference to the given type, or null when it names something else. */
+export function referenceId(reference: string | undefined, resourceType: string): string | null {
+  const parsed = parseFhirReference(reference)
+  return parsed?.resourceType === resourceType ? parsed.id : null
+}
+
+/** Whether a reference such as a SMART `fhirUser` names a clinician: a Practitioner or a PractitionerRole. */
+export function isPractitionerReference(fhirUser: string | undefined): boolean {
+  const type = parseFhirReference(fhirUser)?.resourceType
+  return type === "Practitioner" || type === "PractitionerRole"
+}
+
 export interface FhirHumanName {
   use?: string
   text?: string

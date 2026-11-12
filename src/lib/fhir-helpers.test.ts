@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test"
-import { conceptLabel, conceptName, formatHumanName, formatHumanNames, humanNameText, medicalRecordNumber, memberId } from "./fhir-helpers"
+import { conceptLabel, conceptName, formatHumanName, formatHumanNames, humanNameText, isPractitionerReference, medicalRecordNumber, memberId, parseFhirReference, referenceId } from "./fhir-helpers"
 
 describe("humanNameText", () => {
   it("is undefined for no name or a name with nothing usable", () => {
@@ -180,5 +180,45 @@ describe("memberId", () => {
   it("is undefined for a Coverage that carries no id at all", () => {
     expect(memberId({})).toBeUndefined()
     expect(memberId({ identifier: [], subscriberId: "" })).toBeUndefined()
+  })
+})
+
+describe("parseFhirReference", () => {
+  it("reads relative and absolute references", () => {
+    expect(parseFhirReference("Patient/123")).toEqual({ resourceType: "Patient", id: "123" })
+    expect(parseFhirReference("https://fhir.example.org/r4/Practitioner/abc-1.2")).toEqual({ resourceType: "Practitioner", id: "abc-1.2" })
+  })
+
+  it("drops a version suffix, surrounding whitespace and trailing slashes", () => {
+    expect(parseFhirReference("Observation/o1/_history/3")).toEqual({ resourceType: "Observation", id: "o1" })
+    expect(parseFhirReference(" https://fhir.example.org/Person/p9/ ")).toEqual({ resourceType: "Person", id: "p9" })
+  })
+
+  it("is null for anything that is not a literal reference", () => {
+    for (const value of [undefined, "", "123", "#contained", "patient/1", "Patient/", "Patient/a b", `Patient/${"x".repeat(65)}`, "urn:uuid:1234"]) {
+      expect(parseFhirReference(value)).toBeNull()
+    }
+  })
+})
+
+describe("referenceId", () => {
+  it("is the id only when the reference names the given type", () => {
+    expect(referenceId("Patient/1", "Patient")).toBe("1")
+    expect(referenceId("Practitioner/1", "Patient")).toBeNull()
+    expect(referenceId(undefined, "Patient")).toBeNull()
+  })
+})
+
+describe("isPractitionerReference", () => {
+  it("is true for a Practitioner or PractitionerRole, relative or absolute", () => {
+    expect(isPractitionerReference("Practitioner/45")).toBe(true)
+    expect(isPractitionerReference("https://fhir.example.org/Practitioner/45")).toBe(true)
+    expect(isPractitionerReference("PractitionerRole/r1")).toBe(true)
+  })
+
+  it("is false for patients, people and missing claims", () => {
+    expect(isPractitionerReference("Patient/1")).toBe(false)
+    expect(isPractitionerReference("https://fhir.example.org/Person/1")).toBe(false)
+    expect(isPractitionerReference(undefined)).toBe(false)
   })
 })

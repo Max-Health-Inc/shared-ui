@@ -1,6 +1,7 @@
 import { decodeJwt, type JWTPayload } from "jose"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { onAuthError } from "../lib/auth-error"
+import { isPractitionerReference } from "../lib/fhir-helpers"
 import { silentSignIn as createSilentSignIn } from "../lib/silent-sign-in"
 
 const DEEPLINK_KEY = "__smart_deeplink__"
@@ -334,15 +335,10 @@ export function useSmartAuth({
     return () => { cancelled = true }
   }, [state])
 
-  // Derive patientId + the user's FHIR role reactively — updates when state
-  // becomes "authenticated". `fhirUser` (the SMART claim) points at the signed-in
-  // user's own resource, so a `.../Practitioner/<id>` URL marks a clinician (vs a
-  // `.../Patient/<id>` for patient-facing logins). `isPractitioner` lets the shell
-  // gate clinician-only affordances such as Switch Patient.
   const token = state === "authenticated" && smartAuth.getToken ? smartAuth.getToken() : null
   const patientId = token?.patient ?? undefined
   const fhirUser = token?.fhirUser ?? undefined
-  const isPractitioner = !!fhirUser && /\/Practitioner\//i.test(fhirUser)
+  const isPractitioner = isPractitionerReference(fhirUser)
   // Who is signed in: the app-resolved name (e.g. from fhirUser) when available, else the
   // id_token's OIDC claims. Many SMART tokens carry no name claim, so the resolver is the
   // reliable path and this is the fallback.
