@@ -13,6 +13,12 @@ export function parseFhirReference(reference: string | undefined): FhirReference
   return resourceType && id ? { resourceType, id } : null
 }
 
+/** A literal reference rewritten as `Type/id`, dropping the server base and version; null for anything else. */
+export function relativeReference(reference: string | undefined): string | null {
+  const parsed = parseFhirReference(reference)
+  return parsed ? `${parsed.resourceType}/${parsed.id}` : null
+}
+
 /** The id of a reference to the given type, or null when it names something else. */
 export function referenceId(reference: string | undefined, resourceType: string): string | null {
   const parsed = parseFhirReference(reference)
