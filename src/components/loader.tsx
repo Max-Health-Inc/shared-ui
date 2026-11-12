@@ -62,4 +62,25 @@ function LoaderOverlay({
   )
 }
 
-export { Loader, LoaderOverlay }
+interface PageLoaderProps extends React.ComponentProps<"div"> {
+  size?: "sm" | "md" | "lg"
+  /** Announced to screen readers while the page loads. */
+  label?: string
+}
+
+/** A page's loading state: the loader centred in the space the page is given, never pinned to its corner. */
+function PageLoader({ size = "lg", label = "Loading", className, ...props }: PageLoaderProps) {
+  return (
+    <div
+      data-slot="page-loader"
+      role="status"
+      aria-label={label}
+      className={cn("flex w-full min-h-48 flex-1 items-center justify-center", className)}
+      {...props}
+    >
+      <Loader size={size} />
+    </div>
+  )
+}
+
+export { Loader, LoaderOverlay, PageLoader }
