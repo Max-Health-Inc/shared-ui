@@ -22,6 +22,7 @@ export default defineConfig({
         index: resolve(__dirname, 'src/index.ts'),
         'i18n/index': resolve(__dirname, 'src/i18n/index.ts'),
         'lib/fhir-helpers': resolve(__dirname, 'src/lib/fhir-helpers.ts'),
+        'charts/index': resolve(__dirname, 'src/charts/index.ts'),
       },
       formats: ['es'],
     },
