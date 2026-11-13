@@ -85,7 +85,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@max-health-inc/config": "^4.6.2",
-    "@tailwindcss/vite": "^4.3.3",
+    "@tailwindcss/vite": "^4.3.4",
     "@types/bun": "^1.4.4",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
