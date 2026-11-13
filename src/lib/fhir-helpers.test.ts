@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test"
-import { conceptLabel, conceptName, formatHumanName, formatHumanNames, humanNameText, isPractitionerReference, medicalRecordNumber, memberId, parseFhirReference, referenceId, relativeReference } from "./fhir-helpers"
+import { conceptLabel, conceptName, extensionOf, extensionsOf, formatHumanName, formatHumanNames, humanNameText, isPractitionerReference, medicalRecordNumber, memberId, parseFhirReference, referenceId, relativeReference } from "./fhir-helpers"
 
 describe("humanNameText", () => {
   it("is undefined for no name or a name with nothing usable", () => {
@@ -235,5 +235,25 @@ describe("isPractitionerReference", () => {
     expect(isPractitionerReference("Patient/1")).toBe(false)
     expect(isPractitionerReference("https://fhir.example.org/Person/1")).toBe(false)
     expect(isPractitionerReference(undefined)).toBe(false)
+  })
+})
+
+describe("extensionOf / extensionsOf", () => {
+  const race = "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race"
+  const extensions = [
+    { url: race, valueString: "first" },
+    { url: "other", valueString: "skip" },
+    { url: race, valueString: "second" },
+  ]
+
+  it("finds the first extension with the url and keeps its type", () => {
+    expect(extensionOf(extensions, race)?.valueString).toBe("first")
+    expect(extensionOf(extensions, "missing")).toBeUndefined()
+    expect(extensionOf(undefined, race)).toBeUndefined()
+  })
+
+  it("lists every extension with the url in order", () => {
+    expect(extensionsOf(extensions, race).map((extension) => extension.valueString)).toEqual(["first", "second"])
+    expect(extensionsOf(undefined, race)).toEqual([])
   })
 })

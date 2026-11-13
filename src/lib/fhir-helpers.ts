@@ -31,6 +31,20 @@ export function isPractitionerReference(fhirUser: string | undefined): boolean {
   return type === "Practitioner" || type === "PractitionerRole"
 }
 
+export interface FhirExtensionLike {
+  url: string
+}
+
+/** The first extension with this `url`, keeping the caller's extension type. */
+export function extensionOf<E extends FhirExtensionLike>(extensions: readonly E[] | undefined, url: string): E | undefined {
+  return extensions?.find((extension) => extension.url === url)
+}
+
+/** Every extension with this `url`, in order; empty when there is none. */
+export function extensionsOf<E extends FhirExtensionLike>(extensions: readonly E[] | undefined, url: string): E[] {
+  return extensions?.filter((extension) => extension.url === url) ?? []
+}
+
 export interface FhirHumanName {
   use?: string
   text?: string
