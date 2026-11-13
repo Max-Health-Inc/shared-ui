@@ -31,6 +31,36 @@ export function isPractitionerReference(fhirUser: string | undefined): boolean {
   return type === "Practitioner" || type === "PractitionerRole"
 }
 
+export interface FhirExtensionLike {
+  url: string
+}
+
+/** The first extension with this `url`, keeping the caller's extension type. */
+export function extensionOf<E extends FhirExtensionLike>(extensions: readonly E[] | undefined, url: string): E | undefined {
+  return extensions?.find((extension) => extension.url === url)
+}
+
+/** Every extension with this `url`, in order; empty when there is none. */
+export function extensionsOf<E extends FhirExtensionLike>(extensions: readonly E[] | undefined, url: string): E[] {
+  return extensions?.filter((extension) => extension.url === url) ?? []
+}
+
+export interface FhirBundleEntries<T> {
+  entry?: readonly { resource?: T; search?: { mode?: string } }[]
+}
+
+/** Every resource present in a bundle, keeping its type; entries without a resource are dropped. */
+export function bundleResources<T>(bundle: FhirBundleEntries<T>): T[] {
+  return (bundle.entry ?? []).flatMap(({ resource }) => (resource == null ? [] : [resource]))
+}
+
+/** The matches on a searchset page: `_include`d resources and OperationOutcome entries are dropped. */
+export function matchedResources<T>(page: FhirBundleEntries<T>): T[] {
+  return (page.entry ?? []).flatMap(({ resource, search }) =>
+    resource != null && (search?.mode ?? "match") === "match" ? [resource] : [],
+  )
+}
+
 export interface FhirHumanName {
   use?: string
   text?: string
