@@ -45,6 +45,22 @@ export function extensionsOf<E extends FhirExtensionLike>(extensions: readonly E
   return extensions?.filter((extension) => extension.url === url) ?? []
 }
 
+export interface FhirBundleEntries<T> {
+  entry?: readonly { resource?: T; search?: { mode?: string } }[]
+}
+
+/** Every resource present in a bundle, keeping its type; entries without a resource are dropped. */
+export function bundleResources<T>(bundle: FhirBundleEntries<T>): T[] {
+  return (bundle.entry ?? []).flatMap(({ resource }) => (resource == null ? [] : [resource]))
+}
+
+/** The matches on a searchset page: `_include`d resources and OperationOutcome entries are dropped. */
+export function matchedResources<T>(page: FhirBundleEntries<T>): T[] {
+  return (page.entry ?? []).flatMap(({ resource, search }) =>
+    resource != null && (search?.mode ?? "match") === "match" ? [resource] : [],
+  )
+}
+
 export interface FhirHumanName {
   use?: string
   text?: string

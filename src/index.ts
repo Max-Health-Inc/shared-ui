@@ -64,7 +64,7 @@ export { CHART_COLORS } from "./lib/chart-colors"
 export { mountApp, type MountAppOptions } from "./lib/mount-app"
 
 // FHIR helpers
-export { conceptLabel, conceptName, extensionOf, extensionsOf, formatHumanName, formatHumanNames, humanNameText, isPractitionerReference, medicalRecordNumber, memberId, parseFhirReference, referenceId, relativeReference, type FhirCoverageIds, type FhirExtensionLike, type FhirHumanName, type FhirIdentifier, type FhirReference } from "./lib/fhir-helpers"
+export { bundleResources, conceptLabel, conceptName, extensionOf, extensionsOf, formatHumanName, formatHumanNames, humanNameText, isPractitionerReference, matchedResources, medicalRecordNumber, memberId, parseFhirReference, referenceId, relativeReference, type FhirBundleEntries, type FhirCoverageIds, type FhirExtensionLike, type FhirHumanName, type FhirIdentifier, type FhirReference } from "./lib/fhir-helpers"
 
 export {
   formatDate,

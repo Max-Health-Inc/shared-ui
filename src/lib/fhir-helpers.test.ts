@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test"
-import { conceptLabel, conceptName, extensionOf, extensionsOf, formatHumanName, formatHumanNames, humanNameText, isPractitionerReference, medicalRecordNumber, memberId, parseFhirReference, referenceId, relativeReference } from "./fhir-helpers"
+import { bundleResources, conceptLabel, conceptName, extensionOf, extensionsOf, formatHumanName, formatHumanNames, humanNameText, isPractitionerReference, matchedResources, medicalRecordNumber, memberId, parseFhirReference, referenceId, relativeReference } from "./fhir-helpers"
 
 describe("humanNameText", () => {
   it("is undefined for no name or a name with nothing usable", () => {
@@ -255,5 +255,26 @@ describe("extensionOf / extensionsOf", () => {
   it("lists every extension with the url in order", () => {
     expect(extensionsOf(extensions, race).map((extension) => extension.valueString)).toEqual(["first", "second"])
     expect(extensionsOf(undefined, race)).toEqual([])
+  })
+})
+
+describe("bundleResources / matchedResources", () => {
+  const page = {
+    entry: [
+      { resource: { id: "p1" }, search: { mode: "match" } },
+      { resource: { id: "org" }, search: { mode: "include" } },
+      { search: { mode: "match" } },
+      { resource: { id: "p2" } },
+      { resource: { id: "oo" }, search: { mode: "outcome" } },
+    ],
+  }
+
+  it("keeps every present resource", () => {
+    expect(bundleResources(page).map((r) => r.id)).toEqual(["p1", "org", "p2", "oo"])
+    expect(bundleResources({})).toEqual([])
+  })
+
+  it("keeps only the matches, treating an entry without a mode as one", () => {
+    expect(matchedResources(page).map((r) => r.id)).toEqual(["p1", "p2"])
   })
 })
