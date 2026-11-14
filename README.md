@@ -177,6 +177,21 @@ isPractitionerReference(token.fhirUser) // a Practitioner or PractitionerRole si
 
 `formatHumanName(names)` (root export) is the UI label: the same name, or "Unknown".
 
+### Charts
+
+`@max-health-inc/shared-ui/charts` holds `TimeSeriesChart`, `ChartCard`, `ChartPlot` and
+`fillTimeSeries`. It is built on `recharts`, which this package does not declare: an app that
+imports `/charts` adds it to its own dependencies.
+
+```bash
+bun add recharts@^3.10.1
+```
+
+`recharts` is not a peer, optional or otherwise. GitHub Packages drops `peerDependenciesMeta`
+from the metadata it serves, so npm and bun would install an optional peer into every
+consumer. `src/entry-imports.test.ts` keeps it that way: only the `/charts` entry may reach
+`recharts`, and no peer may be marked optional.
+
 ## Development
 
 ```bash
