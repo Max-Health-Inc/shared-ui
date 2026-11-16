@@ -25,10 +25,35 @@ export function referenceId(reference: string | undefined, resourceType: string)
   return parsed?.resourceType === resourceType ? parsed.id : null
 }
 
+export type FhirUserRole = "patient" | "practitioner" | "related-person" | "person" | "unknown"
+
+export interface ClassifiedFhirUser {
+  role: FhirUserRole
+  resourceType?: string
+  id?: string
+  /** Relative `Type/id`, without server base or version. */
+  reference?: string
+}
+
+const ROLE_BY_TYPE: ReadonlyMap<string, FhirUserRole> = new Map([
+  ["Patient", "patient"],
+  ["Practitioner", "practitioner"],
+  ["PractitionerRole", "practitioner"],
+  ["RelatedPerson", "related-person"],
+  ["Person", "person"],
+])
+
+/** The role a SMART `fhirUser` claim (or any literal reference) names, with its type, id and relative reference. */
+export function parseFhirUser(fhirUser: string | undefined): ClassifiedFhirUser {
+  const parsed = parseFhirReference(fhirUser)
+  if (!parsed) return { role: "unknown" }
+  const { resourceType, id } = parsed
+  return { role: ROLE_BY_TYPE.get(resourceType) ?? "unknown", resourceType, id, reference: `${resourceType}/${id}` }
+}
+
 /** Whether a reference such as a SMART `fhirUser` names a clinician: a Practitioner or a PractitionerRole. */
 export function isPractitionerReference(fhirUser: string | undefined): boolean {
-  const type = parseFhirReference(fhirUser)?.resourceType
-  return type === "Practitioner" || type === "PractitionerRole"
+  return parseFhirUser(fhirUser).role === "practitioner"
 }
 
 export interface FhirExtensionLike {

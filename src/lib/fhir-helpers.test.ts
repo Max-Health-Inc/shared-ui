@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test"
-import { bundleResources, conceptLabel, conceptName, extensionOf, extensionsOf, formatHumanName, formatHumanNames, humanNameText, isPractitionerReference, matchedResources, medicalRecordNumber, memberId, parseFhirReference, referenceId, relativeReference } from "./fhir-helpers"
+import { bundleResources, conceptLabel, conceptName, extensionOf, extensionsOf, formatHumanName, formatHumanNames, humanNameText, isPractitionerReference, matchedResources, medicalRecordNumber, memberId, parseFhirReference, parseFhirUser, referenceId, relativeReference } from "./fhir-helpers"
 
 describe("humanNameText", () => {
   it("is undefined for no name or a name with nothing usable", () => {
@@ -235,6 +235,30 @@ describe("isPractitionerReference", () => {
     expect(isPractitionerReference("Patient/1")).toBe(false)
     expect(isPractitionerReference("https://fhir.example.org/Person/1")).toBe(false)
     expect(isPractitionerReference(undefined)).toBe(false)
+  })
+})
+
+describe("parseFhirUser", () => {
+  it("classifies each fhirUser type with its id and relative reference", () => {
+    expect(parseFhirUser("Patient/123")).toEqual({ role: "patient", resourceType: "Patient", id: "123", reference: "Patient/123" })
+    expect(parseFhirUser("https://fhir.example.org/fhir/Practitioner/45")).toEqual({
+      role: "practitioner", resourceType: "Practitioner", id: "45", reference: "Practitioner/45",
+    })
+    expect(parseFhirUser("PractitionerRole/7")).toEqual({
+      role: "practitioner", resourceType: "PractitionerRole", id: "7", reference: "PractitionerRole/7",
+    })
+    expect(parseFhirUser("RelatedPerson/9").role).toBe("related-person")
+    expect(parseFhirUser("https://fhir.example.org/Person/p1")).toEqual({ role: "person", resourceType: "Person", id: "p1", reference: "Person/p1" })
+  })
+
+  it("drops a version suffix from the reference", () => {
+    expect(parseFhirUser("Patient/123/_history/2").reference).toBe("Patient/123")
+  })
+
+  it("is unknown for a missing or malformed claim, keeping the id of an unsupported type", () => {
+    expect(parseFhirUser(undefined)).toEqual({ role: "unknown" })
+    expect(parseFhirUser("bogus")).toEqual({ role: "unknown" })
+    expect(parseFhirUser("Device/x")).toEqual({ role: "unknown", resourceType: "Device", id: "x", reference: "Device/x" })
   })
 })
 
