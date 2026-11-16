@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { cn } from "../lib/utils"
+import { cn, FIELD_TEXT } from "../lib/utils"
 import { useFormFieldControl } from "./form-field-context"
 
 type NativeSelectSize = "sm" | "md" | "lg"
@@ -16,8 +16,8 @@ interface NativeSelectProps
 
 const sizes: Record<NativeSelectSize, string> = {
   sm: "pl-3 pr-9 py-1.5 text-xs",
-  md: "pl-3 pr-9 py-2 text-sm",
-  lg: "pl-4 pr-11 py-3 text-sm",
+  md: `pl-3 pr-9 py-2 ${FIELD_TEXT}`,
+  lg: `pl-4 pr-11 py-3 ${FIELD_TEXT}`,
 }
 
 const iconSizes: Record<NativeSelectSize, string> = {
