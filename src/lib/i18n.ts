@@ -1,7 +1,8 @@
+import { useCallback } from "react"
 import i18next, { type i18n as I18nInstance } from "i18next"
-import { initReactI18next } from "react-i18next"
+import { initReactI18next, useTranslation } from "react-i18next"
 import LanguageDetector from "i18next-browser-languagedetector"
-import { setUiLanguage } from "./ui-text"
+import { setUiLanguage, type TFn } from "./ui-text"
 
 export interface CreateAppI18nOptions {
   /** Language returned when a key has no translation for the active language. Defaults to `'en'`. */
@@ -36,6 +37,12 @@ function writeLocaleCookie(name: string, lng: string): void {
  */
 export function plural<T>(count: number, one: T, other: T): T {
   return count === 1 ? one : other
+}
+
+/** The app's translator as a {@link TFn}, for the `t` prop shared components take. */
+export function useTFn(): TFn {
+  const { t } = useTranslation()
+  return useCallback<TFn>((key, vars) => t(key, vars), [t])
 }
 
 /** Each language's name in its own tongue, for the language switcher. */
