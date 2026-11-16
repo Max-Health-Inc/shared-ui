@@ -81,6 +81,16 @@ describe("translation meta keys", () => {
   })
 })
 
+describe("createAppI18n page language", () => {
+  it("marks the page with the active language, so screen readers and translators read it right", async () => {
+    const instance = createAppI18n({ _languages: ["es"], Save: ["Guardar"] }, { detect: false })
+    await instance.changeLanguage("es-MX")
+    expect(document.documentElement.lang).toBe("es")
+    await instance.changeLanguage("en")
+    expect(document.documentElement.lang).toBe("en")
+  })
+})
+
 describe("LOCALE_NAMES", () => {
   it("names each language in its own tongue", () => {
     expect(LOCALE_NAMES.de).toBe("Deutsch")

@@ -122,6 +122,8 @@ export function createAppI18n(
   const follow = () => {
     const language = instance.resolvedLanguage ?? instance.language
     setUiLanguage(language)
+    const root = typeof document === "undefined" ? undefined : document.documentElement
+    if (root && language && language !== "cimode") root.lang = language
     if (cookieName !== undefined && language) writeLocaleCookie(cookieName, language)
   }
   follow()
