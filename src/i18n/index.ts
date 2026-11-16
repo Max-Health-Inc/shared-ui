@@ -10,6 +10,7 @@ export {
   getSupportedLanguages,
   isTranslationMetaKey,
   plural,
+  useTFn,
   LOCALE_NAMES,
   TRANSLATION_META_KEYS,
   type CreateAppI18nOptions,

@@ -1,5 +1,5 @@
 import * as React from "react"
-import { cn } from "../lib/utils"
+import { cn, FIELD_TEXT } from "../lib/utils"
 import { useFormFieldControl } from "./form-field-context"
 
 function Textarea({ className, ...rest }: React.ComponentProps<"textarea">) {
@@ -8,7 +8,8 @@ function Textarea({ className, ...rest }: React.ComponentProps<"textarea">) {
     <textarea
       data-slot="textarea"
       className={cn(
-        "min-h-[60px] w-full bg-transparent px-3 py-2 text-sm transition-colors duration-200 resize-none",
+        "min-h-[60px] w-full bg-transparent px-3 py-2 transition-colors duration-200 resize-none",
+        FIELD_TEXT,
         "border border-foreground/20 text-foreground placeholder:text-foreground/30",
         "focus:outline-none focus:border-foreground/50",
         "disabled:cursor-not-allowed disabled:opacity-60",

@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { cn } from "../lib/utils"
+import { cn, FIELD_TEXT } from "../lib/utils"
 import { ChevronsUpDown } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "./popover"
 import { useUiText, type TFn } from "../lib/ui-text"
@@ -57,11 +57,10 @@ function Combobox({
 
   const selectedOption = options.find((opt) => opt.value === value)
 
-  React.useEffect(() => {
-    if (open && inputRef.current) {
-      inputRef.current.focus()
-    }
-  }, [open])
+  const focusSearchOnFinePointer = (event: Event) => {
+    event.preventDefault()
+    if (window.matchMedia("(pointer: fine)").matches) inputRef.current?.focus()
+  }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -95,20 +94,25 @@ function Combobox({
       </PopoverTrigger>
       <PopoverContent
         className={cn(
-          "w-[var(--radix-popover-trigger-width)] min-w-56 p-0",
-          isDark && "bg-gray-900 border-white/15"
+          "w-[var(--radix-popover-trigger-width)] min-w-56 p-0 shadow-lg",
+          isDark ? "bg-gray-900 border-white/15" : "border-foreground/20"
         )}
+        side="bottom"
         align="start"
+        avoidCollisions={false}
+        onOpenAutoFocus={focusSearchOnFinePointer}
       >
         <div className={cn("p-2 border-b", isDark ? "border-white/10" : "border-foreground/10")}>
           <input
             ref={inputRef}
             type="text"
+            enterKeyHint="search"
             value={search}
             onChange={(e) => { setSearch(e.target.value) }}
             placeholder={searchPlaceholder ?? t("Search...")}
             className={cn(
-              "flex h-8 w-full rounded-md px-3 py-1 text-sm",
+              "flex h-9 w-full rounded-md px-3 py-1 md:h-8",
+              FIELD_TEXT,
               "focus-visible:outline-none",
               isDark
                 ? "bg-white/10 border border-white/15 text-white placeholder:text-white/40 focus-visible:border-white/30"
@@ -117,7 +121,7 @@ function Combobox({
           />
         </div>
         <div className={cn(
-          "max-h-56 overflow-y-auto p-1",
+          "max-h-[max(8rem,min(14rem,calc(var(--radix-popover-content-available-height)-4rem)))] overflow-y-auto overscroll-contain p-1",
           isDark
             ? "[&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full"
             : "[&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-foreground/15 [&::-webkit-scrollbar-thumb]:rounded-full"
@@ -136,7 +140,7 @@ function Combobox({
                   setSearch("")
                 }}
                 className={cn(
-                  "relative flex w-full items-start rounded-sm px-2 py-1.5 text-sm text-left cursor-pointer transition-colors",
+                  "relative flex w-full items-start rounded-sm px-2 py-2.5 text-sm text-left cursor-pointer transition-colors md:py-1.5",
                   isDark
                     ? cn("text-white/80 hover:bg-white/10", option.value === value && "bg-white/15 text-white")
                     : cn("hover:bg-foreground/5", option.value === value && "bg-primary/10 text-primary"),

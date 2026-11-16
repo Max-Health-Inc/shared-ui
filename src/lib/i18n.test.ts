@@ -7,7 +7,9 @@
  * are values the caller already rendered, so the `t("…")` literals stay at the call site.
  */
 import { afterEach, describe, it, expect } from "bun:test"
-import { plural, getSupportedLanguages, LOCALE_NAMES, createAppI18n, isTranslationMetaKey } from "./i18n"
+import { createElement } from "react"
+import { renderToStaticMarkup } from "react-dom/server"
+import { plural, getSupportedLanguages, LOCALE_NAMES, createAppI18n, isTranslationMetaKey, useTFn } from "./i18n"
 import { setUiLanguage } from "./ui-text"
 
 afterEach(() => {
@@ -78,6 +80,28 @@ describe("translation meta keys", () => {
       { detect: false },
     )
     expect(instance.getResourceBundle("de", "translation")).toEqual({ Save: "Speichern" })
+  })
+})
+
+describe("createAppI18n page language", () => {
+  it("marks the page with the active language, so screen readers and translators read it right", async () => {
+    const instance = createAppI18n({ _languages: ["es"], Save: ["Guardar"] }, { detect: false })
+    await instance.changeLanguage("es-MX")
+    expect(document.documentElement.lang).toBe("es")
+    await instance.changeLanguage("en")
+    expect(document.documentElement.lang).toBe("en")
+  })
+})
+
+describe("useTFn", () => {
+  it("hands the app's translator to components that take a TFn", async () => {
+    const instance = createAppI18n({ _languages: ["es"], "Hello, {{name}}": ["Hola, {{name}}"] }, { detect: false })
+    await instance.changeLanguage("es")
+    function Greeting() {
+      const t = useTFn()
+      return createElement("p", null, t("Hello, {{name}}", { name: "Ana" }))
+    }
+    expect(renderToStaticMarkup(createElement(Greeting))).toBe("<p>Hola, Ana</p>")
   })
 })
 
