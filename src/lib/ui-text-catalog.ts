@@ -179,6 +179,43 @@ export const UI_TEXT: Record<string, readonly string[]> = {
     "Preferenze per questa app, salvate su questo dispositivo.",
   ],
 
+  // ── About ──────────────────────────────────────────────────────────────────
+  "About this software": ["Über diese Software", "À propos de ce logiciel", "Acerca de este software", "Informazioni su questo software"],
+  "Who makes it, which version you are running, and what changed.": [
+    "Wer sie herstellt, welche Version Sie verwenden und was sich geändert hat.",
+    "Qui le fabrique, quelle version vous utilisez et ce qui a changé.",
+    "Quién lo fabrica, qué versión está usando y qué ha cambiado.",
+    "Chi lo produce, quale versione sta usando e cosa è cambiato.",
+  ],
+  Manufacturer: ["Hersteller", "Fabricant", "Fabricante", "Fabbricante"],
+  "Software version": ["Softwareversion", "Version du logiciel", "Versión del software", "Versione del software"],
+  "Quote this when reporting a problem.": [
+    "Geben Sie diese an, wenn Sie ein Problem melden.",
+    "Indiquez-la lorsque vous signalez un problème.",
+    "Indícala al informar de un problema.",
+    "Indicala quando segnali un problema.",
+  ],
+  Terms: ["Nutzungsbedingungen", "Conditions", "Términos", "Termini"],
+  Privacy: ["Datenschutz", "Confidentialité", "Privacidad", "Privacy"],
+  Changelog: ["Änderungsprotokoll", "Journal des modifications", "Registro de cambios", "Registro delle modifiche"],
+  New: ["Neu", "Nouveau", "Nuevo", "Nuovo"],
+  Fixed: ["Behoben", "Corrigé", "Corregido", "Corretto"],
+  Faster: ["Schneller", "Plus rapide", "Más rápido", "Più veloce"],
+  Breaking: ["Inkompatibel", "Rupture", "Incompatible", "Incompatibile"],
+  "Coming in {{version}}": ["Kommt in {{version}}", "À venir dans {{version}}", "Próximamente en {{version}}", "In arrivo in {{version}}"],
+  "First versioned release.": [
+    "Erste versionierte Veröffentlichung.",
+    "Première version numérotée.",
+    "Primera versión numerada.",
+    "Prima versione numerata.",
+  ],
+  "Changes are listed in English, as they are recorded.": [
+    "Änderungen werden auf Englisch aufgeführt, so wie sie erfasst werden.",
+    "Les modifications sont indiquées en anglais, telles qu’elles sont enregistrées.",
+    "Los cambios se muestran en inglés, tal como se registran.",
+    "Le modifiche sono elencate in inglese, così come vengono registrate.",
+  ],
+
   // ── Shared links ──────────────────────────────────────────────────────────
   "Passcode Required": ["Zugangscode erforderlich", "Code d'accès requis", "Código de acceso obligatorio", "Codice di accesso richiesto"],
   "Enter passcode": ["Zugangscode eingeben", "Saisir le code d'accès", "Introducir el código de acceso", "Inserisci il codice di accesso"],

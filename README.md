@@ -40,6 +40,7 @@ import "@max-health-inc/shared-ui/theme.css"
 - FilterToolbar, PageHeader, StatCard, ResponsiveTabsList
 - Faq — the org-wide question/answer disclosure list (one answer open at a time)
 - LegalDocument — a Privacy Policy or Terms page: effective date, jump-to contents, numbered sections; the app supplies the copy
+- AboutPage, AboutButton, ChangelogSection: the "About this software" page (product, manufacturer and contact, build version, changelog, terms and privacy links) and the header icon button that opens it; `lead`, `details` and children take app-specific sections
 
 ### Hooks
 - `useSmartAuth` — SMART on FHIR auth state management. When a session ends mid-use, `SmartAppShell` keeps the app
@@ -47,6 +48,7 @@ import "@max-health-inc/shared-ui/theme.css"
   0.8+), falling back to the redirect when the popup is blocked
   - `redirecting` is true from a sign-in click until the redirect fails or the page is restored from the back/forward cache
 - `usePendingAction` — pending state for an action that leaves the page; `SignInLanding`, `SmartAppShell` and `useSmartAuth` share it
+- `useAboutRoute({ base })`: the About view as a real `/about` URL under the app's base path; `close` returns to where `show` was called, or to the app home after a deep link
 - `useBranding` — Dynamic brand theming from backend
 - `useModalLayer` / `ModalStackProvider` — Z-index stacking for modals
 
