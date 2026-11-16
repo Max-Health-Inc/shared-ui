@@ -64,6 +64,7 @@ export function useAboutRoute({ base = "/" }: AboutRouteOptions = {}): AboutRout
   const show = useCallback(() => {
     if (isAboutPath(window.location.pathname, base)) return
     window.history.pushState({ [STATE_KEY]: true }, "", aboutPath(base))
+    window.scrollTo({ top: 0 })
     notify()
   }, [base])
 

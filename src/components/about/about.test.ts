@@ -156,9 +156,11 @@ describe("about route", () => {
     const route = mount()
     expect(route.current().open).toBe(false)
 
+    window.scrollTo({ top: 400 })
     act(() => {
       route.current().show()
     })
+    expect(window.scrollY).toBe(0)
     expect(window.location.pathname).toBe("/about")
     expect(route.current().open).toBe(true)
 
