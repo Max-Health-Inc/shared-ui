@@ -172,6 +172,7 @@ humanNameText(practitioner.name?.[0]) // text, else prefix + given + family + su
 medicalRecordNumber(patient.identifier) // the current identifier typed MR; undefined when none is
 parseFhirReference(token.fhirUser) // { resourceType, id } of a relative or absolute literal reference, else null
 referenceId(link.target?.reference, "Patient") // the id when it names a Patient, else null
+parseFhirUser(token.fhirUser) // { role, resourceType, id, reference }: patient, practitioner (incl. PractitionerRole), related-person, person or unknown
 isPractitionerReference(token.fhirUser) // a Practitioner or PractitionerRole signed in
 ```
 
