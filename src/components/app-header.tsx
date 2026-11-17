@@ -80,7 +80,7 @@ export function AppHeader({
     <HeaderCompactContext.Provider value={compact}>
     <header
       className={cn(
-        "border-b border-foreground/10 pt-safe px-safe",
+        "border-b border-foreground/10 pt-safe px-safe print:hidden",
         sticky ? "sticky top-0 z-40 bg-background/90 backdrop-blur" : "relative z-10 bg-foreground/[0.02]",
       )}
     >
