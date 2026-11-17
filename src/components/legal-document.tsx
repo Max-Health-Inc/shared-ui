@@ -40,7 +40,7 @@ export function LegalDocument({
   return (
     <article className={cn("mx-auto max-w-3xl", className)}>
       {back && (
-        <a href={back.href} className="text-sm text-muted-foreground hover:text-foreground">
+        <a href={back.href} className="text-sm text-muted-foreground hover:text-foreground print:hidden">
           {back.label}
         </a>
       )}
