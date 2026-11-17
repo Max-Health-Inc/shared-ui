@@ -237,4 +237,17 @@
       transparent 70%
     );
   }
+
+  /* Paper gets no scene and no frosted header. */
+  @media print {
+    body[data-scene]::before,
+    body[data-scene]::after {
+      display: none !important;
+    }
+
+    body[data-scene]:not([data-scene="none"]) header.border-b {
+      background: transparent !important;
+      backdrop-filter: none;
+    }
+  }
 }

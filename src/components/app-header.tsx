@@ -80,7 +80,7 @@ export function AppHeader({
     <HeaderCompactContext.Provider value={compact}>
     <header
       className={cn(
-        "border-b border-foreground/10 pt-safe px-safe print:hidden",
+        "border-b border-foreground/10 pt-safe px-safe print:static print:bg-transparent print:backdrop-blur-none",
         sticky ? "sticky top-0 z-40 bg-background/90 backdrop-blur" : "relative z-10 bg-foreground/[0.02]",
       )}
     >
@@ -103,7 +103,7 @@ export function AppHeader({
           )}
           {children}
         </div>
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="flex items-center gap-1 shrink-0 print:hidden">
           {actions}
           {installLabel !== false && <PwaInstallButton label={installLabel ?? t("Install")} />}
           {!hideActions && appStoreUrl && (
