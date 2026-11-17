@@ -28,6 +28,7 @@ interface FakeAuth {
   callbacks?: number
   popup?: () => Promise<unknown>
   relays?: boolean
+  refreshCalls?: number
 }
 
 function fakeSmartAuth(state: FakeAuth): Options["smartAuth"] {
@@ -38,7 +39,10 @@ function fakeSmartAuth(state: FakeAuth): Options["smartAuth"] {
     },
     isAuthenticated: () => state.token,
     isTokenExpired: () => state.expired,
-    refreshAccessToken: async () => (state.refreshes ? {} : null),
+    refreshAccessToken: async () => {
+      state.refreshCalls = (state.refreshCalls ?? 0) + 1
+      return state.refreshes ? {} : null
+    },
     clearToken: () => { state.token = false },
     authorize: async (options) => { state.authorizeCalls.push(options) },
     logout: () => {},
@@ -251,5 +255,53 @@ describe("redirecting", () => {
     expect(latest?.redirecting).toBe(false)
     expect(latest?.state).toBe("error")
     expect(latest?.error).toBe("discovery failed")
+  })
+})
+
+describe("a session ended in another app", () => {
+  let auth: FakeAuth
+
+  beforeEach(() => {
+    win.sessionStorage.clear()
+    goTo("https://app.example.com/records")
+    auth = { authorizeCalls: [], token: true, expired: false, refreshes: true }
+    latest = null
+  })
+
+  afterEach(async () => {
+    await act(async () => { root.unmount() })
+  })
+
+  const comeBack = () => act(async () => {
+    document.dispatchEvent(new Event("visibilitychange"))
+    await Promise.resolve()
+  })
+
+  it("is noticed when the member comes back to the app, and asks them to sign in again", async () => {
+    await render({ smartAuth: fakeSmartAuth(auth) })
+    expect(latest?.state).toBe("authenticated")
+
+    auth.refreshes = false
+    await comeBack()
+
+    expect(latest?.state).toBe("session-expired")
+    expect(latest?.resumable).toBe(true)
+    expect(auth.token).toBe(false)
+  })
+
+  it("leaves a session that still stands alone", async () => {
+    await render({ smartAuth: fakeSmartAuth(auth) })
+    await comeBack()
+
+    expect(latest?.state).toBe("authenticated")
+    expect(auth.refreshCalls).toBe(1)
+  })
+
+  it("asks the provider at most once a minute, however often the member switches tabs", async () => {
+    await render({ smartAuth: fakeSmartAuth(auth) })
+    await comeBack()
+    await comeBack()
+
+    expect(auth.refreshCalls).toBe(1)
   })
 })
