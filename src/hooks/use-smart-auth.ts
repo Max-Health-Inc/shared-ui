@@ -4,12 +4,12 @@ import { onAuthError } from "../lib/auth-error"
 import { isPractitionerReference } from "../lib/fhir-helpers"
 import { silentSignIn as createSilentSignIn } from "../lib/silent-sign-in"
 import { usePendingAction } from "./use-pending-action"
+import { useSessionRecheck } from "./use-session-recheck"
 
 const DEEPLINK_KEY = "__smart_deeplink__"
 const silentAttempt = createSilentSignIn("__smart_silent_attempted__")
 const SILENT_REFUSALS = new Set(["login_required", "interaction_required", "consent_required", "account_selection_required"])
 const isBrowser = (): boolean => typeof window !== "undefined"
-const SESSION_RECHECK_MS = 60_000
 
 export type SmartAppState =
   | "loading"
@@ -316,28 +316,12 @@ export function useSmartAuth({
     )
   }, [handleLogin, onAuthenticated, smartAuth])
 
-  // The access token outlives a sign-out elsewhere; a refresh on return asks whether the session stands.
-  useEffect(() => {
-    if (skip || state !== "authenticated" || !isBrowser()) return
-    let checkedAt = 0
-    const recheck = () => {
-      if (document.visibilityState !== "visible" || Date.now() - checkedAt < SESSION_RECHECK_MS) return
-      checkedAt = Date.now()
-      void smartAuth.refreshAccessToken().then((refreshed) => {
-        if (refreshed) return
-        smartAuth.clearToken()
-        setError("Your sign-in ended, perhaps in another app. Please sign in again.")
-        setResumable(true)
-        setState("session-expired")
-      }, () => undefined)
-    }
-    document.addEventListener("visibilitychange", recheck)
-    window.addEventListener("focus", recheck)
-    return () => {
-      document.removeEventListener("visibilitychange", recheck)
-      window.removeEventListener("focus", recheck)
-    }
-  }, [skip, state, smartAuth])
+  const sessionEnded = useCallback(() => {
+    setError("Your sign-in ended, perhaps in another app. Please sign in again.")
+    setResumable(true)
+    setState("session-expired")
+  }, [])
+  useSessionRecheck(smartAuth, { active: !skip && state === "authenticated", onEnded: sessionEnded })
 
   const handleLogout = useCallback(() => {
     silentAttempt.suppress()

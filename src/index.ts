@@ -136,6 +136,7 @@ export {
   type SmartAuthLike,
   type UseSmartAuthOptions,
 } from "./hooks/use-smart-auth"
+export { useSessionRecheck, type RecheckableAuth } from "./hooks/use-session-recheck"
 export { usePendingAction, type PendingAction, type UsePendingActionReturn } from "./hooks/use-pending-action"
 export {
   useScene,
