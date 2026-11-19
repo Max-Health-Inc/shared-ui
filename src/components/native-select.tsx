@@ -12,6 +12,8 @@ interface NativeSelectProps
   selectSize?: NativeSelectSize
   variant?: NativeSelectVariant
   error?: boolean
+  /** Classes for the wrapper, which sets the control's width in its layout; `className` styles the select itself. */
+  containerClassName?: string
 }
 
 const sizes: Record<NativeSelectSize, string> = {
@@ -52,13 +54,13 @@ const variants: Record<
 
 const NativeSelect = React.forwardRef<HTMLSelectElement, NativeSelectProps>(
   (
-    { selectSize = "md", variant = "default", error = false, className, style, children, ...rest },
+    { selectSize = "md", variant = "default", error = false, className, containerClassName, style, children, ...rest },
     ref
   ) => {
     const props = useFormFieldControl({ "aria-invalid": error || undefined, ...rest })
     const v = variants[variant]
     return (
-      <div className="relative w-full">
+      <div className={cn("relative w-full", containerClassName)}>
         <select
           ref={ref}
           className={cn(
