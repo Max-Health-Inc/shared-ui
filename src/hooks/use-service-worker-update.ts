@@ -90,6 +90,10 @@ export function useServiceWorkerUpdate(
   /** The worker that has installed and is waiting to take over. */
   const waitingWorkerRef = useRef<ServiceWorker | null>(null)
   const registrationRef = useRef<ServiceWorkerRegistration | null>(null)
+  const activatingSilentlyRef = useRef(false)
+  /** Another tab activated a newer build. */
+  const supersededRef = useRef(false)
+  const userReloadRef = useRef(false)
 
   const supported =
     enabled &&
@@ -101,38 +105,54 @@ export function useServiceWorkerUpdate(
 
     let cancelled = false
     let registration: ServiceWorkerRegistration | null = null
+    // Network-first: a page loaded after a deploy already runs it, so only a later update prompts.
+    let checkingAtLoad = true
 
-    /** Track a freshly-installing worker; flag an update once it's ready. */
-    const trackInstalling = (worker: ServiceWorker | null) => {
+    const activateSilently = (worker: ServiceWorker) => {
+      activatingSilentlyRef.current = true
+      worker.postMessage({ type: "SKIP_WAITING" })
+    }
+
+    const trackInstalling = (worker: ServiceWorker | null, foundAtLoad: boolean) => {
       if (!worker) return
       worker.addEventListener("statechange", () => {
         // `installed` + an existing controller == an UPDATE (not first install).
-        if (worker.state === "installed" && navigator.serviceWorker.controller) {
-          waitingWorkerRef.current = worker
-          if (!cancelled) setUpdateAvailable(true)
+        if (worker.state !== "installed" || !navigator.serviceWorker.controller) return
+        if (foundAtLoad) {
+          activateSilently(worker)
+          return
         }
+        waitingWorkerRef.current = worker
+        if (!cancelled) setUpdateAvailable(true)
       })
     }
 
-    const onUpdateFound = (reg: ServiceWorkerRegistration) => () => {
-      trackInstalling(reg.installing)
+    const onControllerChange = () => {
+      if (activatingSilentlyRef.current) {
+        activatingSilentlyRef.current = false
+        return
+      }
+      if (userReloadRef.current || cancelled) return
+      supersededRef.current = true
+      setUpdateAvailable(true)
     }
+    navigator.serviceWorker.addEventListener("controllerchange", onControllerChange)
 
     try {
       navigator.serviceWorker
         .register(swUrl)
-        .then((reg) => {
+        .then(async (reg) => {
           if (cancelled) return
           registration = reg
           registrationRef.current = reg
+          reg.addEventListener("updatefound", () => {
+            trackInstalling(reg.installing, checkingAtLoad)
+          })
 
-          // An update may already be waiting from a prior load.
-          if (reg.waiting && navigator.serviceWorker.controller) {
-            waitingWorkerRef.current = reg.waiting
-            setUpdateAvailable(true)
-          }
-
-          reg.addEventListener("updatefound", onUpdateFound(reg))
+          if (reg.waiting && navigator.serviceWorker.controller) activateSilently(reg.waiting)
+          trackInstalling(reg.installing, true)
+          await reg.update().catch(noop)
+          checkingAtLoad = false
         })
         .catch(noop) // registration failed — stay inert
     } catch {
@@ -148,6 +168,7 @@ export function useServiceWorkerUpdate(
     return () => {
       cancelled = true
       window.removeEventListener("focus", onFocus)
+      navigator.serviceWorker.removeEventListener("controllerchange", onControllerChange)
     }
   }, [supported, swUrl])
 
@@ -165,12 +186,14 @@ export function useServiceWorkerUpdate(
     if (!waiting) {
       // Nothing was ever flagged: a no-op that latches no spinner. Flagged but no longer
       // waiting: the update is already active, so loading the page picks it up.
-      if (!tracked) return
+      if (!tracked && !supersededRef.current) return
+      userReloadRef.current = true
       setReloading(true)
       reloadPage()
       return
     }
 
+    userReloadRef.current = true
     setReloading(true)
     navigator.serviceWorker.addEventListener("controllerchange", reloadPage, { once: true })
     waiting.addEventListener("statechange", () => {

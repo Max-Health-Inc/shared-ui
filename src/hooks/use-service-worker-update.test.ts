@@ -120,12 +120,16 @@ function renderHook(opts?: Parameters<typeof useServiceWorkerUpdate>[0]) {
 }
 
 
+async function settleLoadCheck() {
+  await new Promise((resolve) => setTimeout(resolve, 0))
+}
+
 /** Render the hook with a controller present and drive one update to `installed`. */
 async function flaggedUpdate(opts?: Parameters<typeof useServiceWorkerUpdate>[0]) {
   container.controller = {}
   const captured = renderHook(opts)
   await act(async () => {
-    await Promise.resolve()
+    await settleLoadCheck()
   })
   const worker = new FakeWorker()
   container.registration.installing = worker
@@ -144,7 +148,7 @@ describe("useServiceWorkerUpdate", () => {
 
     // Let the registration promise resolve and updatefound wire up.
     await act(async () => {
-      await Promise.resolve()
+      await settleLoadCheck()
     })
 
     expect(container.register.calls.length).toBe(1)
@@ -168,7 +172,7 @@ describe("useServiceWorkerUpdate", () => {
     container.controller = {}
     const captured = renderHook()
     await act(async () => {
-      await Promise.resolve()
+      await settleLoadCheck()
     })
 
     const worker = new FakeWorker()
@@ -197,7 +201,7 @@ describe("useServiceWorkerUpdate", () => {
     container.controller = {}
     const captured = renderHook()
     await act(async () => {
-      await Promise.resolve()
+      await settleLoadCheck()
     })
 
     const worker = new FakeWorker()
@@ -223,7 +227,7 @@ describe("useServiceWorkerUpdate", () => {
     container.controller = {}
     const captured = renderHook()
     await act(async () => {
-      await Promise.resolve()
+      await settleLoadCheck()
     })
 
     act(() => captured.current?.reload())
@@ -279,7 +283,7 @@ describe("useServiceWorkerUpdate", () => {
     container.controller = null // first install: nothing to update over
     const captured = renderHook()
     await act(async () => {
-      await Promise.resolve()
+      await settleLoadCheck()
     })
 
     const worker = new FakeWorker()
@@ -296,7 +300,7 @@ describe("useServiceWorkerUpdate", () => {
   it("is inert when disabled (never registers)", async () => {
     const captured = renderHook({ enabled: false })
     await act(async () => {
-      await Promise.resolve()
+      await settleLoadCheck()
     })
     expect(container.register.calls.length).toBe(0)
     expect(captured.current?.updateAvailable).toBe(false)
@@ -306,7 +310,7 @@ describe("useServiceWorkerUpdate", () => {
     container.controller = {}
     const captured = renderHook()
     await act(async () => {
-      await Promise.resolve()
+      await settleLoadCheck()
     })
     const worker = new FakeWorker()
     container.registration.installing = worker
@@ -320,5 +324,52 @@ describe("useServiceWorkerUpdate", () => {
     act(() => captured.current?.dismiss())
     expect(captured.current?.updateAvailable).toBe(false)
     expect(reloadCalls).toBe(0)
+  })
+  it("quietly activates a worker already waiting when the page loads, since the page runs that build", async () => {
+    container.controller = {}
+    const worker = new FakeWorker()
+    worker.state = "installed"
+    container.registration.waiting = worker
+    const captured = renderHook()
+    await act(async () => {
+      await settleLoadCheck()
+    })
+
+    expect(worker.postMessage.calls[0]?.[0]).toEqual({ type: "SKIP_WAITING" })
+    act(() => container.emit("controllerchange"))
+    expect(captured.current?.updateAvailable).toBe(false)
+    expect(reloadCalls).toBe(0)
+  })
+
+  it("quietly activates a worker found by the page's own load-time check", async () => {
+    container.controller = {}
+    const worker = new FakeWorker()
+    container.registration.installing = worker
+    const captured = renderHook()
+    await act(async () => {
+      await settleLoadCheck()
+    })
+    act(() => {
+      worker.state = "installed"
+      worker.emit("statechange")
+    })
+
+    expect(worker.postMessage.calls[0]?.[0]).toEqual({ type: "SKIP_WAITING" })
+    expect(captured.current?.updateAvailable).toBe(false)
+    expect(reloadCalls).toBe(0)
+  })
+
+  it("prompts a page left open when another tab activates a newer build, and reload() loads it", async () => {
+    container.controller = {}
+    const captured = renderHook()
+    await act(async () => {
+      await settleLoadCheck()
+    })
+
+    act(() => container.emit("controllerchange"))
+    expect(captured.current?.updateAvailable).toBe(true)
+
+    act(() => captured.current?.reload())
+    expect(reloadCalls).toBe(1)
   })
 })
