@@ -29,6 +29,15 @@ export const UI_TEXT: Record<string, readonly string[]> = {
   "Expand panel": ["Fenster aufklappen", "Développer le panneau", "Expandir el panel", "Espandi il pannello"],
   "Install App": ["App installieren", "Installer l'application", "Instalar la app", "Installa l'app"],
 
+  // ── Test environment ──────────────────────────────────────────────────────
+  "Test server": ["Testserver", "Serveur de test", "Servidor de pruebas", "Server di prova"],
+  "This is a test environment. Do not enter or share real patient data or other sensitive information.": [
+    "Dies ist eine Testumgebung. Geben Sie keine echten Patientendaten oder andere sensible Informationen ein und teilen Sie sie nicht.",
+    "Ceci est un environnement de test. Ne saisissez ni ne partagez de données de patients réelles ou d'autres informations sensibles.",
+    "Este es un entorno de pruebas. No introduzca ni comparta datos reales de pacientes ni otra información confidencial.",
+    "Questo è un ambiente di prova. Non inserire né condividere dati reali di pazienti o altre informazioni sensibili.",
+  ],
+
   // ── Authentication states ─────────────────────────────────────────────────
   "Completing sign in...": [
     "Anmeldung wird abgeschlossen...",

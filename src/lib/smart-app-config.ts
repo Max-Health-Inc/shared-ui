@@ -22,6 +22,8 @@ export interface SmartAppEnv {
   readonly VITE_SCOPES?: string
   /** Where a signed-in user manages their account; the header's identity links here. */
   readonly VITE_ACCOUNT_URL?: string
+  /** The deployment's release channel, set by the deploy job: `beta` marks a test deployment. */
+  readonly VITE_RELEASE_CHANNEL?: string
 }
 
 /** Module-level so shared components without the app's env (AppHeader's home link) can read it. */
@@ -54,6 +56,24 @@ export function setAccountUrl(url: string | undefined): void {
   accountUrl = trimmed === "" ? undefined : trimmed
 }
 
+let deploymentStage: string | undefined
+
+/** The stage the app was configured with (`beta`, `RELEASE`, `production`), for the test-environment banner. */
+export function configuredDeploymentStage(): string | undefined {
+  return deploymentStage
+}
+
+/** Record the deployment stage. Exported for apps that learn it at runtime or build their config by hand. */
+export function setDeploymentStage(stage: string | undefined): void {
+  const trimmed = stage?.trim()
+  deploymentStage = trimmed === "" ? undefined : trimmed
+}
+
+/** A test deployment, where real patient data must not be entered: `beta`, whichever vocabulary named it. */
+export function isTestStage(stage: string | undefined): boolean {
+  return stage?.trim().toLowerCase() === "beta"
+}
+
 export interface SmartAppConfig {
   proxyBase: string
   proxyPrefix: string
@@ -63,6 +83,7 @@ export interface SmartAppConfig {
   redirectUri: string
   scopes: string
   accountUrl?: string
+  deploymentStage?: string
 }
 
 interface SmartAppDefaults {
@@ -76,8 +97,10 @@ export function createSmartAppConfig(defaults: SmartAppDefaults): SmartAppConfig
   const { env } = defaults
   setAppBasePath(env.BASE_URL)
   setAccountUrl(env.VITE_ACCOUNT_URL)
+  setDeploymentStage(env.VITE_RELEASE_CHANNEL)
   return {
     accountUrl: configuredAccountUrl(),
+    deploymentStage: configuredDeploymentStage(),
     proxyBase: env.VITE_PROXY_BASE ?? browserOrigin(),
     proxyPrefix: env.VITE_PROXY_PREFIX ?? "proxy-smart-backend",
     fhirServerId: env.VITE_FHIR_SERVER_ID ?? "hapi-fhir-server",
