@@ -4,6 +4,7 @@ import { Button } from "./button"
 import { HeaderLabel } from "./header-label"
 import { HeaderCompactContext, useHeaderOverflow } from "../lib/header-compact"
 import { PwaInstallButton } from "./pwa-install-button"
+import { TestEnvironmentBanner } from "./test-environment-banner"
 import { appBaseUrl } from "../lib/smart-app-config"
 import { useBranding } from "../hooks/use-branding"
 import { useUiText, type TFn } from "../lib/ui-text"
@@ -40,6 +41,8 @@ export interface AppHeaderProps {
   appStoreUrl?: string
   /** Label for the PWA install button (default: a translated "Install"). Set to false to hide. */
   installLabel?: string | false
+  /** The deployment stage; `beta` shows the test-environment banner above the header row. Defaults to the configured `VITE_RELEASE_CHANNEL`. */
+  stage?: string
   /** The app's translate function; omit to use this package's own catalogue. */
   t?: TFn
 }
@@ -60,6 +63,7 @@ export function AppHeader({
   homeUrl,
   appStoreUrl,
   installLabel,
+  stage,
   t: appT,
 }: AppHeaderProps) {
   const brand = useBranding()
@@ -84,6 +88,7 @@ export function AppHeader({
         sticky ? "sticky top-0 z-40 bg-background/90 backdrop-blur" : "relative z-10 bg-foreground/[0.02]",
       )}
     >
+      <TestEnvironmentBanner stage={stage} maxWidth={maxWidth} t={appT} />
       <div ref={rowRef} className={cn(maxWidth, "mx-auto px-3 sm:px-4 py-2 sm:py-3 flex flex-wrap items-center justify-between gap-x-2 gap-y-1")}>
         <div className="flex shrink-0 items-center gap-2">
           {home ? (

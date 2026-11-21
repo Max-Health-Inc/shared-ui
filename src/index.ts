@@ -33,6 +33,7 @@ export { PendingButton, type PendingButtonProps } from "./components/pending-but
 export { PasscodePrompt, type PasscodePromptProps } from "./components/passcode-prompt"
 export { PwaInstallButton, type PwaInstallButtonProps } from "./components/pwa-install-button"
 export { ServiceWorkerUpdatePrompt, type ServiceWorkerUpdatePromptProps } from "./components/service-worker-update-banner"
+export { TestEnvironmentBanner, type TestEnvironmentBannerProps } from "./components/test-environment-banner"
 
 // New generic components
 export { Textarea } from "./components/textarea"
@@ -59,7 +60,7 @@ export { NativeSelect, type NativeSelectProps } from "./components/native-select
 // Utilities
 export { cn } from "./lib/utils"
 export { streamDownload, pumpToPort, prefersBlobDownload, type StreamDownloadOptions, type StreamDownloadMode, type DownloadPort } from "./lib/stream-download"
-export { createSmartAppConfig, createSmartAuth, buildFhirBaseUrl, buildAppStoreUrl, appBaseUrl, setAppBasePath, configuredAccountUrl, setAccountUrl, type SmartAppConfig, type SmartAppEnv } from "./lib/smart-app-config"
+export { createSmartAppConfig, createSmartAuth, buildFhirBaseUrl, buildAppStoreUrl, appBaseUrl, setAppBasePath, configuredAccountUrl, setAccountUrl, configuredDeploymentStage, setDeploymentStage, isTestStage, type SmartAppConfig, type SmartAppEnv } from "./lib/smart-app-config"
 export { CHART_COLORS } from "./lib/chart-colors"
 export { mountApp, type MountAppOptions } from "./lib/mount-app"
 
