@@ -14,6 +14,8 @@ interface ComboboxOption {
 }
 
 interface ComboboxProps {
+  /** Id of the trigger button, for a `<label htmlFor>`. */
+  id?: string
   value?: string
   options: ComboboxOption[]
   placeholder?: string
@@ -33,6 +35,7 @@ interface ComboboxProps {
 }
 
 function Combobox({
+  id,
   value,
   options,
   placeholder,
@@ -77,6 +80,7 @@ function Combobox({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
+          id={id}
           type="button"
           role="combobox"
           aria-expanded={open}
