@@ -78,6 +78,33 @@ describe("Combobox", () => {
     expect(window.document.activeElement).toBe(search)
   })
 
+  it("reports the search as it is typed and, with filter off, shows the caller's options unfiltered", async () => {
+    usePointer(true)
+    const searched: string[] = []
+    await act(async () =>
+      root.render(createElement(Combobox, {
+        options: [{ value: "a", label: "Alpha" }, { value: "b", label: "Beta" }],
+        searchPlaceholder: "Search",
+        filter: false,
+        onSearchChange: (text: string) => { searched.push(text) },
+      })))
+    await settle()
+    const trigger = window.document.querySelector("[role=combobox]")
+    if (!trigger) throw new Error("no combobox trigger")
+    await act(async () => (trigger as unknown as HTMLElement).click())
+    await settle()
+    const search = window.document.querySelector("input[placeholder=Search]")
+    if (!search) throw new Error("the list did not open")
+    const setValue = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set
+    await act(async () => {
+      setValue?.call(search, "zz")
+      search.dispatchEvent(new window.Event("input", { bubbles: true }))
+    })
+    await settle()
+    expect(searched).toEqual(["zz"])
+    expect(window.document.querySelectorAll("[role=option]").length).toBe(2)
+  })
+
   it("keeps its search text at 16px on small screens so phones do not zoom in", async () => {
     usePointer(false)
     const search = await openCombobox()

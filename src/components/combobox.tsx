@@ -20,6 +20,10 @@ interface ComboboxProps {
   searchPlaceholder?: string
   emptyMessage?: string
   onChange?: (value: string) => void
+  /** Called with the search text as it is typed, for options the caller loads to match it. */
+  onSearchChange?: (search: string) => void
+  /** False shows `options` as given, for a caller that already filtered them by the search. */
+  filter?: boolean
   disabled?: boolean
   className?: string
   /** Visual variant. "default" follows the app theme; "dark" is for dark overlay contexts (e.g. 3D toolbars). */
@@ -35,6 +39,8 @@ function Combobox({
   searchPlaceholder,
   emptyMessage,
   onChange,
+  onSearchChange,
+  filter = true,
   disabled = false,
   className,
   variant = "default",
@@ -47,7 +53,12 @@ function Combobox({
 
   const isDark = variant === "dark"
 
-  const filteredOptions = search.length > 0
+  const changeSearch = (next: string) => {
+    setSearch(next)
+    onSearchChange?.(next)
+  }
+
+  const filteredOptions = filter && search.length > 0
     ? options.filter(
         (opt) =>
           opt.label.toLowerCase().includes(search.toLowerCase()) ||
@@ -108,7 +119,7 @@ function Combobox({
             type="text"
             enterKeyHint="search"
             value={search}
-            onChange={(e) => { setSearch(e.target.value) }}
+            onChange={(e) => { changeSearch(e.target.value) }}
             placeholder={searchPlaceholder ?? t("Search...")}
             className={cn(
               "flex h-9 w-full rounded-md px-3 py-1 md:h-8",
@@ -137,7 +148,7 @@ function Combobox({
                 onClick={() => {
                   if (onChange) onChange(option.value)
                   setOpen(false)
-                  setSearch("")
+                  changeSearch("")
                 }}
                 className={cn(
                   "relative flex w-full items-start rounded-sm px-2 py-2.5 text-sm text-left cursor-pointer transition-colors md:py-1.5",
